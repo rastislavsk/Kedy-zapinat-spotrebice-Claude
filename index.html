@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="sk" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Energia AI</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Energia">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Energia">
+    <meta name="theme-color" content="#000000">
+
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'%3E%3Crect width='512' height='512' fill='%23000000' rx='115' /%3E%3Cpath d='M288 32L128 288h128v192l160-256H288V32z' fill='%2310b981' /%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'%3E%3Crect width='512' height='512' fill='%23000000' rx='115' /%3E%3Cpath d='M288 32L128 288h128v192l160-256H288V32z' fill='%2310b981' /%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #000000;
+            color: #fafafa;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .glass-card {
+            background: rgba(24, 24, 27, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .time-block {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Zvýraznenie aktívneho bloku */
+        .active-block {
+            background: rgba(255, 255, 255, 0.03);
+            z-index: 20;
+            transform: scale(1.02);
+            transition: all 0.5s ease;
+        }
+        .active-block-red {
+            border: 2px solid rgba(239, 68, 68, 0.6) !important;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+        }
+        .active-block-amber {
+            border: 2px solid rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.2);
+        }
+        .active-block-green {
+            border: 2px solid rgba(16, 185, 129, 0.6) !important;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Časová ihla a indikátor času */
+        #time-needle {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            z-index: 5; /* Pod blokmi */
+            pointer-events: none;
+            transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
+        }
+
+        .time-pill {
+            position: absolute;
+            right: -16px; /* Umiestnené napravo mimo blok */
+            margin-top: -28px; /* Opticky nad čiarou */
+            z-index: 30; /* Nad blokmi */
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.33); opacity: 1; }
+            80%, 100% { opacity: 0; }
+        }
+        .pulse-dot {
+            position: relative;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: background-color 0.5s ease;
+        }
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            top: -12px; left: -12px; bottom: -12px; right: -12px;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            transition: border-color 0.5s ease;
+        }
+
+        /* Dynamické farby pre pulzujúci bod */
+        .pulse-green { background-color: #10b981; }
+        .pulse-green::after { border-color: #10b981; }
+        .pulse-amber { background-color: #f59e0b; }
+        .pulse-amber::after { border-color: #f59e0b; }
+        .pulse-red { background-color: #ef4444; }
+        .pulse-red::after { border-color: #ef4444; }
+
+        .glass-panel-green {
+            background: linear-gradient(145deg, rgba(6, 78, 59, 0.6) 0%, rgba(2, 44, 34, 0.3) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neon-dot-red { box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.6); }
+        .neon-dot-amber { box-shadow: 0 0 12px 2px rgba(245, 158, 11, 0.6); }
+        .neon-dot-green { box-shadow: 0 0 12px 2px rgba(16, 185, 129, 0.6); }
+
+        #qrcode img, #qrcode canvas { width: 100% !important; height: auto !important; display: block; margin: 0 auto; border-radius: 12px;}
+
+        /* Edge Glow animácie pre 3 farby */
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: inset 0 0 30px 10px rgba(239, 68, 68, 0.15); }
+            50% { box-shadow: inset 0 0 80px 25px rgba(239, 68, 68, 0.45); }
+        }
+        @keyframes pulse-amber {
+            0%, 100% { box-shadow: inset 0 0 30px 10px rgba(245, 158, 11, 0.15); }
+            50% { box-shadow: inset 0 0 80px 25px rgba(245, 158, 11, 0.45); }
+        }
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: inset 0 0 30px 10px rgba(16, 185, 129, 0.15); }
+            50% { box-shadow: inset 0 0 80px 25px rgba(16, 185, 129, 0.45); }
+        }
+
+        #edge-glow {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+            transition: box-shadow 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 0 0px rgba(0, 0, 0, 0);
+        }
+        #edge-glow.glow-red { animation: pulse-red 3s ease-in-out infinite; }
+        #edge-glow.glow-amber { animation: pulse-amber 4s ease-in-out infinite; }
+        #edge-glow.glow-green { animation: pulse-green 5s ease-in-out infinite; }
+
+        @media print {
+            .print-hidden { display: none !important; }
+            .bg-aurora { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .glass-card, .glass-panel-green { background: white !important; border: 2px solid #e4e4e7 !important; color: black !important; box-shadow: none !important; backdrop-filter: none !important; transform: none !important; }
+            .text-zinc-400, .text-zinc-500 { color: #52525b !important; }
+            .text-white, .text-zinc-100 { color: black !important; }
+        }
+    </style>
+</head>
+<body class="flex justify-center min-h-screen items-start relative overflow-x-hidden">
+
+    <div id="edge-glow"></div>
+
+    <!-- Ambient Aurora Background -->
+    <div class="bg-aurora fixed inset-0 z-0 pointer-events-none opacity-40">
+        <div class="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/30 blur-[120px] mix-blend-screen"></div>
+        <div class="absolute top-[40%] right-[-20%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[100px] mix-blend-screen"></div>
+    </div>
+
+    <div class="max-w-md w-full px-4 pt-6 pb-24 relative z-10">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8 print-hidden">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-white mb-1">Energia</h1>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Smart Home</span>
+                    <span class="text-zinc-700">|</span>
+                    <div class="flex items-center gap-2.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
+                        <div id="header-pulse" class="pulse-dot pulse-green"></div>
+                        <span id="current-time-display" class="text-xs font-bold text-white tracking-widest">00:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOTOVOLTIKA - ŽIVÁ VÝROBA -->
+        <div id="pv-card" class="glass-card p-5 rounded-3xl mb-6 relative overflow-hidden print-hidden">
+            <div class="absolute -top-8 -right-8 w-32 h-32 bg-emerald-400/10 blur-3xl rounded-full"></div>
+            <div class="flex items-center justify-between relative z-10 gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                        <i data-lucide="sun-medium" class="w-5 h-5 text-emerald-400"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Výroba fotovoltiky</span>
+                        <div class="flex items-baseline gap-1.5">
+                            <span id="pv-power" class="text-2xl font-extrabold text-white">–</span>
+                            <span class="text-sm font-bold text-zinc-500">kW</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right shrink-0">
+                    <span id="pv-updated" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">načítavam…</span>
+                    <span id="pv-daily" class="block text-xs font-bold text-emerald-400 mt-1">– kWh dnes</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ultra-modern Segmented Control -->
+        <div class="glass-card p-1.5 rounded-2xl flex w-full mb-8 relative print-hidden">
+            <button id="btn-summer" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm" onclick="setSeason('summer')">
+                <i data-lucide="sun" class="w-4 h-4 text-amber-400"></i> Leto
+            </button>
+            <button id="btn-winter" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300" onclick="setSeason('winter')">
+                <i data-lucide="snowflake" class="w-4 h-4"></i> Zima
+            </button>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex justify-between items-center px-2 mb-4 text-[11px] font-bold uppercase tracking-widest text-zinc-500 print-text">
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 neon-dot-green"></span> Zadarmo</div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 neon-dot-amber"></span> Lacná</div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 neon-dot-red"></span> Drahá</div>
+        </div>
+
+        <!-- Timeline Grid -->
+        <div class="space-y-3 relative" id="timeline-container">
+
+            <!-- Časová ihla a pilulka -->
+            <div id="time-needle" class="bg-emerald-500 hidden"></div>
+            <div id="needle-pill" class="time-pill hidden">00:00</div>
+
+            <!-- NOC (23:30 - 07:30) -->
+            <div data-start="23:30" data-end="07:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-sm font-bold text-white">23:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
+                        <h3 class="text-sm font-bold text-white">Lacná sieť</h3>
+                    </div>
+                    <p class="text-xs font-medium text-zinc-400">EV a bojler (nočný prúd)</p>
+                </div>
+                <i data-lucide="moon" class="w-5 h-5 text-amber-500/50 mr-2"></i>
+            </div>
+
+            <!-- RÁNO VT 1 (07:30 - 08:30) -->
+            <div data-start="07:30" data-end="08:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-sm font-bold text-white">07:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
+                        <h3 class="text-sm font-bold text-white">Najdrahšia sieť</h3>
+                    </div>
+                    <p class="text-xs font-medium text-zinc-400">Nezapínať veľké spotrebiče</p>
+                </div>
+            </div>
+
+            <!-- OKNO (08:30 - 09:30) -->
+            <div data-start="08:30" data-end="09:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
+                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-xs font-bold text-white/50">08:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
+                        <h3 class="text-sm font-bold text-zinc-300">Menšie spotrebiče</h3>
+                    </div>
+                </div>
+            </div>
+
+             <!-- DOOBEDIE VT 2 (09:30 - 10:30) -->
+             <div data-start="09:30" data-end="10:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-sm font-bold text-white">09:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
+                        <h3 class="text-sm font-bold text-white">Najdrahšia sieť</h3>
+                    </div>
+                    <p class="text-xs font-medium text-zinc-400">Ešte chvíľu vydržať</p>
+                </div>
+            </div>
+
+            <!-- HLAVNÝ ZELENÝ PANEL (DYNAMICKÝ) -->
+            <div id="summer-day" data-start="10:30" data-end="17:30" class="season-summer time-block glass-panel-green p-6 rounded-[32px] my-4 relative overflow-hidden transition-all duration-500 flex flex-col gap-5">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-400/20 blur-3xl rounded-full print-hidden"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 neon-dot-green"></span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Zlaté okno</span>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-white">Púšťaj všetko!</h3>
+                        <p class="text-sm font-medium text-emerald-100/70 mt-1">Silné slnko, plný výkon zadarmo</p>
+                    </div>
+                    <div class="text-right">
+                    <span class="block text-2xl font-black text-white">10:30</span>
+                    <span class="block text-xs font-bold text-emerald-400/70 uppercase tracking-widest mt-1">do 14:30</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 relative z-10">
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="washing-machine" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.2 kW</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="shirt" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.0 kW</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="utensils-crossed" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">1.8 kW</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-400 shadow-lg shadow-emerald-500/20 flex items-center justify-center backdrop-blur-md relative">
+                            <i data-lucide="car-front" class="w-5 h-5 text-white fill-emerald-400/20"></i>
+                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-emerald-900 shadow-sm"></div>
+                        </div>
+                        <span class="text-[9px] font-extrabold text-white tracking-tighter uppercase bg-emerald-600 px-1.5 py-0.5 rounded shadow-sm">11 kW</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="droplets" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.0 kW</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="winter-day" data-start="10:30" data-end="14:30" class="season-winter time-block hidden glass-panel-green p-6 rounded-[32px] my-4 relative overflow-hidden transition-all duration-500 flex flex-col gap-5">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-400/20 blur-3xl rounded-full print-hidden"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 neon-dot-green"></span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Krátke okno</span>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-white">Opatrne</h3>
+                        <p class="text-sm font-medium text-emerald-100/70 mt-1">Nepúšťať všetko naraz</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-2xl font-black text-white">10:30</span>
+                        <span class="block text-xs font-bold text-emerald-400/70 uppercase tracking-widest mt-1">do 14:30</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 relative z-10">
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="washing-machine" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.2 kW</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1 text-center">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-400 flex items-center justify-center backdrop-blur-md"><i data-lucide="car-front" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">11 kW</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="droplets" class="w-5 h-5 text-emerald-300"></i></div>
+                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.0 kW</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PODVEČER -->
+            <div id="summer-evening" data-start="17:30" data-end="20:30" class="season-summer time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-sm font-bold text-white">17:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
+                        <h3 class="text-sm font-bold text-white">Bežná prevádzka</h3>
+                    </div>
+                    <p class="text-xs font-medium text-zinc-400">Slnko klesá, už iba malé spotrebiče</p>
+                </div>
+                <i data-lucide="sunset" class="w-5 h-5 text-amber-500/50 mr-2"></i>
+            </div>
+
+            <div id="winter-evening" data-start="14:30" data-end="20:30" class="season-winter time-block hidden glass-card p-4 rounded-3xl flex items-center gap-4 group">
+                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-sm font-bold text-white">14:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
+                        <h3 class="text-sm font-bold text-white">Skorá tma</h3>
+                    </div>
+                    <p class="text-xs font-medium text-zinc-400">Lacná sieť bez slnka</p>
+                </div>
+            </div>
+
+            <!-- VEČER VT 3 -->
+            <div data-start="20:30" data-end="21:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
+                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-xs font-bold text-white/50">20:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
+                        <h3 class="text-sm font-bold text-zinc-300">Najdrahšia sieť</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OKNO NESKORO -->
+            <div data-start="21:30" data-end="22:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
+                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-xs font-bold text-white/50">21:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
+                        <h3 class="text-sm font-bold text-zinc-300">OK (Lacná)</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOC VT 4 -->
+            <div data-start="22:30" data-end="23:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
+                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
+                    <span class="text-xs font-bold text-white/50">22:30</span>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
+                        <h3 class="text-sm font-bold text-zinc-300">Najdrahšia sieť</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Zdieľanie -->
+        <div class="mt-12 flex flex-col items-center print-hidden">
+            <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mb-4">Zdieľaj na iný mobil</p>
+            <div class="p-3 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
+                <div id="qrcode" class="w-24 h-24 flex items-center justify-center bg-white rounded-2xl overflow-hidden p-1.5"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const myNetlifyUrl = "https://fanciful-basbousa-951639.netlify.app";
+
+            new QRCode(document.getElementById("qrcode"), {
+                text: myNetlifyUrl,
+                width: 256,
+                height: 256,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            setInterval(updateTimeAndHighlight, 1000 * 30);
+            updateTimeAndHighlight();
+            updatePvProduction();
+            setInterval(updatePvProduction, 1000 * 60);
+        });
+
+        let currentSeason = 'summer';
+
+        function setSeason(season) {
+            currentSeason = season;
+            const btnSummer = document.getElementById('btn-summer');
+            const btnWinter = document.getElementById('btn-winter');
+            const summerItems = document.querySelectorAll('.season-summer');
+            const winterItems = document.querySelectorAll('.season-winter');
+
+            const activeClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm';
+            const inactiveClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300';
+
+            if (season === 'summer') {
+                btnSummer.className = activeClass;
+                btnWinter.className = inactiveClass;
+                summerItems.forEach(el => el.classList.remove('hidden'));
+                winterItems.forEach(el => el.classList.add('hidden'));
+            } else {
+                btnWinter.className = activeClass;
+                btnSummer.className = inactiveClass;
+                winterItems.forEach(el => el.classList.remove('hidden'));
+                summerItems.forEach(el => el.classList.add('hidden'));
+            }
+            updateTimeAndHighlight();
+        }
+
+        function updateTimeAndHighlight() {
+            const now = new Date();
+            const h = now.getHours().toString().padStart(2, '0');
+            const m = now.getMinutes().toString().padStart(2, '0');
+            const currentTimeStr = `${h}:${m}`;
+            const currTotalMin = parseInt(h) * 60 + parseInt(m);
+
+            document.getElementById('current-time-display').innerText = currentTimeStr;
+            const pill = document.getElementById('needle-pill');
+            if(pill) pill.innerText = currentTimeStr;
+
+            const timeBlocks = document.querySelectorAll('.time-block');
+            const needle = document.getElementById('time-needle');
+            const edgeGlow = document.getElementById('edge-glow');
+            const headerPulse = document.getElementById('header-pulse');
+            let activeBlockEl = null;
+
+            timeBlocks.forEach(block => {
+                block.classList.remove('active-block', 'active-block-red', 'active-block-amber', 'active-block-green');
+                if (block.classList.contains('hidden')) return;
+
+                const start = block.getAttribute('data-start');
+                const end = block.getAttribute('data-end');
+
+                if (isCurrentTimeInBlock(currentTimeStr, start, end)) {
+                    block.classList.add('active-block');
+                    activeBlockEl = block;
+                }
+            });
+
+            if (activeBlockEl && needle && pill) {
+                let blockType = 'green';
+                if (activeBlockEl.querySelector('.neon-dot-red')) blockType = 'red';
+                else if (activeBlockEl.querySelector('.neon-dot-amber')) blockType = 'amber';
+
+                const s = activeBlockEl.getAttribute('data-start');
+                const e = activeBlockEl.getAttribute('data-end');
+                const [sH, sM] = s.split(':').map(Number);
+                const [eH, eM] = e.split(':').map(Number);
+                const sMin = sH * 60 + sM;
+                const eMin = eH * 60 + eM;
+
+                let blockTotalMin;
+                let elapsedMin;
+
+                if (sMin > eMin) {
+                    blockTotalMin = (1440 - sMin) + eMin;
+                    elapsedMin = (currTotalMin >= sMin) ? (currTotalMin - sMin) : (1440 - sMin + currTotalMin);
+                } else {
+                    blockTotalMin = eMin - sMin;
+                    elapsedMin = currTotalMin - sMin;
+                }
+
+                const percent = elapsedMin / blockTotalMin;
+                const blockTopRelativeToContainer = activeBlockEl.offsetTop;
+                const needlePos = blockTopRelativeToContainer + (activeBlockEl.offsetHeight * percent);
+
+                needle.style.top = `${needlePos}px`;
+                needle.style.display = 'block';
+
+                pill.style.top = `${needlePos}px`;
+                pill.style.display = 'block';
+
+                edgeGlow.className = '';
+
+                if (blockType === 'red') {
+                    needle.style.backgroundColor = '#ef4444';
+                    needle.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.6)';
+                    edgeGlow.classList.add('glow-red');
+                    activeBlockEl.classList.add('active-block-red');
+                    if (headerPulse) headerPulse.className = 'pulse-dot pulse-red';
+                } else if (blockType === 'amber') {
+                    needle.style.backgroundColor = '#f59e0b';
+                    needle.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.6)';
+                    edgeGlow.classList.add('glow-amber');
+                    activeBlockEl.classList.add('active-block-amber');
+                    if (headerPulse) headerPulse.className = 'pulse-dot pulse-amber';
+                } else {
+                    needle.style.backgroundColor = '#10b981';
+                    needle.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.6)';
+                    edgeGlow.classList.add('glow-green');
+                    activeBlockEl.classList.add('active-block-green');
+                    if (headerPulse) headerPulse.className = 'pulse-dot pulse-green';
+                }
+            } else if(needle && pill) {
+                needle.style.display = 'none';
+                pill.style.display = 'none';
+                if(edgeGlow) edgeGlow.className = '';
+                if(headerPulse) headerPulse.className = 'pulse-dot pulse-green';
+            }
+        }
+
+        function isCurrentTimeInBlock(current, start, end) {
+            const toMinutes = (str) => {
+                const [h, m] = str.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            const curr = toMinutes(current);
+            const s = toMinutes(start);
+            const e = toMinutes(end);
+
+            if (s > e) {
+                return curr >= s || curr < e;
+            }
+            return curr >= s && curr < e;
+        }
+
+        // Živá výroba fotovoltiky (dáta aktualizuje GitHub Action z Huawei FusionSolar kiosku, viď data/pv.json)
+        async function updatePvProduction() {
+            const powerEl = document.getElementById('pv-power');
+            const updatedEl = document.getElementById('pv-updated');
+            const dailyEl = document.getElementById('pv-daily');
+            if (!powerEl) return;
+
+            try {
+                const res = await fetch(`data/pv.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+
+                const power = Number(data.realTimePowerKw);
+                powerEl.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
+
+                if (Number.isFinite(Number(data.dailyEnergyKwh))) {
+                    dailyEl.innerText = `${Number(data.dailyEnergyKwh).toFixed(1)} kWh dnes`;
+                } else {
+                    dailyEl.innerText = '';
+                }
+
+                if (data.updatedAt) {
+                    const updated = new Date(data.updatedAt);
+                    const hh = updated.getHours().toString().padStart(2, '0');
+                    const mm = updated.getMinutes().toString().padStart(2, '0');
+                    updatedEl.innerText = `aktualizované ${hh}:${mm}`;
+                } else {
+                    updatedEl.innerText = '';
+                }
+            } catch (err) {
+                powerEl.innerText = '–';
+                updatedEl.innerText = 'dáta nedostupné';
+                dailyEl.innerText = '';
+            }
+        }
+    </script>
+</body>
+</html>
