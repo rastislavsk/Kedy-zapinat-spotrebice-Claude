@@ -1,0 +1,9 @@
+{
+  "realTimePowerKw": 3.66,
+  "dailyEnergyKwh": 19.46,
+  "monthEnergyKwh": 1264.43,
+  "yearEnergyKwh": 9399.12,
+  "cumulativeEnergyKwh": 26695.04,
+  "stationName": "RR PV kiosk",
+  "updatedAt": "2026-08-25T11:04:32.000Z"
+}
