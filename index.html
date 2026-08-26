@@ -77,13 +77,14 @@
         .time-pill {
             position: absolute;
             right: -16px; /* Umiestnené napravo mimo blok */
-            margin-top: -28px; /* Opticky nad čiarou */
+            margin-top: -38px; /* Opticky nad čiarou (dva riadky: čas + výkon FV) */
             z-index: 30; /* Nad blokmi */
             padding: 4px 10px;
             border-radius: 10px;
             font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.05em;
+            line-height: 1.3;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -243,14 +244,11 @@
         <!-- Timeline Grid -->
         <div class="space-y-3 relative" id="timeline-container">
 
-            <!-- Časová ihla a pilulka -->
+            <!-- Časová ihla a pilulka (čas + pod ním aktuálny výkon FV, pohybujú sa spolu) -->
             <div id="time-needle" class="bg-emerald-500 hidden"></div>
-            <div id="needle-pill" class="time-pill hidden">00:00</div>
-
-            <!-- Odznak živej výroby FV, JS ho presúva do práve aktívneho slotu -->
-            <div id="pv-slot-badge" class="absolute bottom-3 right-3 z-20 items-center gap-1 px-2 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg" style="display:none;">
-                <i data-lucide="sun-medium" class="w-3 h-3 text-emerald-400"></i>
-                <span id="pv-slot-value" class="text-[10px] font-extrabold text-white tracking-wide">– kW</span>
+            <div id="needle-pill" class="time-pill hidden flex-col items-end">
+                <span id="needle-pill-time">00:00</span>
+                <span id="needle-pill-pv" class="text-emerald-300 text-[10px] font-bold tracking-normal"></span>
             </div>
 
             <!-- NOC (23:30 - 07:30) -->
@@ -489,7 +487,6 @@
 
         let currentSeason = 'summer';
         let latestPvData = null;
-        let activePvBlockEl = null;
 
         function setSeason(season) {
             currentSeason = season;
@@ -524,7 +521,9 @@
 
             document.getElementById('current-time-display').innerText = currentTimeStr;
             const pill = document.getElementById('needle-pill');
-            if(pill) pill.innerText = currentTimeStr;
+            const pillTime = document.getElementById('needle-pill-time');
+            if (pillTime) pillTime.innerText = currentTimeStr;
+            updateNeedlePillPv();
 
             const timeBlocks = document.querySelectorAll('.time-block');
             const needle = document.getElementById('time-needle');
@@ -544,9 +543,6 @@
                     activeBlockEl = block;
                 }
             });
-
-            activePvBlockEl = activeBlockEl;
-            syncPvSlotBadge();
 
             if (activeBlockEl && needle && pill) {
                 let blockType = 'green';
@@ -579,7 +575,7 @@
                 needle.style.display = 'block';
 
                 pill.style.top = `${needlePos}px`;
-                pill.style.display = 'block';
+                pill.style.display = 'flex';
 
                 edgeGlow.className = '';
 
@@ -664,27 +660,16 @@
                 latestPvData = null;
             }
 
-            syncPvSlotBadge();
+            updateNeedlePillPv();
         }
 
-        // Presunie odznak s výkonom FV do aktuálne aktívneho časového slotu
-        function syncPvSlotBadge() {
-            const badge = document.getElementById('pv-slot-badge');
-            const valueEl = document.getElementById('pv-slot-value');
-            if (!badge || !valueEl) return;
+        // Zobrazí aktuálny výkon FV pod časom v pohyblivej pilulke
+        function updateNeedlePillPv() {
+            const pvEl = document.getElementById('needle-pill-pv');
+            if (!pvEl) return;
 
             const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
-
-            if (!activePvBlockEl || !Number.isFinite(power)) {
-                badge.style.display = 'none';
-                return;
-            }
-
-            if (badge.parentElement !== activePvBlockEl) {
-                activePvBlockEl.appendChild(badge);
-            }
-            valueEl.innerText = `${power.toFixed(2)} kW`;
-            badge.style.display = 'flex';
+            pvEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '';
         }
     </script>
 </body>
