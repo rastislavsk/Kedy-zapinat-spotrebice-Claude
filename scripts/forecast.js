@@ -130,6 +130,13 @@ function daypartFor(dateUtc) {
     return 'neskôr';
 }
 
+// Hodinové pole pre graf (predpoveď výroby): {hour, kw}, zoradené podľa hodiny.
+function hourlySeries(entries) {
+    return entries
+        .map((h) => ({ hour: localHour(h.dateUtc), kw: Number(h.acKw.toFixed(2)) }))
+        .sort((a, b) => a.hour - b.hour);
+}
+
 async function main() {
     const url = 'https://api.open-meteo.com/v1/forecast'
         + `?latitude=${LAT}&longitude=${LON}`
@@ -187,10 +194,11 @@ async function main() {
     }
 
     const tomorrowKey = localDateKey(new Date(now.getTime() + 24 * 3600 * 1000));
-    const tomorrowPeakKw = hourly
-        .filter((h) => h.localDate === tomorrowKey)
-        .reduce((max, h) => Math.max(max, h.acKw), 0);
+    const tomorrowEntries = hourly.filter((h) => h.localDate === tomorrowKey);
+    const tomorrowPeakKw = tomorrowEntries.reduce((max, h) => Math.max(max, h.acKw), 0);
     const tomorrowSunny = tomorrowPeakKw >= HIGH_KW;
+
+    const todayEntries = hourly.filter((h) => h.localDate === todayKey);
 
     const output = {
         strongerWindowAhead,
@@ -199,6 +207,8 @@ async function main() {
         hoursAhead,
         tomorrowSunny,
         tomorrowPeakKw: Number(tomorrowPeakKw.toFixed(2)),
+        hourlyToday: hourlySeries(todayEntries),
+        hourlyTomorrow: hourlySeries(tomorrowEntries),
         updatedAt: new Date().toISOString(),
     };
 
@@ -206,7 +216,11 @@ async function main() {
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, 'forecast.json'), `${JSON.stringify(output, null, 2)}\n`);
 
-    console.log('Saved data/forecast.json:', output);
+    console.log('Saved data/forecast.json:', {
+        ...output,
+        hourlyToday: `${output.hourlyToday.length} bodov`,
+        hourlyTomorrow: `${output.hourlyTomorrow.length} bodov`,
+    });
 }
 
 main().catch((err) => {
