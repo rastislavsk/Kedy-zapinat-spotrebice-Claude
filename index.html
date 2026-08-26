@@ -247,6 +247,12 @@
             <div id="time-needle" class="bg-emerald-500 hidden"></div>
             <div id="needle-pill" class="time-pill hidden">00:00</div>
 
+            <!-- Odznak živej výroby FV, JS ho presúva do práve aktívneho slotu -->
+            <div id="pv-slot-badge" class="absolute bottom-3 right-3 z-20 items-center gap-1 px-2 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 shadow-lg" style="display:none;">
+                <i data-lucide="sun-medium" class="w-3 h-3 text-emerald-400"></i>
+                <span id="pv-slot-value" class="text-[10px] font-extrabold text-white tracking-wide">– kW</span>
+            </div>
+
             <!-- NOC (23:30 - 07:30) -->
             <div data-start="23:30" data-end="07:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
                 <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
@@ -482,6 +488,8 @@
         });
 
         let currentSeason = 'summer';
+        let latestPvData = null;
+        let activePvBlockEl = null;
 
         function setSeason(season) {
             currentSeason = season;
@@ -536,6 +544,9 @@
                     activeBlockEl = block;
                 }
             });
+
+            activePvBlockEl = activeBlockEl;
+            syncPvSlotBadge();
 
             if (activeBlockEl && needle && pill) {
                 let blockType = 'green';
@@ -644,11 +655,36 @@
                 } else {
                     updatedEl.innerText = '';
                 }
+
+                latestPvData = data;
             } catch (err) {
                 powerEl.innerText = '–';
                 updatedEl.innerText = 'dáta nedostupné';
                 dailyEl.innerText = '';
+                latestPvData = null;
             }
+
+            syncPvSlotBadge();
+        }
+
+        // Presunie odznak s výkonom FV do aktuálne aktívneho časového slotu
+        function syncPvSlotBadge() {
+            const badge = document.getElementById('pv-slot-badge');
+            const valueEl = document.getElementById('pv-slot-value');
+            if (!badge || !valueEl) return;
+
+            const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+
+            if (!activePvBlockEl || !Number.isFinite(power)) {
+                badge.style.display = 'none';
+                return;
+            }
+
+            if (badge.parentElement !== activePvBlockEl) {
+                activePvBlockEl.appendChild(badge);
+            }
+            valueEl.innerText = `${power.toFixed(2)} kW`;
+            badge.style.display = 'flex';
         }
     </script>
 </body>
