@@ -259,9 +259,9 @@
                 <div class="flex-1">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
-                        <h3 class="text-sm font-bold text-white">Lacná sieť</h3>
+                        <h3 class="text-sm font-bold text-white">Lacný nočný prúd</h3>
                     </div>
-                    <p class="text-xs font-medium text-zinc-400">EV a bojler (nočný prúd)</p>
+                    <p class="text-xs font-medium text-zinc-400">Slnko nesvieti, no sieť je lacná. Vhodné na bojler a nabíjanie auta.</p>
                 </div>
                 <i data-lucide="moon" class="w-5 h-5 text-amber-500/50 mr-2"></i>
             </div>
@@ -286,10 +286,11 @@
                     <span class="text-xs font-bold text-white/50">08:30</span>
                 </div>
                 <div class="flex-1">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mb-1">
                         <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
                         <h3 class="text-sm font-bold text-zinc-300">Menšie spotrebiče</h3>
                     </div>
+                    <p class="text-xs font-medium text-zinc-400"></p>
                 </div>
             </div>
 
@@ -314,7 +315,7 @@
                     <div>
                         <div class="flex items-center gap-2 mb-1.5">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 neon-dot-green"></span>
-                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Zlaté okno</span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Ideálne okno</span>
                         </div>
                         <h3 class="text-2xl font-extrabold text-white">Púšťaj všetko!</h3>
                         <p class="text-sm font-medium text-emerald-100/70 mt-1">Silné slnko, plný výkon zadarmo</p>
@@ -419,10 +420,11 @@
                     <span class="text-xs font-bold text-white/50">20:30</span>
                 </div>
                 <div class="flex-1">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mb-1">
                         <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
                         <h3 class="text-sm font-bold text-zinc-300">Najdrahšia sieť</h3>
                     </div>
+                    <p class="text-xs font-medium text-zinc-400"></p>
                 </div>
             </div>
 
@@ -432,10 +434,11 @@
                     <span class="text-xs font-bold text-white/50">21:30</span>
                 </div>
                 <div class="flex-1">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mb-1">
                         <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
                         <h3 class="text-sm font-bold text-zinc-300">OK (Lacná)</h3>
                     </div>
+                    <p class="text-xs font-medium text-zinc-400"></p>
                 </div>
             </div>
 
@@ -445,10 +448,11 @@
                     <span class="text-xs font-bold text-white/50">22:30</span>
                 </div>
                 <div class="flex-1">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mb-1">
                         <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
                         <h3 class="text-sm font-bold text-zinc-300">Najdrahšia sieť</h3>
                     </div>
+                    <p class="text-xs font-medium text-zinc-400"></p>
                 </div>
             </div>
 
@@ -472,6 +476,8 @@
         lucide.createIcons();
 
         window.addEventListener('DOMContentLoaded', () => {
+            captureOriginalSlotTexts();
+
             const appUrl = "https://rastislavsk.github.io/Kedy-zapinat-spotrebice-Claude/";
 
             new QRCode(document.getElementById("qrcode"), {
@@ -487,11 +493,15 @@
             updateTimeAndHighlight();
             updatePvProduction();
             setInterval(updatePvProduction, 1000 * 60);
+            updateForecast();
+            setInterval(updateForecast, 1000 * 60 * 5);
         });
 
         let currentSeason = 'summer';
         let latestPvData = null;
+        let latestForecastData = null;
         let currentBlockType = null;
+        let originalSlotTexts = null;
 
         function setSeason(season) {
             currentSeason = season;
@@ -535,6 +545,8 @@
             const headerPulse = document.getElementById('header-pulse');
             let activeBlockEl = null;
 
+            restoreOriginalSlotTexts();
+
             timeBlocks.forEach(block => {
                 block.classList.remove('active-block', 'active-block-red', 'active-block-amber', 'active-block-green');
                 if (block.classList.contains('hidden')) return;
@@ -555,6 +567,13 @@
 
                 currentBlockType = blockType;
                 applyPvColors();
+
+                const isNightSlot = activeBlockEl.getAttribute('data-start') === '23:30';
+                if (!isNightSlot) {
+                    const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+                    const msg = getSlotMessage(blockType, power, latestForecastData);
+                    if (msg) applySlotMessage(activeBlockEl, msg);
+                }
 
                 const s = activeBlockEl.getAttribute('data-start');
                 const e = activeBlockEl.getAttribute('data-end');
@@ -663,6 +682,147 @@
             }
 
             applyPvColors();
+            updateTimeAndHighlight();
+        }
+
+        // Predpoveď na zvyšok dňa a na zajtra (dáta počíta GitHub Action zo scripts/forecast.js, viď data/forecast.json)
+        async function updateForecast() {
+            try {
+                const res = await fetch(`data/forecast.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                latestForecastData = await res.json();
+            } catch (err) {
+                latestForecastData = null;
+            }
+
+            updateTimeAndHighlight();
+        }
+
+        // Uloží pôvodný (statický) text každého slotu, aby sa dal po odchode z aktívneho stavu vrátiť späť
+        function captureOriginalSlotTexts() {
+            originalSlotTexts = new WeakMap();
+            document.querySelectorAll('.time-block').forEach(block => {
+                const h3 = block.querySelector('h3');
+                const p = block.querySelector('p');
+                originalSlotTexts.set(block, {
+                    h: h3 ? h3.textContent : '',
+                    p: p ? p.textContent : '',
+                });
+            });
+        }
+
+        function restoreOriginalSlotTexts() {
+            if (!originalSlotTexts) return;
+            document.querySelectorAll('.time-block').forEach(block => {
+                const saved = originalSlotTexts.get(block);
+                if (!saved) return;
+                const h3 = block.querySelector('h3');
+                const p = block.querySelector('p');
+                if (h3) h3.textContent = saved.h;
+                if (p) p.textContent = saved.p;
+            });
+        }
+
+        function applySlotMessage(block, msg) {
+            const h3 = block.querySelector('h3');
+            const p = block.querySelector('p');
+            if (h3) h3.textContent = msg.headline;
+            if (p) p.textContent = msg.body;
+        }
+
+        // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
+        function productionLevel(powerKw) {
+            if (!Number.isFinite(powerKw)) return null;
+            if (powerKw < 2) return 'niz';
+            if (powerKw < 4) return 'str';
+            return 'vys';
+        }
+
+        // Mriežka textov: sieť (red = drahá, amber = lacná, green = ideálne okno) × výroba (niz/str/vys).
+        // "override" nahradí základný text, keď zo SolarCastu vyplýva citeľne silnejšie slnko ešte dnes.
+        const SLOT_MESSAGES = {
+            red: {
+                niz: {
+                    h: 'Nezapínaj veľké spotrebiče',
+                    p: 'Slnko dnes už výraznejšie nepridá a elektrina je drahá. Práčku, sušičku ani nabíjanie auta teraz nespúšťaj.',
+                    override: {
+                        h: 'Počkaj na slnko',
+                        p: (d) => `Elektrina je teraz drahá a slnko ešte nepridáva. Silnejšie slnko príde ${d} — veľké spotrebiče si nechaj na vtedy.`,
+                    },
+                },
+                str: {
+                    h: 'Len menšie spotrebiče',
+                    p: 'Panely čiastočne pomáhajú, sieť je stále drahá. Rýchlovarná kanvica či nabíjačky sú v poriadku, veľké spotrebiče radšej nie.',
+                    override: {
+                        h: 'Počkaj, bude to lepšie',
+                        p: (d) => `Panely zatiaľ len pomáhajú, sieť je drahá. Silnejšie slnko a lacnejšia elektrina prídu ${d} — veľké spotrebiče si nechaj na vtedy.`,
+                    },
+                },
+                vys: {
+                    h: 'Môžeš zapnúť aj väčší spotrebič',
+                    p: 'Aj v drahej hodine dávajú panely slušný výkon. Jeden väčší spotrebič si môžeš dovoliť.',
+                },
+            },
+            amber: {
+                niz: {
+                    h: 'Malé spotrebiče áno, veľké tiež môžu',
+                    p: 'Sieť je lacná a slnko dnes už výraznejšie nepridá. Veľké spotrebiče môžeš pokojne zapnúť.',
+                    override: {
+                        h: 'Radšej počkaj na slnko',
+                        p: (d) => `Sieť je síce lacná, ale zadarmo elektrina zo slnka príde ${d}. Ak to nie je súrne, počkaj.`,
+                    },
+                },
+                str: {
+                    h: 'Dobrý čas na bežnú prevádzku',
+                    p: 'Slušná výroba aj lacná sieť — toto je dnes už asi najlepšie, čo bude. Práčka, umývačka aj iné bežné spotrebiče môžu ísť.',
+                    override: {
+                        h: 'Počkaj, ak to nie je súrne',
+                        p: (d) => `Teraz je to dobré, ale zadarmo elektrina zo slnka príde ${d}. Ak môžeš počkať, oplatí sa.`,
+                    },
+                },
+                vys: {
+                    h: 'Výborný čas na spotrebiče',
+                    p: 'Vysoká výroba a lacná sieť. Využi to na veľké spotrebiče vrátane nabíjania auta.',
+                },
+            },
+            green: {
+                niz: {
+                    h: 'Zváž, či nepočkať',
+                    p: (ctx) => ctx.tomorrowSunny
+                        ? 'Panely momentálne nedávajú veľa. Zajtra bude slnečno, tak to pokojne nechaj na zajtra.'
+                        : 'Panely momentálne nedávajú veľa. Zajtra podľa predpovede slnečno nebude, tak kľudne zapni, čo potrebuješ.',
+                },
+                str: {
+                    h: 'Dobrý čas, využi ho',
+                    p: 'Slnko aj cena hrajú v tvoj prospech. Zapni práčku, umývačku, čo potrebuješ.',
+                },
+                vys: {
+                    h: 'Najlepší čas dňa — zapni všetko',
+                    p: 'Plný výkon a nulová cena. Ideálny moment na práčku, sušičku aj nabíjanie auta.',
+                },
+            },
+        };
+
+        function getSlotMessage(tier, powerKw, forecast) {
+            const level = productionLevel(powerKw);
+            const group = SLOT_MESSAGES[tier];
+            if (!level || !group) return null;
+
+            const entry = group[level];
+            if (!entry) return null;
+
+            if (tier === 'green') {
+                const body = typeof entry.p === 'function'
+                    ? entry.p({ tomorrowSunny: !!(forecast && forecast.tomorrowSunny) })
+                    : entry.p;
+                return { headline: entry.h, body };
+            }
+
+            if (entry.override && forecast && forecast.strongerWindowAhead && forecast.windowDaypart) {
+                return { headline: entry.override.h, body: entry.override.p(forecast.windowDaypart) };
+            }
+
+            return { headline: entry.h, body: entry.p };
         }
 
         // Stav výkonu FV: zelená od 2 kW; pod 2 kW je to červená v 4 najdrahších
