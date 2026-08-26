@@ -164,6 +164,29 @@
         #edge-glow.glow-amber { animation: pulse-amber 4s ease-in-out infinite; }
         #edge-glow.glow-green { animation: pulse-green 5s ease-in-out infinite; }
 
+        /* Graf predpovede (2. záložka) */
+        .forecast-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(9, 9, 11, 0.92);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 7px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            transform: translate(-50%, -130%);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 10;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .forecast-tooltip .tt-time { color: #a1a1aa; font-weight: 600; font-size: 10px; }
+        .forecast-tooltip .tt-kw { color: #fff; font-size: 13px; }
+        .forecast-tooltip.visible { opacity: 1; }
+        .forecast-axis-label { font-size: 9px; fill: #71717a; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; }
+
         @media print {
             .print-hidden { display: none !important; }
             .bg-aurora { display: none !important; }
@@ -187,7 +210,7 @@
     <div class="max-w-md w-full px-4 pt-6 pb-24 relative z-10">
 
         <!-- Header -->
-        <div class="flex items-center justify-between mb-8 print-hidden">
+        <div class="flex items-center justify-between mb-6 print-hidden">
             <div>
                 <h1 class="text-3xl font-extrabold tracking-tight text-white mb-1">Energia</h1>
                 <div class="flex items-center gap-3">
@@ -200,6 +223,19 @@
                 </div>
             </div>
         </div>
+
+        <!-- Hlavné záložky appky -->
+        <div class="glass-card p-1.5 rounded-2xl flex w-full mb-6 relative print-hidden">
+            <button id="tab-spotrebice" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm" onclick="setTab('spotrebice')">
+                <i data-lucide="layout-list" class="w-4 h-4"></i> Spotrebiče
+            </button>
+            <button id="tab-predpoved" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300" onclick="setTab('predpoved')">
+                <i data-lucide="sun-medium" class="w-4 h-4"></i> Predpoveď
+            </button>
+        </div>
+
+        <!-- ZÁLOŽKA: SPOTREBIČE -->
+        <div id="panel-spotrebice">
 
         <!-- FOTOVOLTIKA - ŽIVÁ VÝROBA -->
         <div id="pv-card" class="glass-card p-5 rounded-3xl mb-6 relative overflow-hidden print-hidden">
@@ -470,6 +506,75 @@
             </a>
         </div>
 
+        </div>
+        <!-- /ZÁLOŽKA: SPOTREBIČE -->
+
+        <!-- ZÁLOŽKA: PREDPOVEĎ -->
+        <div id="panel-predpoved" class="hidden">
+
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h2 class="text-lg font-extrabold text-white mb-0.5">Predpoveď výroby</h2>
+                    <p class="text-xs font-semibold text-zinc-500">Dvorany nad Nitrou · 10,4 kWp</p>
+                </div>
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <i data-lucide="sun-medium" class="w-4 h-4 text-emerald-400"></i>
+                </div>
+            </div>
+
+            <div class="glass-card p-1.5 rounded-2xl flex w-full mb-4 relative">
+                <button id="day-btn-today" class="relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300" onclick="setForecastDay('today')">Dnes</button>
+                <button id="day-btn-tomorrow" class="relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300" onclick="setForecastDay('tomorrow')">Zajtra</button>
+            </div>
+
+            <div class="flex gap-3 mb-4">
+                <div class="glass-card p-3.5 rounded-2xl flex-1">
+                    <span class="block text-[9px] font-extrabold uppercase tracking-widest text-zinc-500 mb-1">Špička</span>
+                    <div class="text-lg font-extrabold text-white"><span id="forecast-peak">–</span> <span class="text-xs font-bold text-zinc-500">kW</span></div>
+                    <div class="text-[10px] font-semibold text-zinc-500 mt-0.5" id="forecast-peak-time">–</div>
+                </div>
+                <div class="glass-card p-3.5 rounded-2xl flex-1">
+                    <span class="block text-[9px] font-extrabold uppercase tracking-widest text-zinc-500 mb-1">Odhad výroby</span>
+                    <div class="text-lg font-extrabold text-white"><span id="forecast-total">–</span> <span class="text-xs font-bold text-zinc-500">kWh</span></div>
+                    <div class="text-[10px] font-semibold text-zinc-500 mt-0.5">za celý deň</div>
+                </div>
+            </div>
+
+            <div class="glass-card p-4 rounded-3xl mb-4 relative overflow-hidden">
+                <div class="absolute -top-8 -right-8 w-28 h-28 bg-emerald-400/10 blur-3xl rounded-full pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-2 relative z-10">
+                    <span class="text-[11px] font-bold text-zinc-500">Priebeh výroby (kW)</span>
+                    <span id="forecast-now-badge" class="hidden items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span id="forecast-now-time">teraz</span>
+                    </span>
+                </div>
+                <div class="relative z-10" id="forecast-chart-wrap">
+                    <svg id="forecast-chart" viewBox="0 0 320 150" preserveAspectRatio="none" class="w-full h-auto block"></svg>
+                    <div id="forecast-tooltip" class="forecast-tooltip"><div class="tt-time">--:--</div><div class="tt-kw">-- kW</div></div>
+                </div>
+                <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5 relative z-10">
+                    <div class="flex items-center gap-3 text-[10px] font-bold text-zinc-500">
+                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-emerald-500"></span>predpoveď</span>
+                        <span id="forecast-live-legend" class="hidden items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-white"></span>naživo</span>
+                    </div>
+                    <span class="text-[10px] font-semibold text-zinc-500">ťukni pre detail</span>
+                </div>
+            </div>
+
+            <div class="glass-panel-green p-4 rounded-3xl flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                    <i data-lucide="lightbulb" class="w-4 h-4 text-emerald-300"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-extrabold text-white mb-0.5" id="forecast-message-title">Načítavam…</h4>
+                    <p class="text-xs font-medium text-emerald-100/70" id="forecast-message-body">Predpoveď sa načítava.</p>
+                </div>
+            </div>
+
+        </div>
+        <!-- /ZÁLOŽKA: PREDPOVEĎ -->
+
     </div>
 
     <script>
@@ -477,6 +582,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             captureOriginalSlotTexts();
+            initForecastChartInteraction();
 
             const appUrl = "https://rastislavsk.github.io/Kedy-zapinat-spotrebice-Claude/";
 
@@ -489,6 +595,7 @@
                 correctLevel : QRCode.CorrectLevel.H
             });
 
+            setForecastDay('today');
             setInterval(updateTimeAndHighlight, 1000 * 30);
             updateTimeAndHighlight();
             updatePvProduction();
@@ -502,6 +609,8 @@
         let latestForecastData = null;
         let currentBlockType = null;
         let originalSlotTexts = null;
+        let currentForecastDay = 'today';
+        let forecastChartState = null;
 
         function setSeason(season) {
             currentSeason = season;
@@ -525,6 +634,30 @@
                 summerItems.forEach(el => el.classList.add('hidden'));
             }
             updateTimeAndHighlight();
+        }
+
+        // Prepínanie hlavných záložiek appky (Spotrebiče / Predpoveď)
+        function setTab(tab) {
+            const btnSpotrebice = document.getElementById('tab-spotrebice');
+            const btnPredpoved = document.getElementById('tab-predpoved');
+            const panelSpotrebice = document.getElementById('panel-spotrebice');
+            const panelPredpoved = document.getElementById('panel-predpoved');
+
+            const activeClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm';
+            const inactiveClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300';
+
+            if (tab === 'predpoved') {
+                btnPredpoved.className = activeClass;
+                btnSpotrebice.className = inactiveClass;
+                panelPredpoved.classList.remove('hidden');
+                panelSpotrebice.classList.add('hidden');
+                renderForecastChart();
+            } else {
+                btnSpotrebice.className = activeClass;
+                btnPredpoved.className = inactiveClass;
+                panelSpotrebice.classList.remove('hidden');
+                panelPredpoved.classList.add('hidden');
+            }
         }
 
         function updateTimeAndHighlight() {
@@ -683,6 +816,7 @@
 
             applyPvColors();
             updateTimeAndHighlight();
+            renderForecastChart();
         }
 
         // Predpoveď na zvyšok dňa a na zajtra (dáta počíta GitHub Action zo scripts/forecast.js, viď data/forecast.json)
@@ -696,6 +830,7 @@
             }
 
             updateTimeAndHighlight();
+            renderForecastChart();
         }
 
         // Uloží pôvodný (statický) text každého slotu, aby sa dal po odchode z aktívneho stavu vrátiť späť
@@ -862,6 +997,228 @@
                 edgeGlow.className = '';
                 if (status) edgeGlow.classList.add(`glow-${status}`);
             }
+        }
+
+        // ================= ZÁLOŽKA PREDPOVEĎ =================
+
+        // Prepínač Dnes / Zajtra nad grafom predpovede
+        function setForecastDay(day) {
+            currentForecastDay = day;
+            const btnToday = document.getElementById('day-btn-today');
+            const btnTomorrow = document.getElementById('day-btn-tomorrow');
+            const activeClass = 'relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-emerald-500/15 text-emerald-300';
+            const inactiveClass = 'relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-zinc-500 hover:text-zinc-300';
+
+            if (day === 'today') {
+                btnToday.className = activeClass;
+                btnTomorrow.className = inactiveClass;
+            } else {
+                btnTomorrow.className = activeClass;
+                btnToday.className = inactiveClass;
+            }
+            renderForecastChart();
+        }
+
+        function forecastXY(hour, kw, hMin, hMax, maxKw, dims) {
+            const x = dims.padL + ((hour - hMin) / (hMax - hMin || 1)) * (dims.w - dims.padL - dims.padR);
+            const y = dims.padT + (1 - kw / maxKw) * (dims.h - dims.padT - dims.padB);
+            return { x, y };
+        }
+
+        function forecastSmoothPath(pts, hMin, hMax, maxKw, dims) {
+            if (!pts.length) return '';
+            const first = forecastXY(pts[0].hour, pts[0].kw, hMin, hMax, maxKw, dims);
+            let d = `M ${first.x} ${first.y}`;
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = forecastXY(pts[i].hour, pts[i].kw, hMin, hMax, maxKw, dims);
+                const p1 = forecastXY(pts[i + 1].hour, pts[i + 1].kw, hMin, hMax, maxKw, dims);
+                const cx = (p0.x + p1.x) / 2;
+                d += ` C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`;
+            }
+            return d;
+        }
+
+        function forecastInterpolate(pts, hour) {
+            if (!pts.length) return 0;
+            if (hour <= pts[0].hour) return pts[0].kw;
+            if (hour >= pts[pts.length - 1].hour) return pts[pts.length - 1].kw;
+            for (let i = 0; i < pts.length - 1; i++) {
+                if (hour >= pts[i].hour && hour <= pts[i + 1].hour) {
+                    const t = (hour - pts[i].hour) / (pts[i + 1].hour - pts[i].hour);
+                    return pts[i].kw + (pts[i + 1].kw - pts[i].kw) * t;
+                }
+            }
+            return pts[pts.length - 1].kw;
+        }
+
+        // Jedna veta zhŕňajúca deň - rovnaký tón ako texty pri spotrebičoch
+        function forecastDayMessage(pts, isToday) {
+            const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0] || { hour: 0, kw: 0 });
+
+            if (peak.kw < 1.2) {
+                return isToday
+                    ? { title: 'Dnes bude slabo', body: 'Výroba bude celý deň nízka. Veľké spotrebiče si radšej naplánuj na iný deň.' }
+                    : { title: 'Zajtra bude slabšie', body: 'Predpoveď počíta s nízkou výrobou. Ak to nie je súrne, počkaj na slnečnejší deň.' };
+            }
+
+            const strongHours = pts.filter(p => p.kw >= peak.kw * 0.6).map(p => p.hour);
+            const rangeStart = Math.min(...strongHours);
+            const rangeEnd = Math.max(...strongHours) + 1;
+            const peakLabel = `${String(peak.hour).padStart(2, '0')}:00`;
+
+            if (isToday) {
+                return {
+                    title: `Najsilnejšie slnko okolo ${peakLabel}`,
+                    body: `Špička okolo ${peakLabel}. Veľké spotrebiče majú najviac zmysel medzi ${rangeStart}:00 a ${rangeEnd}:00.`,
+                };
+            }
+            return {
+                title: `Zajtra bude slnečno`,
+                body: `Špička okolo ${peakLabel} (~${peak.kw.toFixed(1)} kW). Veľké spotrebiče má zmysel naplánovať medzi ${rangeStart}:00 a ${rangeEnd}:00.`,
+            };
+        }
+
+        function renderForecastChart() {
+            const svg = document.getElementById('forecast-chart');
+            if (!svg) return;
+
+            const pts = latestForecastData
+                ? (currentForecastDay === 'today' ? latestForecastData.hourlyToday : latestForecastData.hourlyTomorrow)
+                : null;
+
+            const nowBadge = document.getElementById('forecast-now-badge');
+            const liveLegend = document.getElementById('forecast-live-legend');
+            const titleEl = document.getElementById('forecast-message-title');
+            const bodyEl = document.getElementById('forecast-message-body');
+
+            if (!pts || !pts.length) {
+                svg.innerHTML = '';
+                forecastChartState = null;
+                nowBadge.classList.add('hidden');
+                nowBadge.classList.remove('flex');
+                liveLegend.classList.add('hidden');
+                liveLegend.classList.remove('flex');
+                document.getElementById('forecast-peak').innerText = '–';
+                document.getElementById('forecast-peak-time').innerText = '–';
+                document.getElementById('forecast-total').innerText = '–';
+                titleEl.innerText = 'Predpoveď sa pripravuje';
+                bodyEl.innerText = 'Hodinové dáta zatiaľ nie sú k dispozícii, skús to o chvíľu.';
+                return;
+            }
+
+            const dims = { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22 };
+            const hMin = pts[0].hour;
+            const hMax = pts[pts.length - 1].hour;
+            const maxKw = Math.max(...pts.map(p => p.kw), 0.5) * 1.15;
+
+            const linePath = forecastSmoothPath(pts, hMin, hMax, maxKw, dims);
+            const lastXY = forecastXY(pts[pts.length - 1].hour, 0, hMin, hMax, maxKw, dims);
+            const firstXY = forecastXY(pts[0].hour, 0, hMin, hMax, maxKw, dims);
+            const areaPath = `${linePath} L ${lastXY.x} ${dims.h - dims.padB} L ${firstXY.x} ${dims.h - dims.padB} Z`;
+
+            let gridLines = '';
+            for (let h = hMin; h <= hMax; h++) {
+                if (h % 3 !== 0) continue;
+                const { x } = forecastXY(h, 0, hMin, hMax, maxKw, dims);
+                gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+                gridLines += `<text class="forecast-axis-label" x="${x}" y="${dims.h - 6}" text-anchor="middle">${h}:00</text>`;
+            }
+
+            let nowMarker = '';
+            let liveDot = '';
+            const now = new Date();
+            const nowHour = now.getHours() + now.getMinutes() / 60;
+
+            if (currentForecastDay === 'today') {
+                const clampedHour = Math.max(hMin, Math.min(hMax, nowHour));
+                const nowKw = forecastInterpolate(pts, clampedHour);
+                const { x: nowX, y: nowY } = forecastXY(clampedHour, nowKw, hMin, hMax, maxKw, dims);
+                nowMarker = `
+                    <line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+                    <circle cx="${nowX}" cy="${nowY}" r="4.5" fill="#10b981" stroke="#000" stroke-width="2"/>
+                    <circle cx="${nowX}" cy="${nowY}" r="9" fill="none" stroke="#10b981" stroke-width="1" opacity="0.4"/>
+                `;
+                nowBadge.classList.remove('hidden');
+                nowBadge.classList.add('flex');
+                document.getElementById('forecast-now-time').innerText = `teraz ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+                const livePower = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+                if (Number.isFinite(livePower) && nowHour >= hMin && nowHour <= hMax) {
+                    const liveMaxKw = Math.max(maxKw, livePower * 1.15);
+                    const { x: liveX, y: liveY } = forecastXY(nowHour, livePower, hMin, hMax, liveMaxKw, dims);
+                    liveDot = `<circle cx="${liveX}" cy="${liveY}" r="4" fill="#fff" stroke="#000" stroke-width="1.5"/>`;
+                    liveLegend.classList.remove('hidden');
+                    liveLegend.classList.add('flex');
+                } else {
+                    liveLegend.classList.add('hidden');
+                    liveLegend.classList.remove('flex');
+                }
+            } else {
+                nowBadge.classList.add('hidden');
+                nowBadge.classList.remove('flex');
+                liveLegend.classList.add('hidden');
+                liveLegend.classList.remove('flex');
+            }
+
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="forecastAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
+                        <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                ${gridLines}
+                <path d="${areaPath}" fill="url(#forecastAreaGrad)"/>
+                <path d="${linePath}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+                ${nowMarker}
+                ${liveDot}
+            `;
+
+            forecastChartState = { pts, hMin, hMax, maxKw, dims };
+
+            const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]);
+            const total = Math.round(pts.reduce((s, p) => s + p.kw, 0) * 10) / 10;
+            document.getElementById('forecast-peak').innerText = peak.kw.toFixed(1);
+            document.getElementById('forecast-peak-time').innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
+            document.getElementById('forecast-total').innerText = total;
+
+            const msg = forecastDayMessage(pts, currentForecastDay === 'today');
+            titleEl.innerText = msg.title;
+            bodyEl.innerText = msg.body;
+        }
+
+        // Ťuknutie/potiahnutie po grafe - tooltip s presnou hodnotou
+        function initForecastChartInteraction() {
+            const wrap = document.getElementById('forecast-chart-wrap');
+            const svg = document.getElementById('forecast-chart');
+            const tooltip = document.getElementById('forecast-tooltip');
+            if (!wrap || !svg || !tooltip) return;
+
+            function handlePointer(clientX) {
+                if (!forecastChartState) return;
+                const { pts, hMin, hMax, maxKw, dims } = forecastChartState;
+                const rect = svg.getBoundingClientRect();
+                const relX = clientX - rect.left;
+                const svgX = (relX / rect.width) * dims.w;
+                const hour = hMin + ((svgX - dims.padL) / (dims.w - dims.padL - dims.padR)) * (hMax - hMin);
+                const clampedHour = Math.max(hMin, Math.min(hMax, hour));
+                const kw = forecastInterpolate(pts, clampedHour);
+                const hh = Math.floor(clampedHour);
+                const mm = Math.round((clampedHour - hh) * 60);
+                const { y } = forecastXY(clampedHour, kw, hMin, hMax, maxKw, dims);
+
+                tooltip.querySelector('.tt-time').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+                tooltip.querySelector('.tt-kw').textContent = `${kw.toFixed(2)} kW`;
+                tooltip.style.left = `${relX}px`;
+                tooltip.style.top = `${(y / dims.h) * rect.height}px`;
+                tooltip.classList.add('visible');
+            }
+
+            wrap.addEventListener('mousemove', (e) => handlePointer(e.clientX));
+            wrap.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+            wrap.addEventListener('touchstart', (e) => handlePointer(e.touches[0].clientX), { passive: true });
+            wrap.addEventListener('touchmove', (e) => handlePointer(e.touches[0].clientX), { passive: true });
+            wrap.addEventListener('touchend', () => setTimeout(() => tooltip.classList.remove('visible'), 800));
         }
     </script>
 </body>
