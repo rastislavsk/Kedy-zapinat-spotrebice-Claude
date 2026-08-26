@@ -10,167 +10,341 @@
     <meta name="apple-mobile-web-app-title" content="Energia">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Energia">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#121212">
 
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'%3E%3Crect width='512' height='512' fill='%23000000' rx='115' /%3E%3Cpath d='M288 32L128 288h128v192l160-256H288V32z' fill='%2310b981' /%3E%3C/svg%3E">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'%3E%3Crect width='512' height='512' fill='%23000000' rx='115' /%3E%3Cpath d='M288 32L128 288h128v192l160-256H288V32z' fill='%2310b981' /%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'%3E%3Crect width='512' height='512' fill='%23121212' rx='115' /%3E%3Cpath d='M288 32L128 288h128v192l160-256H288V32z' fill='%2334d399' /%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'%3E%3Crect width='512' height='512' fill='%23121212' rx='115' /%3E%3Cpath d='M288 32L128 288h128v192l160-256H288V32z' fill='%2334d399' /%3E%3C/svg%3E">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        :root {
+            --bg: #121212;
+            --surface-0: #161616;
+            --surface-1: #1E1E1E;
+            --surface-2: #242424;
+            --surface-3: #2B2B2B;
+            --outline: rgba(255,255,255,0.10);
+            --outline-strong: rgba(255,255,255,0.18);
+            --on-surface: #ECECEC;
+            --on-surface-med: rgba(236,236,236,0.68);
+            --on-surface-dim: rgba(236,236,236,0.42);
+
+            --primary: #34D399;
+            --primary-strong: #6EE7B7;
+            --on-primary: #05170F;
+            --primary-container: rgba(52,211,153,0.16);
+            --primary-container-strong: rgba(52,211,153,0.28);
+
+            --amber: #FFB300;
+            --amber-strong: #FFCB66;
+            --amber-container: rgba(255,179,0,0.16);
+
+            --red: #FF5C5C;
+            --red-strong: #FF9C9C;
+            --red-container: rgba(255,92,92,0.16);
+
+            --shadow-1: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4);
+            --shadow-2: 0 3px 8px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #000000;
-            color: #fafafa;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            background: var(--bg);
+            color: var(--on-surface);
+            font-family: 'Roboto', -apple-system, Arial, sans-serif;
+            font-variant-numeric: tabular-nums;
         }
 
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .glass-card {
-            background: rgba(24, 24, 27, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .hidden { display: none !important; }
 
-        .time-block {
-            position: relative;
-            z-index: 10;
+        /* --- Top app bar --- */
+        .appbar {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: var(--bg);
         }
+        .appbar-inner {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 18px 20px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .appbar-title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+        .appbar-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface-2);
+            border-radius: 999px;
+            padding: 6px 12px 6px 9px;
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52,211,153,0.18);
+            transition: background-color 0.4s ease, box-shadow 0.4s ease;
+        }
+        .status-dot.status-red { background: var(--red); box-shadow: 0 0 0 3px rgba(255,92,92,0.18); }
+        .status-dot.status-amber { background: var(--amber); box-shadow: 0 0 0 3px rgba(255,179,0,0.18); }
+        .appbar-status span { font-size: 12px; font-weight: 700; color: var(--on-surface); }
 
-        /* Zvýraznenie aktívneho bloku */
-        .active-block {
-            background: rgba(255, 255, 255, 0.03);
-            z-index: 20;
-            transform: scale(1.02);
-            transition: all 0.5s ease;
-        }
-        .active-block-red {
-            border: 2px solid rgba(239, 68, 68, 0.6) !important;
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
-        }
-        .active-block-amber {
-            border: 2px solid rgba(245, 158, 11, 0.6) !important;
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.2);
-        }
-        .active-block-green {
-            border: 2px solid rgba(16, 185, 129, 0.6) !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
-        }
+        /* --- Page --- */
+        .page { max-width: 480px; margin: 0 auto; padding: 4px 20px 108px; }
 
-        /* Časová ihla a indikátor času */
-        #time-needle {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 2px;
-            z-index: 5; /* Pod blokmi */
-            pointer-events: none;
-            transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease;
-        }
-
-        .time-pill {
-            position: absolute;
-            right: -16px; /* Umiestnené napravo mimo blok */
-            margin-top: -38px; /* Opticky nad čiarou (dva riadky: čas + výkon FV) */
-            z-index: 30; /* Nad blokmi */
-            padding: 4px 10px;
-            border-radius: 10px;
+        .section-caption {
             font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            line-height: 1.3;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--on-surface-dim);
+            margin: 20px 4px 10px;
+        }
+        .legend-row {
+            display: flex;
+            gap: 18px;
+            margin: 0 4px 12px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--on-surface-dim); }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        /* --- Elevated Card: summary surfaces & interactive controls only --- */
+        .m-card {
+            background: var(--surface-1);
+            border-radius: 20px;
+            box-shadow: var(--shadow-1);
+            padding: 16px;
         }
 
-        @keyframes pulse-ring {
-            0% { transform: scale(.33); opacity: 1; }
-            80%, 100% { opacity: 0; }
+        /* PV production card */
+        .pv-card { display: flex; align-items: center; gap: 14px; margin: 8px 0 20px; }
+        .pv-icon {
+            width: 46px; height: 46px; border-radius: 14px;
+            background: var(--primary-container);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
-        .pulse-dot {
+        .pv-icon svg { width: 22px; height: 22px; }
+        .pv-body { flex: 1; min-width: 0; }
+        .pv-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--on-surface-dim); }
+        .pv-value { display: flex; align-items: baseline; gap: 5px; margin-top: 2px; }
+        .pv-value .num { font-size: 26px; font-weight: 700; color: var(--primary-strong); transition: color 0.4s ease; }
+        .pv-value .unit { font-size: 13px; font-weight: 500; color: var(--on-surface-dim); }
+        .pv-side { text-align: right; flex-shrink: 0; }
+        .pv-side .time { font-size: 10.5px; font-weight: 700; color: var(--on-surface-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+        .pv-side .kwh { font-size: 12.5px; font-weight: 700; color: var(--primary-strong); margin-top: 3px; }
+
+        /* Segmented button (Material 3 style toggle) */
+        .segmented {
+            display: flex;
+            background: var(--surface-1);
+            border: 1px solid var(--outline-strong);
+            border-radius: 999px;
+            padding: 4px;
+            gap: 4px;
+            margin-bottom: 18px;
+        }
+        .segmented button {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--on-surface-med);
+            font-family: 'Roboto', sans-serif;
+            font-size: 13.5px;
+            font-weight: 700;
+            padding: 11px 8px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        .segmented button.active {
+            background: var(--primary-container-strong);
+            color: var(--primary-strong);
+            box-shadow: inset 0 0 0 1px rgba(52,211,153,0.4);
+        }
+        .segmented svg { width: 16px; height: 16px; }
+
+        /* --- List rows: flat, low elevation, deliberately NOT a big card --- */
+        .list { display: flex; flex-direction: column; gap: 6px; }
+        .row {
             position: relative;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: background-color 0.5s ease;
+            background: var(--surface-0);
+            border: 1px solid var(--outline);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: background-color 0.4s ease, border-radius 0.3s ease, box-shadow 0.3s ease;
         }
-        .pulse-dot::after {
+        .row::before {
             content: '';
             position: absolute;
-            top: -12px; left: -12px; bottom: -12px; right: -12px;
-            border-radius: 50%;
-            border: 2px solid;
-            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-            transition: border-color 0.5s ease;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
         }
+        .row[data-status="red"]::before { background: var(--red); }
+        .row[data-status="amber"]::before { background: var(--amber); }
+        .row[data-status="green"]::before { background: var(--primary); }
 
-        /* Dynamické farby pre pulzujúci bod */
-        .pulse-green { background-color: #10b981; }
-        .pulse-green::after { border-color: #10b981; }
-        .pulse-amber { background-color: #f59e0b; }
-        .pulse-amber::after { border-color: #f59e0b; }
-        .pulse-red { background-color: #ef4444; }
-        .pulse-red::after { border-color: #ef4444; }
-
-        .glass-panel-green {
-            background: linear-gradient(145deg, rgba(6, 78, 59, 0.6) 0%, rgba(2, 44, 34, 0.3) 100%);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.1);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        .row-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 14px;
         }
-
-        .neon-dot-red { box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.6); }
-        .neon-dot-amber { box-shadow: 0 0 12px 2px rgba(245, 158, 11, 0.6); }
-        .neon-dot-green { box-shadow: 0 0 12px 2px rgba(16, 185, 129, 0.6); }
-
-        #qrcode img, #qrcode canvas { width: 100% !important; height: auto !important; display: block; margin: 0 auto; border-radius: 12px;}
-
-        /* Edge Glow animácie pre 3 farby */
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: inset 0 0 30px 10px rgba(239, 68, 68, 0.15); }
-            50% { box-shadow: inset 0 0 80px 25px rgba(239, 68, 68, 0.45); }
+        .row-time {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--on-surface);
+            width: 40px;
+            flex-shrink: 0;
+            padding-left: 6px;
         }
-        @keyframes pulse-amber {
-            0%, 100% { box-shadow: inset 0 0 30px 10px rgba(245, 158, 11, 0.15); }
-            50% { box-shadow: inset 0 0 80px 25px rgba(245, 158, 11, 0.45); }
-        }
-        @keyframes pulse-green {
-            0%, 100% { box-shadow: inset 0 0 30px 10px rgba(16, 185, 129, 0.15); }
-            50% { box-shadow: inset 0 0 80px 25px rgba(16, 185, 129, 0.45); }
-        }
+        .row-body { flex: 1; min-width: 0; }
+        .row-title { font-size: 13.5px; font-weight: 500; color: var(--on-surface); line-height: 1.3; }
+        .row-sub { font-size: 11.5px; color: var(--on-surface-dim); margin-top: 1px; line-height: 1.3; }
+        .row-sub:empty { display: none; }
 
-        #edge-glow {
+        .chip {
+            flex-shrink: 0;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            padding: 4px 9px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        .chip-red { background: var(--red-container); color: var(--red-strong); }
+        .chip-amber { background: var(--amber-container); color: var(--amber-strong); }
+        .chip-green { background: var(--primary-container); color: var(--primary-strong); }
+
+        /* --- Row promoted to "now" card when active --- */
+        .row-now-content { display: none; padding: 16px; position: relative; overflow: hidden; }
+        .row.is-now {
+            background: var(--surface-2);
+            border-color: transparent;
+            border-radius: 20px;
+            box-shadow: var(--shadow-2), 0 0 0 1px rgba(52,211,153,0.35);
+        }
+        .row.is-now::before { display: none; }
+        .row.is-now .row-compact { display: none; }
+        .row.is-now .row-now-content { display: block; }
+
+        .now-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary);
+            color: var(--on-primary);
+            font-size: 10.5px;
+            font-weight: 900;
+            letter-spacing: 0.07em;
+            padding: 5px 10px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+        }
+        .now-badge .now-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--on-primary); }
+        .now-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .now-title { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+        .now-sub { font-size: 12.5px; color: var(--on-surface-med); margin: 0; line-height: 1.4; }
+        .now-time-block { text-align: right; flex-shrink: 0; }
+        .now-clock { font-size: 21px; font-weight: 900; }
+        .now-pv-value { font-size: 12.5px; font-weight: 700; color: var(--primary-strong); margin-top: 2px; }
+
+        .now-chips { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+        .device-chip {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface-3);
+            border: 1px solid var(--outline-strong);
+            border-radius: 12px;
+            padding: 7px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--on-surface-med);
+        }
+        .device-chip svg { width: 13px; height: 13px; }
+        .device-chip.highlight { border-color: rgba(52,211,153,0.5); color: var(--primary-strong); background: rgba(52,211,153,0.1); }
+
+        /* --- Bottom navigation --- */
+        .bottomnav {
             position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 100;
-            transition: box-shadow 1s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: inset 0 0 0px rgba(0, 0, 0, 0);
+            left: 0; right: 0; bottom: 0;
+            z-index: 30;
+            background: var(--surface-1);
+            border-top: 1px solid var(--outline);
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.35);
         }
-        #edge-glow.glow-red { animation: pulse-red 3s ease-in-out infinite; }
-        #edge-glow.glow-amber { animation: pulse-amber 4s ease-in-out infinite; }
-        #edge-glow.glow-green { animation: pulse-green 5s ease-in-out infinite; }
+        .bottomnav-inner {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 0 4px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--on-surface-dim);
+            font-family: 'Roboto', sans-serif;
+        }
+        .nav-icon-wrap {
+            width: 52px;
+            height: 28px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .nav-item.active .nav-icon-wrap { background: var(--primary-container-strong); }
+        .nav-item.active { color: var(--primary-strong); }
+        .nav-item svg { width: 21px; height: 21px; }
+        .nav-item span { font-size: 10.5px; font-weight: 700; }
 
-        /* Graf predpovede (2. záložka) */
+        /* --- Predpoveď panel --- */
+        .stat-row { display: flex; gap: 10px; margin-bottom: 4px; }
+        .stat-card { flex: 1; }
+        .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--on-surface-dim); display: block; margin-bottom: 5px; }
+        .stat-value { font-size: 20px; font-weight: 700; }
+        .stat-value span { font-size: 12px; font-weight: 500; color: var(--on-surface-dim); }
+        .stat-sub { font-size: 10.5px; color: var(--on-surface-dim); font-weight: 500; margin-top: 2px; }
+
+        .chart-card { margin: 16px 0; position: relative; overflow: hidden; }
+        .chart-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .chart-top .lbl { font-size: 11.5px; font-weight: 700; color: var(--on-surface-med); }
+        #forecast-now-badge { margin: 0; padding: 4px 9px; font-size: 9.5px; }
+        .chart-wrap { position: relative; touch-action: none; }
+        svg#forecast-chart { width: 100%; height: auto; display: block; }
+        .axis-label { font-size: 9px; fill: var(--on-surface-dim); font-weight: 700; font-family: 'Roboto', sans-serif; }
+        .chart-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--outline); }
+        .chart-legend { display: flex; gap: 12px; font-size: 10.5px; font-weight: 700; color: var(--on-surface-dim); }
+        .chart-legend span { display: flex; align-items: center; gap: 5px; }
+        .legend-swatch { width: 9px; height: 9px; border-radius: 3px; }
+
         .forecast-tooltip {
             position: absolute;
             pointer-events: none;
-            background: rgba(9, 9, 11, 0.92);
-            border: 1px solid rgba(255,255,255,0.12);
-            backdrop-filter: blur(10px);
+            background: rgba(9,9,11,0.94);
+            border: 1px solid var(--outline-strong);
             border-radius: 12px;
             padding: 7px 10px;
             font-size: 11px;
@@ -182,406 +356,508 @@
             z-index: 10;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
-        .forecast-tooltip .tt-time { color: #a1a1aa; font-weight: 600; font-size: 10px; }
+        .forecast-tooltip .tt-time { color: var(--on-surface-dim); font-weight: 600; font-size: 10px; }
         .forecast-tooltip .tt-kw { color: #fff; font-size: 13px; }
         .forecast-tooltip.visible { opacity: 1; }
-        .forecast-axis-label { font-size: 9px; fill: #71717a; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .day-message {
+            background: var(--primary-container);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-top: 4px;
+        }
+        .day-message .icon { width: 32px; height: 32px; border-radius: 11px; background: rgba(52,211,153,0.22); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .day-message .icon svg { width: 15px; height: 15px; }
+        .day-message h4 { margin: 0 0 3px; font-size: 13px; font-weight: 700; color: var(--primary-strong); }
+        .day-message p { margin: 0; font-size: 11.5px; color: rgba(230,255,244,0.8); font-weight: 500; line-height: 1.45; }
+
+        /* --- Zdieľať panel --- */
+        .share-heading { text-align: center; margin: 20px 0 22px; }
+        .share-heading .t { font-size: 16px; font-weight: 700; }
+        .share-heading .s { font-size: 11.5px; color: var(--on-surface-dim); font-weight: 500; margin-top: 3px; }
+        .share-card { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 28px 20px; }
+        .qr-box { width: 168px; height: 168px; background: #fff; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 12px; }
+        .qr-box canvas, .qr-box img { width: 100% !important; height: 100% !important; }
+        .qr-hint { font-size: 11px; color: var(--on-surface-dim); font-weight: 600; text-align: center; }
+        .m-btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            text-decoration: none;
+        }
+        .m-btn-filled { background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-1); }
+        .m-btn svg { width: 16px; height: 16px; }
 
         @media print {
-            .print-hidden { display: none !important; }
-            .bg-aurora { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .glass-card, .glass-panel-green { background: white !important; border: 2px solid #e4e4e7 !important; color: black !important; box-shadow: none !important; backdrop-filter: none !important; transform: none !important; }
-            .text-zinc-400, .text-zinc-500 { color: #52525b !important; }
-            .text-white, .text-zinc-100 { color: black !important; }
+            .bottomnav, .appbar-status, .pv-card, .segmented, .legend-row, #panel-predpoved, #panel-zdielat { display: none !important; }
+            body { background: #fff; color: #000; }
+            .row { background: #fff; border: 1px solid #ddd; color: #000; }
+            .row-sub, .row-time { color: #333; }
         }
     </style>
 </head>
-<body class="flex justify-center min-h-screen items-start relative overflow-x-hidden">
+<body>
 
-    <div id="edge-glow"></div>
-
-    <!-- Ambient Aurora Background -->
-    <div class="bg-aurora fixed inset-0 z-0 pointer-events-none opacity-40">
-        <div class="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-emerald-900/30 blur-[120px] mix-blend-screen"></div>
-        <div class="absolute top-[40%] right-[-20%] w-[60vw] h-[60vw] rounded-full bg-blue-900/20 blur-[100px] mix-blend-screen"></div>
+    <div class="appbar">
+        <div class="appbar-inner">
+            <span class="appbar-title">Energia</span>
+            <div class="appbar-status">
+                <span id="header-status-dot" class="status-dot"></span>
+                <span id="current-time-display">00:00</span>
+            </div>
+        </div>
     </div>
 
-    <div class="max-w-md w-full px-4 pt-6 pb-24 relative z-10">
+    <div class="page">
 
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6 print-hidden">
-            <div>
-                <h1 class="text-3xl font-extrabold tracking-tight text-white mb-1">Energia</h1>
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Smart Home</span>
-                    <span class="text-zinc-700">|</span>
-                    <div class="flex items-center gap-2.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
-                        <div id="header-pulse" class="pulse-dot pulse-green"></div>
-                        <span id="current-time-display" class="text-xs font-bold text-white tracking-widest">00:00</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hlavné záložky appky -->
-        <div class="glass-card p-1.5 rounded-2xl flex w-full mb-6 relative print-hidden">
-            <button id="tab-spotrebice" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm" onclick="setTab('spotrebice')">
-                <i data-lucide="layout-list" class="w-4 h-4"></i> Spotrebiče
-            </button>
-            <button id="tab-predpoved" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300" onclick="setTab('predpoved')">
-                <i data-lucide="sun-medium" class="w-4 h-4"></i> Predpoveď
-            </button>
-        </div>
-
-        <!-- ZÁLOŽKA: SPOTREBIČE -->
+        <!-- PANEL: SPOTREBIČE -->
         <div id="panel-spotrebice">
 
-        <!-- FOTOVOLTIKA - ŽIVÁ VÝROBA -->
-        <div id="pv-card" class="glass-card p-5 rounded-3xl mb-6 relative overflow-hidden print-hidden">
-            <div class="absolute -top-8 -right-8 w-32 h-32 bg-emerald-400/10 blur-3xl rounded-full"></div>
-            <div class="flex items-center justify-between relative z-10 gap-3">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <i data-lucide="sun-medium" class="w-5 h-5 text-emerald-400"></i>
+            <div id="pv-card" class="m-card pv-card">
+                <div class="pv-icon">
+                    <i data-lucide="sun-medium" style="color:#34D399;width:22px;height:22px;"></i>
+                </div>
+                <div class="pv-body">
+                    <span class="pv-label">Výroba fotovoltiky</span>
+                    <div class="pv-value">
+                        <span id="pv-power" class="num">–</span>
+                        <span class="unit">kW</span>
                     </div>
-                    <div class="min-w-0">
-                        <span class="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Výroba fotovoltiky</span>
-                        <div class="flex items-baseline gap-1.5">
-                            <span id="pv-power" class="text-2xl font-extrabold text-white">–</span>
-                            <span class="text-sm font-bold text-zinc-500">kW</span>
+                </div>
+                <div class="pv-side">
+                    <span id="pv-updated" class="time">načítavam…</span>
+                    <div id="pv-daily" class="kwh">– kWh dnes</div>
+                </div>
+            </div>
+
+            <div class="segmented">
+                <button id="btn-summer" class="active" onclick="setSeason('summer')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                    Leto
+                </button>
+                <button id="btn-winter" onclick="setSeason('winter')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.2 6l15.6 12M19.8 6L4.2 18"/></svg>
+                    Zima
+                </button>
+            </div>
+
+            <div class="legend-row">
+                <div class="legend-item"><span class="legend-dot" style="background:#34D399"></span>Zadarmo</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FFB300"></span>Lacná</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#FF5C5C"></span>Drahá</div>
+            </div>
+
+            <div class="list" id="timeline-container">
+
+                <!-- NOC (23:30 - 07:30) -->
+                <div class="row" data-start="23:30" data-end="07:30" data-status="amber">
+                    <div class="row-compact">
+                        <span class="row-time">23:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Lacný nočný prúd</div>
+                            <div class="row-sub">Slnko nesvieti, no sieť je lacná</div>
+                        </div>
+                        <span class="chip chip-amber">Lacná</span>
+                    </div>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Lacný nočný prúd</h3>
+                                <p class="now-sub">Slnko nesvieti, no sieť je lacná. Vhodné na bojler a nabíjanie auta.</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="text-right shrink-0">
-                    <span id="pv-updated" class="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">načítavam…</span>
-                    <span id="pv-daily" class="block text-xs font-bold text-emerald-400 mt-1">– kWh dnes</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Ultra-modern Segmented Control -->
-        <div class="glass-card p-1.5 rounded-2xl flex w-full mb-8 relative print-hidden">
-            <button id="btn-summer" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm" onclick="setSeason('summer')">
-                <i data-lucide="sun" class="w-4 h-4 text-amber-400"></i> Leto
-            </button>
-            <button id="btn-winter" class="relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300" onclick="setSeason('winter')">
-                <i data-lucide="snowflake" class="w-4 h-4"></i> Zima
-            </button>
-        </div>
-
-        <!-- Legend -->
-        <div class="flex justify-between items-center px-2 mb-4 text-[11px] font-bold uppercase tracking-widest text-zinc-500 print-text">
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 neon-dot-green"></span> Zadarmo</div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 neon-dot-amber"></span> Lacná</div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 neon-dot-red"></span> Drahá</div>
-        </div>
-
-        <!-- Timeline Grid -->
-        <div class="space-y-3 relative" id="timeline-container">
-
-            <!-- Časová ihla a pilulka (čas + pod ním aktuálny výkon FV, pohybujú sa spolu) -->
-            <div id="time-needle" class="bg-emerald-500 hidden"></div>
-            <div id="needle-pill" class="time-pill hidden flex-col items-end">
-                <span id="needle-pill-time">00:00</span>
-                <span id="needle-pill-pv" class="text-[10px] font-bold tracking-normal"></span>
-            </div>
-
-            <!-- NOC (23:30 - 07:30) -->
-            <div data-start="23:30" data-end="07:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-sm font-bold text-white">23:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
-                        <h3 class="text-sm font-bold text-white">Lacný nočný prúd</h3>
-                    </div>
-                    <p class="text-xs font-medium text-zinc-400">Slnko nesvieti, no sieť je lacná. Vhodné na bojler a nabíjanie auta.</p>
-                </div>
-                <i data-lucide="moon" class="w-5 h-5 text-amber-500/50 mr-2"></i>
-            </div>
-
-            <!-- RÁNO VT 1 (07:30 - 08:30) -->
-            <div data-start="07:30" data-end="08:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-sm font-bold text-white">07:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
-                        <h3 class="text-sm font-bold text-white">Najdrahšia sieť</h3>
-                    </div>
-                    <p class="text-xs font-medium text-zinc-400">Nezapínať veľké spotrebiče</p>
-                </div>
-            </div>
-
-            <!-- OKNO (08:30 - 09:30) -->
-            <div data-start="08:30" data-end="09:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
-                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-xs font-bold text-white/50">08:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
-                        <h3 class="text-sm font-bold text-zinc-300">Menšie spotrebiče</h3>
-                    </div>
-                    <p class="text-xs font-medium text-zinc-400"></p>
-                </div>
-            </div>
-
-             <!-- DOOBEDIE VT 2 (09:30 - 10:30) -->
-             <div data-start="09:30" data-end="10:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-sm font-bold text-white">09:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
-                        <h3 class="text-sm font-bold text-white">Najdrahšia sieť</h3>
-                    </div>
-                    <p class="text-xs font-medium text-zinc-400">Ešte chvíľu vydržať</p>
-                </div>
-            </div>
-
-            <!-- HLAVNÝ ZELENÝ PANEL (DYNAMICKÝ) -->
-            <div id="summer-day" data-start="10:30" data-end="17:30" class="season-summer time-block glass-panel-green p-6 rounded-[32px] my-4 relative overflow-hidden transition-all duration-500 flex flex-col gap-5">
-                <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-400/20 blur-3xl rounded-full print-hidden"></div>
-                <div class="flex justify-between items-start relative z-10">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 neon-dot-green"></span>
-                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Ideálne okno</span>
+                <!-- RÁNO VT 1 (07:30 - 08:30) -->
+                <div class="row" data-start="07:30" data-end="08:30" data-status="red">
+                    <div class="row-compact">
+                        <span class="row-time">07:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Najdrahšia sieť</div>
+                            <div class="row-sub">Nezapínať veľké spotrebiče</div>
                         </div>
-                        <h3 class="text-2xl font-extrabold text-white">Púšťaj všetko!</h3>
-                        <p class="text-sm font-medium text-emerald-100/70 mt-1">Silné slnko, plný výkon zadarmo</p>
+                        <span class="chip chip-red">Drahá</span>
                     </div>
-                    <div class="text-right">
-                    <span class="block text-2xl font-black text-white">10:30</span>
-                    <span class="block text-xs font-bold text-emerald-400/70 uppercase tracking-widest mt-1">do 14:30</span>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap gap-3 relative z-10">
-                <div class="flex flex-col items-center gap-1">
-                    <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="washing-machine" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.2 kW</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="shirt" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.0 kW</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="utensils-crossed" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">1.8 kW</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-400 shadow-lg shadow-emerald-500/20 flex items-center justify-center backdrop-blur-md relative">
-                            <i data-lucide="car-front" class="w-5 h-5 text-white fill-emerald-400/20"></i>
-                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-emerald-900 shadow-sm"></div>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Najdrahšia sieť</h3>
+                                <p class="now-sub">Nezapínať veľké spotrebiče</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
                         </div>
-                        <span class="text-[9px] font-extrabold text-white tracking-tighter uppercase bg-emerald-600 px-1.5 py-0.5 rounded shadow-sm">11 kW</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="droplets" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.0 kW</span>
                     </div>
                 </div>
-            </div>
 
-            <div id="winter-day" data-start="10:30" data-end="14:30" class="season-winter time-block hidden glass-panel-green p-6 rounded-[32px] my-4 relative overflow-hidden transition-all duration-500 flex flex-col gap-5">
-                <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-400/20 blur-3xl rounded-full print-hidden"></div>
-                <div class="flex justify-between items-start relative z-10">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 neon-dot-green"></span>
-                            <span class="text-xs font-bold uppercase tracking-widest text-emerald-400">Krátke okno</span>
+                <!-- OKNO (08:30 - 09:30) -->
+                <div class="row" data-start="08:30" data-end="09:30" data-status="amber">
+                    <div class="row-compact">
+                        <span class="row-time">08:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Menšie spotrebiče</div>
+                            <div class="row-sub"></div>
                         </div>
-                        <h3 class="text-2xl font-extrabold text-white">Opatrne</h3>
-                        <p class="text-sm font-medium text-emerald-100/70 mt-1">Nepúšťať všetko naraz</p>
+                        <span class="chip chip-amber">Lacná</span>
                     </div>
-                    <div class="text-right">
-                        <span class="block text-2xl font-black text-white">10:30</span>
-                        <span class="block text-xs font-bold text-emerald-400/70 uppercase tracking-widest mt-1">do 14:30</span>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Menšie spotrebiče</h3>
+                                <p class="now-sub"></p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-3 relative z-10">
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="washing-machine" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.2 kW</span>
+                <!-- DOOBEDIE VT 2 (09:30 - 10:30) -->
+                <div class="row" data-start="09:30" data-end="10:30" data-status="red">
+                    <div class="row-compact">
+                        <span class="row-time">09:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Najdrahšia sieť</div>
+                            <div class="row-sub">Ešte chvíľu vydržať</div>
+                        </div>
+                        <span class="chip chip-red">Drahá</span>
                     </div>
-                    <div class="flex flex-col items-center gap-1 text-center">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-400 flex items-center justify-center backdrop-blur-md"><i data-lucide="car-front" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">11 kW</span>
-                    </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center backdrop-blur-md"><i data-lucide="droplets" class="w-5 h-5 text-emerald-300"></i></div>
-                        <span class="text-[9px] font-bold text-emerald-200/80 tracking-tighter uppercase">2.0 kW</span>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Najdrahšia sieť</h3>
+                                <p class="now-sub">Ešte chvíľu vydržať</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- PODVEČER -->
-            <div id="summer-evening" data-start="17:30" data-end="20:30" class="season-summer time-block glass-card p-4 rounded-3xl flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-sm font-bold text-white">17:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
-                        <h3 class="text-sm font-bold text-white">Bežná prevádzka</h3>
+                <!-- HLAVNÝ PANEL LETO (10:30 - 17:30) -->
+                <div id="summer-day" class="row season-summer" data-start="10:30" data-end="17:30" data-status="green">
+                    <div class="row-compact">
+                        <span class="row-time">10:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Ideálne okno</div>
+                            <div class="row-sub">Silné slnko, plný výkon zadarmo</div>
+                        </div>
+                        <span class="chip chip-green">Zadarmo</span>
                     </div>
-                    <p class="text-xs font-medium text-zinc-400">Slnko klesá, už iba malé spotrebiče</p>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Ideálne okno</h3>
+                                <p class="now-sub">Silné slnko, plný výkon zadarmo. Zapni práčku, umývačku, čo potrebuješ.</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                        <div class="now-chips">
+                            <div class="device-chip highlight"><i data-lucide="washing-machine"></i>Práčka · 2.2 kW</div>
+                            <div class="device-chip highlight"><i data-lucide="shirt"></i>Sušička · 2.0 kW</div>
+                            <div class="device-chip"><i data-lucide="utensils-crossed"></i>Umývačka · 1.8 kW</div>
+                            <div class="device-chip"><i data-lucide="car-front"></i>Auto · 11 kW</div>
+                            <div class="device-chip"><i data-lucide="droplets"></i>Bojler · 2.0 kW</div>
+                        </div>
+                    </div>
                 </div>
-                <i data-lucide="sunset" class="w-5 h-5 text-amber-500/50 mr-2"></i>
-            </div>
 
-            <div id="winter-evening" data-start="14:30" data-end="20:30" class="season-winter time-block hidden glass-card p-4 rounded-3xl flex items-center gap-4 group">
-                <div class="w-14 h-14 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-sm font-bold text-white">14:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
-                        <h3 class="text-sm font-bold text-white">Skorá tma</h3>
+                <!-- HLAVNÝ PANEL ZIMA (10:30 - 14:30) -->
+                <div id="winter-day" class="row season-winter hidden" data-start="10:30" data-end="14:30" data-status="green">
+                    <div class="row-compact">
+                        <span class="row-time">10:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Krátke okno</div>
+                            <div class="row-sub">Nepúšťať všetko naraz</div>
+                        </div>
+                        <span class="chip chip-green">Zadarmo</span>
                     </div>
-                    <p class="text-xs font-medium text-zinc-400">Lacná sieť bez slnka</p>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Krátke okno</h3>
+                                <p class="now-sub">Opatrne — nepúšťať všetko naraz.</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                        <div class="now-chips">
+                            <div class="device-chip highlight"><i data-lucide="washing-machine"></i>Práčka · 2.2 kW</div>
+                            <div class="device-chip"><i data-lucide="car-front"></i>Auto · 11 kW</div>
+                            <div class="device-chip"><i data-lucide="droplets"></i>Bojler · 2.0 kW</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- VEČER VT 3 -->
-            <div data-start="20:30" data-end="21:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
-                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-xs font-bold text-white/50">20:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
-                        <h3 class="text-sm font-bold text-zinc-300">Najdrahšia sieť</h3>
+                <!-- PODVEČER LETO -->
+                <div id="summer-evening" class="row season-summer" data-start="17:30" data-end="20:30" data-status="amber">
+                    <div class="row-compact">
+                        <span class="row-time">17:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Bežná prevádzka</div>
+                            <div class="row-sub">Slnko klesá, už iba malé spotrebiče</div>
+                        </div>
+                        <span class="chip chip-amber">Lacná</span>
                     </div>
-                    <p class="text-xs font-medium text-zinc-400"></p>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Bežná prevádzka</h3>
+                                <p class="now-sub">Slnko klesá, už iba malé spotrebiče</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- OKNO NESKORO -->
-            <div data-start="21:30" data-end="22:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
-                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-xs font-bold text-white/50">21:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 neon-dot-amber"></span>
-                        <h3 class="text-sm font-bold text-zinc-300">OK (Lacná)</h3>
+                <!-- PODVEČER ZIMA -->
+                <div id="winter-evening" class="row season-winter hidden" data-start="14:30" data-end="20:30" data-status="amber">
+                    <div class="row-compact">
+                        <span class="row-time">14:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Skorá tma</div>
+                            <div class="row-sub">Lacná sieť bez slnka</div>
+                        </div>
+                        <span class="chip chip-amber">Lacná</span>
                     </div>
-                    <p class="text-xs font-medium text-zinc-400"></p>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Skorá tma</h3>
+                                <p class="now-sub">Lacná sieť bez slnka</p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- NOC VT 4 -->
-            <div data-start="22:30" data-end="23:30" class="time-block glass-card p-4 rounded-3xl flex items-center gap-4">
-                <div class="w-14 h-10 rounded-2xl bg-white/5 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                    <span class="text-xs font-bold text-white/50">22:30</span>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-red-500 neon-dot-red"></span>
-                        <h3 class="text-sm font-bold text-zinc-300">Najdrahšia sieť</h3>
+                <!-- VEČER VT 3 -->
+                <div class="row" data-start="20:30" data-end="21:30" data-status="red">
+                    <div class="row-compact">
+                        <span class="row-time">20:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Najdrahšia sieť</div>
+                            <div class="row-sub"></div>
+                        </div>
+                        <span class="chip chip-red">Drahá</span>
                     </div>
-                    <p class="text-xs font-medium text-zinc-400"></p>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Najdrahšia sieť</h3>
+                                <p class="now-sub"></p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- OKNO NESKORO -->
+                <div class="row" data-start="21:30" data-end="22:30" data-status="amber">
+                    <div class="row-compact">
+                        <span class="row-time">21:30</span>
+                        <div class="row-body">
+                            <div class="row-title">OK (Lacná)</div>
+                            <div class="row-sub"></div>
+                        </div>
+                        <span class="chip chip-amber">Lacná</span>
+                    </div>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">OK (Lacná)</h3>
+                                <p class="now-sub"></p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOC VT 4 -->
+                <div class="row" data-start="22:30" data-end="23:30" data-status="red">
+                    <div class="row-compact">
+                        <span class="row-time">22:30</span>
+                        <div class="row-body">
+                            <div class="row-title">Najdrahšia sieť</div>
+                            <div class="row-sub"></div>
+                        </div>
+                        <span class="chip chip-red">Drahá</span>
+                    </div>
+                    <div class="row-now-content">
+                        <span class="now-badge"><span class="now-pulse"></span>TERAZ · AKTÍVNY SLOT</span>
+                        <div class="now-top">
+                            <div>
+                                <h3 class="now-title">Najdrahšia sieť</h3>
+                                <p class="now-sub"></p>
+                            </div>
+                            <div class="now-time-block">
+                                <div class="now-clock">--:--</div>
+                                <div class="now-pv-value"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
+        <!-- /PANEL: SPOTREBIČE -->
 
-        <!-- Zdieľanie -->
-        <div class="mt-12 flex flex-col items-center print-hidden">
-            <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mb-4">Zdieľaj na iný mobil</p>
-            <div class="p-3 bg-white/5 rounded-3xl border border-white/10 backdrop-blur-md">
-                <div id="qrcode" class="w-24 h-24 flex items-center justify-center bg-white rounded-2xl overflow-hidden p-1.5"></div>
-            </div>
-            <a href="https://wa.me/?text=https%3A%2F%2Frastislavsk.github.io%2FKedy-zapinat-spotrebice-Claude%2F" target="_blank" rel="noopener" class="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#25D366]/15 border border-[#25D366]/30 text-[#25D366] text-xs font-bold uppercase tracking-widest hover:bg-[#25D366]/25 transition-colors">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.669.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.001 2C6.478 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5.003L2.05 22l5.096-1.293A9.958 9.958 0 0012.001 22c5.523 0 10-4.477 10-10S17.524 2 12.001 2zm0 18.161c-1.635 0-3.146-.457-4.436-1.246l-.318-.19-3.3.837.882-3.222-.207-.331a8.117 8.117 0 01-1.24-4.328c0-4.5 3.66-8.161 8.16-8.161 4.502 0 8.161 3.66 8.161 8.161 0 4.502-3.66 8.161-8.161 8.161z"/></svg>
-                Zdieľať cez WhatsApp
-            </a>
-        </div>
-
-        </div>
-        <!-- /ZÁLOŽKA: SPOTREBIČE -->
-
-        <!-- ZÁLOŽKA: PREDPOVEĎ -->
+        <!-- PANEL: PREDPOVEĎ -->
         <div id="panel-predpoved" class="hidden">
 
-            <div class="flex items-start justify-between mb-4">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin:12px 4px 16px;">
                 <div>
-                    <h2 class="text-lg font-extrabold text-white mb-0.5">Predpoveď výroby</h2>
-                    <p class="text-xs font-semibold text-zinc-500">Dvorany nad Nitrou · 10,4 kWp</p>
+                    <div style="font-size:16px;font-weight:700;">Predpoveď výroby</div>
+                    <div style="font-size:11.5px;color:var(--on-surface-dim);font-weight:500;margin-top:2px;">Dvorany nad Nitrou · 10,4 kWp</div>
                 </div>
-                <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                    <i data-lucide="sun-medium" class="w-4 h-4 text-emerald-400"></i>
-                </div>
-            </div>
-
-            <div class="glass-card p-1.5 rounded-2xl flex w-full mb-4 relative">
-                <button id="day-btn-today" class="relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300" onclick="setForecastDay('today')">Dnes</button>
-                <button id="day-btn-tomorrow" class="relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300" onclick="setForecastDay('tomorrow')">Zajtra</button>
-            </div>
-
-            <div class="flex gap-3 mb-4">
-                <div class="glass-card p-3.5 rounded-2xl flex-1">
-                    <span class="block text-[9px] font-extrabold uppercase tracking-widest text-zinc-500 mb-1">Špička</span>
-                    <div class="text-lg font-extrabold text-white"><span id="forecast-peak">–</span> <span class="text-xs font-bold text-zinc-500">kW</span></div>
-                    <div class="text-[10px] font-semibold text-zinc-500 mt-0.5" id="forecast-peak-time">–</div>
-                </div>
-                <div class="glass-card p-3.5 rounded-2xl flex-1">
-                    <span class="block text-[9px] font-extrabold uppercase tracking-widest text-zinc-500 mb-1">Odhad výroby</span>
-                    <div class="text-lg font-extrabold text-white"><span id="forecast-total">–</span> <span class="text-xs font-bold text-zinc-500">kWh</span></div>
-                    <div class="text-[10px] font-semibold text-zinc-500 mt-0.5">za celý deň</div>
+                <div class="pv-icon" style="width:38px;height:38px;">
+                    <i data-lucide="sun-medium" style="color:#34D399;width:17px;height:17px;"></i>
                 </div>
             </div>
 
-            <div class="glass-card p-4 rounded-3xl mb-4 relative overflow-hidden">
-                <div class="absolute -top-8 -right-8 w-28 h-28 bg-emerald-400/10 blur-3xl rounded-full pointer-events-none"></div>
-                <div class="flex items-center justify-between mb-2 relative z-10">
-                    <span class="text-[11px] font-bold text-zinc-500">Priebeh výroby (kW)</span>
-                    <span id="forecast-now-badge" class="hidden items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <div class="segmented">
+                <button id="day-btn-today" class="active" onclick="setForecastDay('today')">Dnes</button>
+                <button id="day-btn-tomorrow" onclick="setForecastDay('tomorrow')">Zajtra</button>
+            </div>
+
+            <div class="stat-row">
+                <div class="m-card stat-card">
+                    <span class="stat-label">Špička</span>
+                    <div class="stat-value"><span id="forecast-peak">–</span><span> kW</span></div>
+                    <div class="stat-sub" id="forecast-peak-time">–</div>
+                </div>
+                <div class="m-card stat-card">
+                    <span class="stat-label">Odhad výroby</span>
+                    <div class="stat-value"><span id="forecast-total">–</span><span> kWh</span></div>
+                    <div class="stat-sub">za celý deň</div>
+                </div>
+            </div>
+
+            <div class="m-card chart-card">
+                <div class="chart-top">
+                    <span class="lbl">Priebeh výroby (kW)</span>
+                    <span id="forecast-now-badge" class="now-badge hidden">
+                        <span class="now-pulse"></span>
                         <span id="forecast-now-time">teraz</span>
                     </span>
                 </div>
-                <div class="relative z-10" id="forecast-chart-wrap">
-                    <svg id="forecast-chart" viewBox="0 0 320 150" preserveAspectRatio="none" class="w-full h-auto block"></svg>
+                <div class="chart-wrap" id="forecast-chart-wrap">
+                    <svg id="forecast-chart" viewBox="0 0 320 150" preserveAspectRatio="none"></svg>
                     <div id="forecast-tooltip" class="forecast-tooltip"><div class="tt-time">--:--</div><div class="tt-kw">-- kW</div></div>
                 </div>
-                <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5 relative z-10">
-                    <div class="flex items-center gap-3 text-[10px] font-bold text-zinc-500">
-                        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-emerald-500"></span>predpoveď</span>
-                        <span id="forecast-live-legend" class="hidden items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-white"></span>naživo</span>
+                <div class="chart-footer">
+                    <div class="chart-legend">
+                        <span><span class="legend-swatch" style="background:#34D399"></span>predpoveď</span>
+                        <span id="forecast-live-legend" class="hidden"><span class="legend-swatch" style="background:#fff;border-radius:50%;"></span>naživo</span>
                     </div>
-                    <span class="text-[10px] font-semibold text-zinc-500">ťukni pre detail</span>
+                    <span style="font-size:10px;color:var(--on-surface-dim);font-weight:600;">ťukni pre detail</span>
                 </div>
             </div>
 
-            <div class="glass-panel-green p-4 rounded-3xl flex items-start gap-3">
-                <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                    <i data-lucide="lightbulb" class="w-4 h-4 text-emerald-300"></i>
+            <div class="day-message">
+                <div class="icon">
+                    <i data-lucide="lightbulb" style="color:#34D399;width:15px;height:15px;"></i>
                 </div>
                 <div>
-                    <h4 class="text-sm font-extrabold text-white mb-0.5" id="forecast-message-title">Načítavam…</h4>
-                    <p class="text-xs font-medium text-emerald-100/70" id="forecast-message-body">Predpoveď sa načítava.</p>
+                    <h4 id="forecast-message-title">Načítavam…</h4>
+                    <p id="forecast-message-body">Predpoveď sa načítava.</p>
                 </div>
             </div>
 
         </div>
-        <!-- /ZÁLOŽKA: PREDPOVEĎ -->
+        <!-- /PANEL: PREDPOVEĎ -->
 
+        <!-- PANEL: ZDIEĽAŤ -->
+        <div id="panel-zdielat" class="hidden">
+
+            <div class="share-heading">
+                <div class="t">Zdieľať appku</div>
+                <div class="s">Pošli link na iný telefón</div>
+            </div>
+
+            <div class="m-card share-card">
+                <div class="qr-box" id="qrcode"></div>
+                <div class="qr-hint">Naskenuj kód mobilom</div>
+                <a href="https://wa.me/?text=https%3A%2F%2Frastislavsk.github.io%2FKedy-zapinat-spotrebice-Claude%2F" target="_blank" rel="noopener" class="m-btn m-btn-filled">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.669.15-.198.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.001 2C6.478 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5.003L2.05 22l5.096-1.293A9.958 9.958 0 0012.001 22c5.523 0 10-4.477 10-10S17.524 2 12.001 2zm0 18.161c-1.635 0-3.146-.457-4.436-1.246l-.318-.19-3.3.837.882-3.222-.207-.331a8.117 8.117 0 01-1.24-4.328c0-4.5 3.66-8.161 8.16-8.161 4.502 0 8.161 3.66 8.161 8.161 0 4.502-3.66 8.161-8.161 8.161z"/></svg>
+                    Zdieľať cez WhatsApp
+                </a>
+            </div>
+
+        </div>
+        <!-- /PANEL: ZDIEĽAŤ -->
+
+    </div>
+
+    <div class="bottomnav">
+        <div class="bottomnav-inner">
+            <button id="nav-spotrebice" class="nav-item active" onclick="setPanel('spotrebice')">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg></div>
+                <span>Spotrebiče</span>
+            </button>
+            <button id="nav-predpoved" class="nav-item" onclick="setPanel('predpoved')">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></div>
+                <span>Predpoveď</span>
+            </button>
+            <button id="nav-zdielat" class="nav-item" onclick="setPanel('zdielat')">
+                <div class="nav-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.6l6.8-3.8M8.6 13.4l6.8 3.8"/></svg></div>
+                <span>Zdieľať</span>
+            </button>
+        </div>
     </div>
 
     <script>
         lucide.createIcons();
 
         window.addEventListener('DOMContentLoaded', () => {
-            captureOriginalSlotTexts();
             initForecastChartInteraction();
 
             const appUrl = "https://rastislavsk.github.io/Kedy-zapinat-spotrebice-Claude/";
@@ -608,56 +884,25 @@
         let latestPvData = null;
         let latestForecastData = null;
         let currentBlockType = null;
-        let originalSlotTexts = null;
         let currentForecastDay = 'today';
         let forecastChartState = null;
 
         function setSeason(season) {
             currentSeason = season;
-            const btnSummer = document.getElementById('btn-summer');
-            const btnWinter = document.getElementById('btn-winter');
-            const summerItems = document.querySelectorAll('.season-summer');
-            const winterItems = document.querySelectorAll('.season-winter');
-
-            const activeClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm';
-            const inactiveClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300';
-
-            if (season === 'summer') {
-                btnSummer.className = activeClass;
-                btnWinter.className = inactiveClass;
-                summerItems.forEach(el => el.classList.remove('hidden'));
-                winterItems.forEach(el => el.classList.add('hidden'));
-            } else {
-                btnWinter.className = activeClass;
-                btnSummer.className = inactiveClass;
-                winterItems.forEach(el => el.classList.remove('hidden'));
-                summerItems.forEach(el => el.classList.add('hidden'));
-            }
+            document.getElementById('btn-summer').classList.toggle('active', season === 'summer');
+            document.getElementById('btn-winter').classList.toggle('active', season === 'winter');
+            document.querySelectorAll('.season-summer').forEach(el => el.classList.toggle('hidden', season !== 'summer'));
+            document.querySelectorAll('.season-winter').forEach(el => el.classList.toggle('hidden', season !== 'winter'));
             updateTimeAndHighlight();
         }
 
-        // Prepínanie hlavných záložiek appky (Spotrebiče / Predpoveď)
-        function setTab(tab) {
-            const btnSpotrebice = document.getElementById('tab-spotrebice');
-            const btnPredpoved = document.getElementById('tab-predpoved');
-            const panelSpotrebice = document.getElementById('panel-spotrebice');
-            const panelPredpoved = document.getElementById('panel-predpoved');
-
-            const activeClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all duration-300 bg-white/10 shadow-sm';
-            const inactiveClass = 'relative z-10 flex-1 py-3 rounded-xl text-sm font-bold text-zinc-500 flex items-center justify-center gap-2 transition-all duration-300 hover:text-zinc-300';
-
-            if (tab === 'predpoved') {
-                btnPredpoved.className = activeClass;
-                btnSpotrebice.className = inactiveClass;
-                panelPredpoved.classList.remove('hidden');
-                panelSpotrebice.classList.add('hidden');
-                renderForecastChart();
-            } else {
-                btnSpotrebice.className = activeClass;
-                btnPredpoved.className = inactiveClass;
-                panelSpotrebice.classList.remove('hidden');
-                panelPredpoved.classList.add('hidden');
-            }
+        // Prepínanie hlavných obrazoviek appky cez spodnú navigáciu
+        function setPanel(panel) {
+            ['spotrebice', 'predpoved', 'zdielat'].forEach(p => {
+                document.getElementById(`panel-${p}`).classList.toggle('hidden', p !== panel);
+                document.getElementById(`nav-${p}`).classList.toggle('active', p === panel);
+            });
+            if (panel === 'predpoved') renderForecastChart();
         }
 
         function updateTimeAndHighlight() {
@@ -665,99 +910,55 @@
             const h = now.getHours().toString().padStart(2, '0');
             const m = now.getMinutes().toString().padStart(2, '0');
             const currentTimeStr = `${h}:${m}`;
-            const currTotalMin = parseInt(h) * 60 + parseInt(m);
-
             document.getElementById('current-time-display').innerText = currentTimeStr;
-            const pill = document.getElementById('needle-pill');
-            const pillTime = document.getElementById('needle-pill-time');
-            if (pillTime) pillTime.innerText = currentTimeStr;
 
-            const timeBlocks = document.querySelectorAll('.time-block');
-            const needle = document.getElementById('time-needle');
-            const edgeGlow = document.getElementById('edge-glow');
-            const headerPulse = document.getElementById('header-pulse');
-            let activeBlockEl = null;
+            const rows = document.querySelectorAll('.row');
+            let activeRow = null;
 
-            restoreOriginalSlotTexts();
-
-            timeBlocks.forEach(block => {
-                block.classList.remove('active-block', 'active-block-red', 'active-block-amber', 'active-block-green');
-                if (block.classList.contains('hidden')) return;
-
-                const start = block.getAttribute('data-start');
-                const end = block.getAttribute('data-end');
-
-                if (isCurrentTimeInBlock(currentTimeStr, start, end)) {
-                    block.classList.add('active-block');
-                    activeBlockEl = block;
-                }
+            rows.forEach(row => {
+                row.classList.remove('is-now');
+                if (row.classList.contains('hidden')) return;
+                const start = row.getAttribute('data-start');
+                const end = row.getAttribute('data-end');
+                if (isCurrentTimeInBlock(currentTimeStr, start, end)) activeRow = row;
             });
 
-            if (activeBlockEl && needle && pill) {
-                let blockType = 'green';
-                if (activeBlockEl.querySelector('.neon-dot-red')) blockType = 'red';
-                else if (activeBlockEl.querySelector('.neon-dot-amber')) blockType = 'amber';
+            const headerDot = document.getElementById('header-status-dot');
 
+            if (activeRow) {
+                const blockType = activeRow.getAttribute('data-status') || 'green';
                 currentBlockType = blockType;
-                applyPvColors();
+                activeRow.classList.add('is-now');
 
-                const isNightSlot = activeBlockEl.getAttribute('data-start') === '23:30';
+                const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+                const color = getPvColor(power);
+
+                const clockEl = activeRow.querySelector('.now-clock');
+                const pvValEl = activeRow.querySelector('.now-pv-value');
+                if (clockEl) clockEl.textContent = currentTimeStr;
+                if (pvValEl) {
+                    pvValEl.textContent = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '';
+                    pvValEl.style.color = color;
+                }
+
+                const isNightSlot = activeRow.getAttribute('data-start') === '23:30';
                 if (!isNightSlot) {
-                    const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
                     const msg = getSlotMessage(blockType, power, latestForecastData);
-                    if (msg) applySlotMessage(activeBlockEl, msg);
+                    if (msg) {
+                        const titleEl = activeRow.querySelector('.now-title');
+                        const subEl = activeRow.querySelector('.now-sub');
+                        if (titleEl) titleEl.textContent = msg.headline;
+                        if (subEl) subEl.textContent = msg.body;
+                    }
                 }
 
-                const s = activeBlockEl.getAttribute('data-start');
-                const e = activeBlockEl.getAttribute('data-end');
-                const [sH, sM] = s.split(':').map(Number);
-                const [eH, eM] = e.split(':').map(Number);
-                const sMin = sH * 60 + sM;
-                const eMin = eH * 60 + eM;
-
-                let blockTotalMin;
-                let elapsedMin;
-
-                if (sMin > eMin) {
-                    blockTotalMin = (1440 - sMin) + eMin;
-                    elapsedMin = (currTotalMin >= sMin) ? (currTotalMin - sMin) : (1440 - sMin + currTotalMin);
-                } else {
-                    blockTotalMin = eMin - sMin;
-                    elapsedMin = currTotalMin - sMin;
-                }
-
-                const percent = elapsedMin / blockTotalMin;
-                const blockTopRelativeToContainer = activeBlockEl.offsetTop;
-                const needlePos = blockTopRelativeToContainer + (activeBlockEl.offsetHeight * percent);
-
-                needle.style.top = `${needlePos}px`;
-                needle.style.display = 'block';
-
-                pill.style.top = `${needlePos}px`;
-                pill.style.display = 'flex';
-
-                if (blockType === 'red') {
-                    needle.style.backgroundColor = '#ef4444';
-                    needle.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.6)';
-                    activeBlockEl.classList.add('active-block-red');
-                    if (headerPulse) headerPulse.className = 'pulse-dot pulse-red';
-                } else if (blockType === 'amber') {
-                    needle.style.backgroundColor = '#f59e0b';
-                    needle.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.6)';
-                    activeBlockEl.classList.add('active-block-amber');
-                    if (headerPulse) headerPulse.className = 'pulse-dot pulse-amber';
-                } else {
-                    needle.style.backgroundColor = '#10b981';
-                    needle.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.6)';
-                    activeBlockEl.classList.add('active-block-green');
-                    if (headerPulse) headerPulse.className = 'pulse-dot pulse-green';
-                }
-            } else if(needle && pill) {
-                needle.style.display = 'none';
-                pill.style.display = 'none';
-                if(edgeGlow) edgeGlow.className = '';
-                if(headerPulse) headerPulse.className = 'pulse-dot pulse-green';
+                headerDot.className = 'status-dot' + (blockType === 'red' ? ' status-red' : blockType === 'amber' ? ' status-amber' : '');
+            } else {
+                currentBlockType = null;
+                headerDot.className = 'status-dot';
             }
+
+            applyPvColors();
         }
 
         function isCurrentTimeInBlock(current, start, end) {
@@ -765,14 +966,10 @@
                 const [h, m] = str.split(':').map(Number);
                 return h * 60 + m;
             };
-
             const curr = toMinutes(current);
             const s = toMinutes(start);
             const e = toMinutes(end);
-
-            if (s > e) {
-                return curr >= s || curr < e;
-            }
+            if (s > e) return curr >= s || curr < e;
             return curr >= s && curr < e;
         }
 
@@ -831,38 +1028,6 @@
 
             updateTimeAndHighlight();
             renderForecastChart();
-        }
-
-        // Uloží pôvodný (statický) text každého slotu, aby sa dal po odchode z aktívneho stavu vrátiť späť
-        function captureOriginalSlotTexts() {
-            originalSlotTexts = new WeakMap();
-            document.querySelectorAll('.time-block').forEach(block => {
-                const h3 = block.querySelector('h3');
-                const p = block.querySelector('p');
-                originalSlotTexts.set(block, {
-                    h: h3 ? h3.textContent : '',
-                    p: p ? p.textContent : '',
-                });
-            });
-        }
-
-        function restoreOriginalSlotTexts() {
-            if (!originalSlotTexts) return;
-            document.querySelectorAll('.time-block').forEach(block => {
-                const saved = originalSlotTexts.get(block);
-                if (!saved) return;
-                const h3 = block.querySelector('h3');
-                const p = block.querySelector('p');
-                if (h3) h3.textContent = saved.h;
-                if (p) p.textContent = saved.p;
-            });
-        }
-
-        function applySlotMessage(block, msg) {
-            const h3 = block.querySelector('h3');
-            const p = block.querySelector('p');
-            if (h3) h3.textContent = msg.headline;
-            if (p) p.textContent = msg.body;
         }
 
         // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
@@ -970,52 +1135,25 @@
 
         function getPvColor(power) {
             const status = getPvStatus(power);
-            if (status === 'green') return '#10b981';
-            if (status === 'red') return '#ef4444';
-            if (status === 'amber') return '#f59e0b';
-            return '#fff';
+            if (status === 'green') return 'var(--primary-strong)';
+            if (status === 'red') return 'var(--red-strong)';
+            if (status === 'amber') return 'var(--amber-strong)';
+            return 'var(--on-surface)';
         }
 
-        // Nastaví text a farbu výkonu FV v hornej karte, v pohyblivej pilulke pod časom
-        // a farbu pulzujúceho pozadia (edge-glow) - tá teraz sleduje výkon FV, nie sieťový slot
         function applyPvColors() {
             const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
-            const status = getPvStatus(power);
             const color = getPvColor(power);
-
             const powerEl = document.getElementById('pv-power');
             if (powerEl) powerEl.style.color = color;
-
-            const pvEl = document.getElementById('needle-pill-pv');
-            if (pvEl) {
-                pvEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '';
-                pvEl.style.color = color;
-            }
-
-            const edgeGlow = document.getElementById('edge-glow');
-            if (edgeGlow) {
-                edgeGlow.className = '';
-                if (status) edgeGlow.classList.add(`glow-${status}`);
-            }
         }
 
-        // ================= ZÁLOŽKA PREDPOVEĎ =================
+        // ================= PANEL PREDPOVEĎ =================
 
-        // Prepínač Dnes / Zajtra nad grafom predpovede
         function setForecastDay(day) {
             currentForecastDay = day;
-            const btnToday = document.getElementById('day-btn-today');
-            const btnTomorrow = document.getElementById('day-btn-tomorrow');
-            const activeClass = 'relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 bg-emerald-500/15 text-emerald-300';
-            const inactiveClass = 'relative z-10 flex-1 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 text-zinc-500 hover:text-zinc-300';
-
-            if (day === 'today') {
-                btnToday.className = activeClass;
-                btnTomorrow.className = inactiveClass;
-            } else {
-                btnTomorrow.className = activeClass;
-                btnToday.className = inactiveClass;
-            }
+            document.getElementById('day-btn-today').classList.toggle('active', day === 'today');
+            document.getElementById('day-btn-tomorrow').classList.toggle('active', day === 'tomorrow');
             renderForecastChart();
         }
 
@@ -1051,7 +1189,6 @@
             return pts[pts.length - 1].kw;
         }
 
-        // Jedna veta zhŕňajúca deň - rovnaký tón ako texty pri spotrebičoch
         function forecastDayMessage(pts, isToday) {
             const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0] || { hour: 0, kw: 0 });
 
@@ -1095,9 +1232,7 @@
                 svg.innerHTML = '';
                 forecastChartState = null;
                 nowBadge.classList.add('hidden');
-                nowBadge.classList.remove('flex');
                 liveLegend.classList.add('hidden');
-                liveLegend.classList.remove('flex');
                 document.getElementById('forecast-peak').innerText = '–';
                 document.getElementById('forecast-peak-time').innerText = '–';
                 document.getElementById('forecast-total').innerText = '–';
@@ -1120,8 +1255,8 @@
             for (let h = hMin; h <= hMax; h++) {
                 if (h % 3 !== 0) continue;
                 const { x } = forecastXY(h, 0, hMin, hMax, maxKw, dims);
-                gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-                gridLines += `<text class="forecast-axis-label" x="${x}" y="${dims.h - 6}" text-anchor="middle">${h}:00</text>`;
+                gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+                gridLines += `<text class="axis-label" x="${x}" y="${dims.h - 6}" text-anchor="middle">${h}:00</text>`;
             }
 
             let nowMarker = '';
@@ -1134,42 +1269,37 @@
                 const nowKw = forecastInterpolate(pts, clampedHour);
                 const { x: nowX, y: nowY } = forecastXY(clampedHour, nowKw, hMin, hMax, maxKw, dims);
                 nowMarker = `
-                    <line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="#10b981" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
-                    <circle cx="${nowX}" cy="${nowY}" r="4.5" fill="#10b981" stroke="#000" stroke-width="2"/>
-                    <circle cx="${nowX}" cy="${nowY}" r="9" fill="none" stroke="#10b981" stroke-width="1" opacity="0.4"/>
+                    <line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="#34D399" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.55"/>
+                    <circle cx="${nowX}" cy="${nowY}" r="4.5" fill="#34D399" stroke="#1E1E1E" stroke-width="2"/>
+                    <circle cx="${nowX}" cy="${nowY}" r="9" fill="none" stroke="#34D399" stroke-width="1" opacity="0.4"/>
                 `;
                 nowBadge.classList.remove('hidden');
-                nowBadge.classList.add('flex');
                 document.getElementById('forecast-now-time').innerText = `teraz ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
                 const livePower = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
                 if (Number.isFinite(livePower) && nowHour >= hMin && nowHour <= hMax) {
                     const liveMaxKw = Math.max(maxKw, livePower * 1.15);
                     const { x: liveX, y: liveY } = forecastXY(nowHour, livePower, hMin, hMax, liveMaxKw, dims);
-                    liveDot = `<circle cx="${liveX}" cy="${liveY}" r="4" fill="#fff" stroke="#000" stroke-width="1.5"/>`;
+                    liveDot = `<circle cx="${liveX}" cy="${liveY}" r="4" fill="#fff" stroke="#1E1E1E" stroke-width="1.5"/>`;
                     liveLegend.classList.remove('hidden');
-                    liveLegend.classList.add('flex');
                 } else {
                     liveLegend.classList.add('hidden');
-                    liveLegend.classList.remove('flex');
                 }
             } else {
                 nowBadge.classList.add('hidden');
-                nowBadge.classList.remove('flex');
                 liveLegend.classList.add('hidden');
-                liveLegend.classList.remove('flex');
             }
 
             svg.innerHTML = `
                 <defs>
                     <linearGradient id="forecastAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
-                        <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                        <stop offset="0%" stop-color="#34D399" stop-opacity="0.4"/>
+                        <stop offset="100%" stop-color="#34D399" stop-opacity="0"/>
                     </linearGradient>
                 </defs>
                 ${gridLines}
                 <path d="${areaPath}" fill="url(#forecastAreaGrad)"/>
-                <path d="${linePath}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="${linePath}" fill="none" stroke="#34D399" stroke-width="2.5" stroke-linecap="round"/>
                 ${nowMarker}
                 ${liveDot}
             `;
@@ -1187,7 +1317,6 @@
             bodyEl.innerText = msg.body;
         }
 
-        // Ťuknutie/potiahnutie po grafe - tooltip s presnou hodnotou
         function initForecastChartInteraction() {
             const wrap = document.getElementById('forecast-chart-wrap');
             const svg = document.getElementById('forecast-chart');
