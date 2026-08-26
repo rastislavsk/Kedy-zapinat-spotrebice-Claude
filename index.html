@@ -584,24 +584,19 @@
                 pill.style.top = `${needlePos}px`;
                 pill.style.display = 'flex';
 
-                edgeGlow.className = '';
-
                 if (blockType === 'red') {
                     needle.style.backgroundColor = '#ef4444';
                     needle.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.6)';
-                    edgeGlow.classList.add('glow-red');
                     activeBlockEl.classList.add('active-block-red');
                     if (headerPulse) headerPulse.className = 'pulse-dot pulse-red';
                 } else if (blockType === 'amber') {
                     needle.style.backgroundColor = '#f59e0b';
                     needle.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.6)';
-                    edgeGlow.classList.add('glow-amber');
                     activeBlockEl.classList.add('active-block-amber');
                     if (headerPulse) headerPulse.className = 'pulse-dot pulse-amber';
                 } else {
                     needle.style.backgroundColor = '#10b981';
                     needle.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.6)';
-                    edgeGlow.classList.add('glow-green');
                     activeBlockEl.classList.add('active-block-green');
                     if (headerPulse) headerPulse.className = 'pulse-dot pulse-green';
                 }
@@ -670,17 +665,27 @@
             applyPvColors();
         }
 
-        // Farba hodnoty výkonu FV: zelená od 2 kW; pod 2 kW je to červená v 4 najdrahších
+        // Stav výkonu FV: zelená od 2 kW; pod 2 kW je to červená v 4 najdrahších
         // sieťových slotoch (07:30-08:30, 09:30-10:30, 20:30-21:30, 22:30-23:30), inak oranžová
-        function getPvColor(power) {
-            if (!Number.isFinite(power)) return '#fff';
-            if (power >= 2) return '#10b981';
-            return currentBlockType === 'red' ? '#ef4444' : '#f59e0b';
+        function getPvStatus(power) {
+            if (!Number.isFinite(power)) return null;
+            if (power >= 2) return 'green';
+            return currentBlockType === 'red' ? 'red' : 'amber';
         }
 
-        // Nastaví text a farbu výkonu FV v hornej karte a v pohyblivej pilulke pod časom
+        function getPvColor(power) {
+            const status = getPvStatus(power);
+            if (status === 'green') return '#10b981';
+            if (status === 'red') return '#ef4444';
+            if (status === 'amber') return '#f59e0b';
+            return '#fff';
+        }
+
+        // Nastaví text a farbu výkonu FV v hornej karte, v pohyblivej pilulke pod časom
+        // a farbu pulzujúceho pozadia (edge-glow) - tá teraz sleduje výkon FV, nie sieťový slot
         function applyPvColors() {
             const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+            const status = getPvStatus(power);
             const color = getPvColor(power);
 
             const powerEl = document.getElementById('pv-power');
@@ -690,6 +695,12 @@
             if (pvEl) {
                 pvEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '';
                 pvEl.style.color = color;
+            }
+
+            const edgeGlow = document.getElementById('edge-glow');
+            if (edgeGlow) {
+                edgeGlow.className = '';
+                if (status) edgeGlow.classList.add(`glow-${status}`);
             }
         }
     </script>
