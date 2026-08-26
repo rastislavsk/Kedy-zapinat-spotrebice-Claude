@@ -248,7 +248,7 @@
             <div id="time-needle" class="bg-emerald-500 hidden"></div>
             <div id="needle-pill" class="time-pill hidden flex-col items-end">
                 <span id="needle-pill-time">00:00</span>
-                <span id="needle-pill-pv" class="text-emerald-300 text-[10px] font-bold tracking-normal"></span>
+                <span id="needle-pill-pv" class="text-[10px] font-bold tracking-normal"></span>
             </div>
 
             <!-- NOC (23:30 - 07:30) -->
@@ -487,6 +487,7 @@
 
         let currentSeason = 'summer';
         let latestPvData = null;
+        let currentBlockType = null;
 
         function setSeason(season) {
             currentSeason = season;
@@ -523,7 +524,6 @@
             const pill = document.getElementById('needle-pill');
             const pillTime = document.getElementById('needle-pill-time');
             if (pillTime) pillTime.innerText = currentTimeStr;
-            updateNeedlePillPv();
 
             const timeBlocks = document.querySelectorAll('.time-block');
             const needle = document.getElementById('time-needle');
@@ -548,6 +548,9 @@
                 let blockType = 'green';
                 if (activeBlockEl.querySelector('.neon-dot-red')) blockType = 'red';
                 else if (activeBlockEl.querySelector('.neon-dot-amber')) blockType = 'amber';
+
+                currentBlockType = blockType;
+                applyPvColors();
 
                 const s = activeBlockEl.getAttribute('data-start');
                 const e = activeBlockEl.getAttribute('data-end');
@@ -660,16 +663,30 @@
                 latestPvData = null;
             }
 
-            updateNeedlePillPv();
+            applyPvColors();
         }
 
-        // Zobrazí aktuálny výkon FV pod časom v pohyblivej pilulke
-        function updateNeedlePillPv() {
-            const pvEl = document.getElementById('needle-pill-pv');
-            if (!pvEl) return;
+        // Farba hodnoty výkonu FV: zelená od 2 kW; pod 2 kW je to červená v 4 najdrahších
+        // sieťových slotoch (07:30-08:30, 09:30-10:30, 20:30-21:30, 22:30-23:30), inak oranžová
+        function getPvColor(power) {
+            if (!Number.isFinite(power)) return '#fff';
+            if (power >= 2) return '#10b981';
+            return currentBlockType === 'red' ? '#ef4444' : '#f59e0b';
+        }
 
+        // Nastaví text a farbu výkonu FV v hornej karte a v pohyblivej pilulke pod časom
+        function applyPvColors() {
             const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
-            pvEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '';
+            const color = getPvColor(power);
+
+            const powerEl = document.getElementById('pv-power');
+            if (powerEl) powerEl.style.color = color;
+
+            const pvEl = document.getElementById('needle-pill-pv');
+            if (pvEl) {
+                pvEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '';
+                pvEl.style.color = color;
+            }
         }
     </script>
 </body>
