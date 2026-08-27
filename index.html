@@ -128,20 +128,19 @@
 
         /* --- Day strip: whole day at a glance --- */
         .daystrip-wrap { margin-bottom: 24px; }
-        .daystrip { display: flex; height: 7px; border-radius: 4px; overflow: hidden; position: relative; background: var(--ink-08); }
+        .daystrip { display: flex; height: 7px; border-radius: 4px; position: relative; background: var(--ink-08); }
         .daystrip .seg { opacity: 0.85; }
+        .daystrip .seg:first-child { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+        .daystrip .seg:last-child { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
         .daystrip .seg.green { background: var(--green); }
         .daystrip .seg.amber { background: var(--amber); }
         .daystrip .seg.red { background: var(--red); }
         .daystrip .now-marker {
-            position: absolute; top: -9px; width: 3px; height: 26px; background: var(--ink);
-            border-radius: 2px;
-            box-shadow: 0 0 0 2px var(--bg), 0 0 7px rgba(242,240,234,0.65);
-        }
-        .daystrip .now-marker::after {
-            content: ''; position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent;
-            border-top: 7px solid var(--ink);
+            position: absolute; top: -11.2px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0;
+            border-left: 6.4px solid transparent; border-right: 6.4px solid transparent;
+            border-top: 11.2px solid var(--ink);
+            filter: drop-shadow(0 0 5px rgba(242,240,234,0.55));
         }
         .strip-ticks { display: flex; justify-content: space-between; margin-top: 8px; }
         .strip-ticks span { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); }
