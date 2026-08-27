@@ -1129,8 +1129,9 @@
             }
 
             const dims = { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22 };
-            const hMin = pts[0].hour;
-            const hMax = pts[pts.length - 1].hour;
+            // Os X je fixná od 06:00 do 21:00 — pokrýva celé produkčné okno dňa.
+            const hMin = 6;
+            const hMax = 21;
 
             // Dnešná skutočná výroba (z kiosku, 5-min kroky) sa kreslí len na karte "Dnes".
             const realPts = (currentForecastDay === 'today' && latestPvData && Array.isArray(latestPvData.realCurveToday))
