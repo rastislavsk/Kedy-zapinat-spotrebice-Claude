@@ -122,9 +122,11 @@
         .wait-chip svg { width: 14px; height: 14px; stroke: var(--accent, var(--ink-45)); flex-shrink: 0; }
         .wait-chip b { color: var(--ink); font-weight: 600; }
 
-        .footline { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-bottom: 18px; }
-        .footline .kw { font-size: 13px; font-weight: 600; color: var(--ink-70); transition: color 0.4s ease; }
-        .footline .sep { color: var(--ink-20); }
+        .pv-updated-line { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-bottom: 8px; }
+        .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .footline-left { display: flex; align-items: baseline; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); }
+        .footline-left .kw { font-size: 13px; font-weight: 600; color: var(--ink-70); transition: color 0.4s ease; }
+        .footline-left .sep { color: var(--ink-20); }
 
         /* --- Day strip: whole day at a glance --- */
         .daystrip-wrap { margin-bottom: 24px; }
@@ -149,7 +151,6 @@
             font-family: 'IBM Plex Mono', monospace;
             font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
             color: var(--ink-35);
-            margin: 22px 0 4px;
         }
 
         /* --- Underline tabs (season / day switch) --- */
@@ -322,18 +323,22 @@
                 </div>
             </div>
 
+            <div class="pv-updated-line" id="pv-updated-line">
+                <span id="pv-updated">načítavam…</span>
+            </div>
+
             <div class="footline">
-                <span id="pv-power" class="kw">–</span><span class="sep">·</span>
-                <span id="pv-updated">načítavam…</span><span class="sep">·</span>
-                <span id="pv-daily">– kWh dnes</span>
+                <div class="footline-left">
+                    <span id="pv-power" class="kw">–</span><span class="sep">·</span>
+                    <span>aktuálna výroba fotovoltiky</span>
+                </div>
+                <span class="season-indicator" id="season-indicator">Leto</span>
             </div>
 
             <div class="daystrip-wrap">
                 <div class="daystrip" id="daystrip"></div>
                 <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
             </div>
-
-            <div class="season-indicator" id="season-indicator">Leto</div>
 
             <div class="today-forecast-link" onclick="setPanel('predpoved')">
                 <div class="msg-block" id="today-msg-block">
@@ -815,7 +820,6 @@
         async function updatePvProduction() {
             const powerEl = document.getElementById('pv-power');
             const updatedEl = document.getElementById('pv-updated');
-            const dailyEl = document.getElementById('pv-daily');
             if (!powerEl) return;
 
             try {
@@ -823,12 +827,6 @@
 
                 const power = Number(data.realTimePowerKw);
                 powerEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '–';
-
-                if (Number.isFinite(Number(data.dailyEnergyKwh))) {
-                    dailyEl.innerText = `${Number(data.dailyEnergyKwh).toFixed(1)} kWh dnes`;
-                } else {
-                    dailyEl.innerText = '';
-                }
 
                 if (data.updatedAt) {
                     const updated = new Date(data.updatedAt);
@@ -843,7 +841,6 @@
             } catch (err) {
                 powerEl.innerText = '–';
                 updatedEl.innerText = 'dáta nedostupné';
-                dailyEl.innerText = '';
                 latestPvData = null;
             }
 
