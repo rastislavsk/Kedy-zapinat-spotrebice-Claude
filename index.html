@@ -221,6 +221,7 @@
         .stat .lbl { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); display: block; margin-bottom: 6px; }
         .stat .val { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
         .stat .val .u { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 400; color: var(--ink-45); }
+        .stat .val .val-real { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: var(--green); margin-left: 4px; }
         .stat .sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-35); margin-top: 4px; }
 
         .chart-card { margin: 4px 0 24px; position: relative; }
@@ -343,12 +344,12 @@
                 <div class="stat-pair" id="today-stat-pair">
                     <div class="stat">
                         <span class="lbl">Špička</span>
-                        <div class="val"><span id="today-peak">–</span><span class="u"> kW</span></div>
+                        <div class="val"><span id="today-peak">–</span><span class="u"> kW</span><span class="val-real hidden" id="today-peak-real"></span></div>
                         <div class="sub" id="today-peak-time">–</div>
                     </div>
                     <div class="stat">
                         <span class="lbl">Odhad výroby</span>
-                        <div class="val"><span id="today-total">–</span><span class="u"> kWh</span></div>
+                        <div class="val"><span id="today-total">–</span><span class="u"> kWh</span><span class="val-real hidden" id="today-total-real"></span></div>
                         <div class="sub">za celý deň</div>
                     </div>
                 </div>
@@ -487,12 +488,12 @@
             <div class="stat-pair">
                 <div class="stat">
                     <span class="lbl">Špička</span>
-                    <div class="val"><span id="forecast-peak">–</span><span class="u"> kW</span></div>
+                    <div class="val"><span id="forecast-peak">–</span><span class="u"> kW</span><span class="val-real hidden" id="forecast-peak-real"></span></div>
                     <div class="sub" id="forecast-peak-time">–</div>
                 </div>
                 <div class="stat">
                     <span class="lbl">Odhad výroby</span>
-                    <div class="val"><span id="forecast-total">–</span><span class="u"> kWh</span></div>
+                    <div class="val"><span id="forecast-total">–</span><span class="u"> kWh</span><span class="val-real hidden" id="forecast-total-real"></span></div>
                     <div class="sub">za celý deň</div>
                 </div>
             </div>
@@ -866,6 +867,33 @@
             renderTodaySummary();
         }
 
+        // Skutočná výroba dnes doteraz (z kiosku): najvyšší 5-min výkon a nabehnuté kWh za deň.
+        function realProductionSoFar() {
+            if (!latestPvData) return null;
+            const curve = Array.isArray(latestPvData.realCurveToday) ? latestPvData.realCurveToday : [];
+            const peak = curve.length ? curve.reduce((a, b) => (b.kw > a.kw ? b : a), curve[0]).kw : null;
+            const total = Number.isFinite(Number(latestPvData.dailyEnergyKwh)) ? Number(latestPvData.dailyEnergyKwh) : null;
+            return { peak, total };
+        }
+
+        function applyRealStats(peakRealEl, totalRealEl) {
+            const real = realProductionSoFar();
+
+            if (real && Number.isFinite(real.peak)) {
+                peakRealEl.innerText = ` · ${real.peak.toFixed(1)} teraz`;
+                peakRealEl.classList.remove('hidden');
+            } else {
+                peakRealEl.classList.add('hidden');
+            }
+
+            if (real && Number.isFinite(real.total)) {
+                totalRealEl.innerText = ` · ${real.total.toFixed(1)} doteraz`;
+                totalRealEl.classList.remove('hidden');
+            } else {
+                totalRealEl.classList.add('hidden');
+            }
+        }
+
         // Výber z Predpovede pre panel Spotrebiče: správa dňa + špička/odhad výroby, len pre dnešok.
         function renderTodaySummary() {
             const titleEl = document.getElementById('today-message-title');
@@ -873,6 +901,8 @@
             const peakEl = document.getElementById('today-peak');
             const peakTimeEl = document.getElementById('today-peak-time');
             const totalEl = document.getElementById('today-total');
+            const peakRealEl = document.getElementById('today-peak-real');
+            const totalRealEl = document.getElementById('today-total-real');
             if (!titleEl) return;
 
             const pts = latestForecastData ? latestForecastData.hourlyToday : null;
@@ -882,6 +912,8 @@
                 peakEl.innerText = '–';
                 peakTimeEl.innerText = '–';
                 totalEl.innerText = '–';
+                peakRealEl.classList.add('hidden');
+                totalRealEl.classList.add('hidden');
                 return;
             }
 
@@ -894,6 +926,8 @@
             peakEl.innerText = peak.kw.toFixed(1);
             peakTimeEl.innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
             totalEl.innerText = total;
+
+            applyRealStats(peakRealEl, totalRealEl);
         }
 
         // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
@@ -1114,6 +1148,8 @@
             const liveLegend = document.getElementById('forecast-live-legend');
             const titleEl = document.getElementById('forecast-message-title');
             const bodyEl = document.getElementById('forecast-message-body');
+            const peakRealEl = document.getElementById('forecast-peak-real');
+            const totalRealEl = document.getElementById('forecast-total-real');
 
             if (!pts || !pts.length) {
                 svg.innerHTML = '';
@@ -1123,6 +1159,8 @@
                 document.getElementById('forecast-peak').innerText = '–';
                 document.getElementById('forecast-peak-time').innerText = '–';
                 document.getElementById('forecast-total').innerText = '–';
+                peakRealEl.classList.add('hidden');
+                totalRealEl.classList.add('hidden');
                 titleEl.innerText = 'Predpoveď sa pripravuje';
                 bodyEl.innerText = 'Hodinové dáta zatiaľ nie sú k dispozícii, skús to o chvíľu.';
                 return;
@@ -1199,6 +1237,13 @@
             document.getElementById('forecast-peak').innerText = peak.kw.toFixed(1);
             document.getElementById('forecast-peak-time').innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
             document.getElementById('forecast-total').innerText = total;
+
+            if (currentForecastDay === 'today') {
+                applyRealStats(peakRealEl, totalRealEl);
+            } else {
+                peakRealEl.classList.add('hidden');
+                totalRealEl.classList.add('hidden');
+            }
 
             const msg = forecastDayMessage(pts, currentForecastDay === 'today');
             titleEl.innerText = msg.title;
