@@ -331,7 +331,25 @@
 
             <div class="season-indicator" id="season-indicator">Leto</div>
 
-            <div class="tl" id="timeline-container">
+            <div class="msg-block" id="today-msg-block">
+                <h4 id="today-message-title">Načítavam…</h4>
+                <p id="today-message-body">Predpoveď sa načítava.</p>
+            </div>
+
+            <div class="stat-pair" id="today-stat-pair">
+                <div class="stat">
+                    <span class="lbl">Špička</span>
+                    <div class="val"><span id="today-peak">–</span><span class="u"> kW</span></div>
+                    <div class="sub" id="today-peak-time">–</div>
+                </div>
+                <div class="stat">
+                    <span class="lbl">Odhad výroby</span>
+                    <div class="val"><span id="today-total">–</span><span class="u"> kWh</span></div>
+                    <div class="sub">za celý deň</div>
+                </div>
+            </div>
+
+            <div class="tl hidden" id="timeline-container">
 
                 <!-- NOC (23:30 - 07:30) -->
                 <div class="tl-row" data-start="23:30" data-end="07:30" data-status="amber">
@@ -840,6 +858,37 @@
 
             updateTimeAndHighlight();
             renderForecastChart();
+            renderTodaySummary();
+        }
+
+        // Výber z Predpovede pre panel Spotrebiče: správa dňa + špička/odhad výroby, len pre dnešok.
+        function renderTodaySummary() {
+            const titleEl = document.getElementById('today-message-title');
+            const bodyEl = document.getElementById('today-message-body');
+            const peakEl = document.getElementById('today-peak');
+            const peakTimeEl = document.getElementById('today-peak-time');
+            const totalEl = document.getElementById('today-total');
+            if (!titleEl) return;
+
+            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
+            if (!pts || !pts.length) {
+                titleEl.innerText = 'Predpoveď sa pripravuje';
+                bodyEl.innerText = 'Hodinové dáta zatiaľ nie sú k dispozícii, skús to o chvíľu.';
+                peakEl.innerText = '–';
+                peakTimeEl.innerText = '–';
+                totalEl.innerText = '–';
+                return;
+            }
+
+            const msg = forecastDayMessage(pts, true);
+            titleEl.innerText = msg.title;
+            bodyEl.innerText = msg.body;
+
+            const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]);
+            const total = Math.round(pts.reduce((s, p) => s + p.kw, 0) * 10) / 10;
+            peakEl.innerText = peak.kw.toFixed(1);
+            peakTimeEl.innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
+            totalEl.innerText = total;
         }
 
         // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
