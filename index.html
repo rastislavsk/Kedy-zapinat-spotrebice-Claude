@@ -1147,7 +1147,9 @@
                 if (h % 3 !== 0) continue;
                 const { x } = forecastXY(h, 0, hMin, hMax, maxKw, dims);
                 gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.07)" stroke-width="1"/>`;
-                gridLines += `<text class="axis-label" x="${x}" y="${dims.h - 6}" text-anchor="middle">${h}:00</text>`;
+                // Krajné popisky zarovnaj k okraju (nie na stred), aby sa nerezali o okraj SVG.
+                const anchor = h === hMin ? 'start' : (h === hMax ? 'end' : 'middle');
+                gridLines += `<text class="axis-label" x="${x}" y="${dims.h - 6}" text-anchor="${anchor}">${h}:00</text>`;
             }
 
             const cloudAvailable = pts.every(p => Number.isFinite(p.cloud));
