@@ -63,6 +63,8 @@
             max-width: 480px;
             margin: 0 auto;
             padding: 18px 20px 14px;
+        }
+        .appbar-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -122,7 +124,7 @@
         .wait-chip svg { width: 14px; height: 14px; stroke: var(--accent, var(--ink-45)); flex-shrink: 0; }
         .wait-chip b { color: var(--ink); font-weight: 600; }
 
-        .pv-updated-line { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-bottom: 8px; }
+        .pv-updated-line { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-top: 6px; }
         .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
         .footline-left { display: flex; align-items: baseline; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); }
         .footline-left .kw { font-size: 13px; font-weight: 600; color: var(--ink-70); transition: color 0.4s ease; }
@@ -303,10 +305,15 @@
 
     <div class="appbar">
         <div class="appbar-inner">
-            <span class="appbar-label">ENERGIA</span>
-            <div class="appbar-clock">
-                <span id="header-status-dot" class="live-dot"></span>
-                <span id="current-time-display">00:00</span>
+            <div class="appbar-top">
+                <span class="appbar-label">ENERGIA</span>
+                <div class="appbar-clock">
+                    <span id="header-status-dot" class="live-dot"></span>
+                    <span id="current-time-display">00:00</span>
+                </div>
+            </div>
+            <div class="pv-updated-line" id="pv-updated-line">
+                <span id="pv-updated">načítavam…</span>
             </div>
         </div>
     </div>
@@ -325,10 +332,6 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
                     <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
                 </div>
-            </div>
-
-            <div class="pv-updated-line" id="pv-updated-line">
-                <span id="pv-updated">načítavam…</span>
             </div>
 
             <div class="footline">
