@@ -234,9 +234,9 @@
         .chart-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--ink-08); }
         .chart-legend { display: flex; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-35); }
         .chart-legend span { display: flex; align-items: center; gap: 6px; }
-        .leg-line { width: 12px; height: 1.5px; background: var(--green); display: inline-block; }
+        .leg-line { width: 12px; height: 1.5px; background: var(--ink); display: inline-block; }
+        .leg-line-real { width: 12px; height: 1.5px; background: var(--green); display: inline-block; }
         .leg-dash { width: 12px; height: 0; border-top: 1.5px dashed var(--ink-35); display: inline-block; }
-        .leg-dot2 { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); display: inline-block; }
 
         .forecast-tooltip {
             position: absolute;
@@ -513,7 +513,7 @@
                     <div class="chart-legend">
                         <span><span class="leg-line"></span>predpoveď</span>
                         <span><span class="leg-dash"></span>oblačnosť</span>
-                        <span id="forecast-live-legend" class="hidden"><span class="leg-dot2"></span>naživo</span>
+                        <span id="forecast-live-legend" class="hidden"><span class="leg-line-real"></span>skutočná výroba</span>
                     </div>
                 </div>
             </div>
@@ -1131,7 +1131,13 @@
             const dims = { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22 };
             const hMin = pts[0].hour;
             const hMax = pts[pts.length - 1].hour;
-            const maxKw = Math.max(...pts.map(p => p.kw), 0.5) * 1.15;
+
+            // Dnešná skutočná výroba (z kiosku, 5-min kroky) sa kreslí len na karte "Dnes".
+            const realPts = (currentForecastDay === 'today' && latestPvData && Array.isArray(latestPvData.realCurveToday))
+                ? latestPvData.realCurveToday.filter(p => p.hour >= hMin && p.hour <= hMax)
+                : [];
+
+            const maxKw = Math.max(...pts.map(p => p.kw), ...realPts.map(p => p.kw), 0.5) * 1.15;
 
             const linePath = forecastSmoothPath(pts, hMin, hMax, maxKw, dims);
 
@@ -1148,42 +1154,39 @@
                 ? `<path d="${forecastCloudSmoothPath(pts, hMin, hMax, dims)}" fill="none" stroke="rgba(242,240,234,0.4)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>`
                 : '';
 
+            let realPath = '';
+            let realDot = '';
+            if (realPts.length) {
+                realPath = `<path d="${forecastSmoothPath(realPts, hMin, hMax, maxKw, dims)}" fill="none" stroke="#9EF25B" stroke-width="2" stroke-linecap="round"/>`;
+                const last = realPts[realPts.length - 1];
+                const { x: lastX, y: lastY } = forecastXY(last.hour, last.kw, hMin, hMax, maxKw, dims);
+                realDot = `<circle cx="${lastX}" cy="${lastY}" r="4" fill="#9EF25B" stroke="#0A0A0A" stroke-width="2"/>`;
+                liveLegend.classList.remove('hidden');
+            } else {
+                liveLegend.classList.add('hidden');
+            }
+
             let nowMarker = '';
-            let liveDot = '';
             const now = new Date();
             const nowHour = now.getHours() + now.getMinutes() / 60;
 
             if (currentForecastDay === 'today') {
                 const clampedHour = Math.max(hMin, Math.min(hMax, nowHour));
-                const nowKw = forecastInterpolate(pts, clampedHour);
-                const { x: nowX, y: nowY } = forecastXY(clampedHour, nowKw, hMin, hMax, maxKw, dims);
-                nowMarker = `
-                    <line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="#9EF25B" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.5"/>
-                    <circle cx="${nowX}" cy="${nowY}" r="4" fill="#9EF25B" stroke="#0A0A0A" stroke-width="2"/>
-                `;
+                const { x: nowX } = forecastXY(clampedHour, 0, hMin, hMax, maxKw, dims);
+                nowMarker = `<line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.35)" stroke-width="1.2" stroke-dasharray="2 3"/>`;
                 nowBadge.classList.remove('hidden');
                 document.getElementById('forecast-now-time').innerText = `teraz ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-                const livePower = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
-                if (Number.isFinite(livePower) && nowHour >= hMin && nowHour <= hMax) {
-                    const liveMaxKw = Math.max(maxKw, livePower * 1.15);
-                    const { x: liveX, y: liveY } = forecastXY(nowHour, livePower, hMin, hMax, liveMaxKw, dims);
-                    liveDot = `<circle cx="${liveX}" cy="${liveY}" r="3.5" fill="#F2F0EA" stroke="#0A0A0A" stroke-width="1.5"/>`;
-                    liveLegend.classList.remove('hidden');
-                } else {
-                    liveLegend.classList.add('hidden');
-                }
             } else {
                 nowBadge.classList.add('hidden');
-                liveLegend.classList.add('hidden');
             }
 
             svg.innerHTML = `
                 ${gridLines}
-                <path d="${linePath}" fill="none" stroke="#9EF25B" stroke-width="2" stroke-linecap="round"/>
+                <path d="${linePath}" fill="none" stroke="#F2F0EA" stroke-width="2" stroke-linecap="round"/>
                 ${cloudPath}
+                ${realPath}
                 ${nowMarker}
-                ${liveDot}
+                ${realDot}
             `;
 
             forecastChartState = { pts, hMin, hMax, maxKw, dims };
