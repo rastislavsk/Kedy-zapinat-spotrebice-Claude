@@ -12,6 +12,22 @@ function decodeEntities(str) {
         .replace(/&#39;/g, "'");
 }
 
+// Dnešná skutočná výroba priamo z kiosku (5-min kroky), len hodnoty do teraz.
+function extractRealCurveToday(powerCurve) {
+    if (!powerCurve || !Array.isArray(powerCurve.xAxis) || !Array.isArray(powerCurve.activePower)) return [];
+    const points = [];
+    for (let i = 0; i < powerCurve.xAxis.length; i++) {
+        const raw = powerCurve.activePower[i];
+        if (raw === undefined || raw === null || raw === '-') continue;
+        const kw = Number(raw);
+        if (!Number.isFinite(kw)) continue;
+        const [hh, mm] = String(powerCurve.xAxis[i]).split(':').map(Number);
+        if (!Number.isFinite(hh) || !Number.isFinite(mm)) continue;
+        points.push({ hour: Number((hh + mm / 60).toFixed(4)), kw });
+    }
+    return points;
+}
+
 async function main() {
     if (!KIOSK_URL) {
         throw new Error('KIOSK_URL env var is not set');
@@ -33,6 +49,7 @@ async function main() {
         yearEnergyKwh: typeof kpi.yearEnergy === 'number' ? kpi.yearEnergy : null,
         cumulativeEnergyKwh: typeof kpi.cumulativeEnergy === 'number' ? kpi.cumulativeEnergy : null,
         stationName: inner.stationOverview ? inner.stationOverview.stationName : null,
+        realCurveToday: extractRealCurveToday(inner.powerCurve),
         updatedAt: new Date().toISOString(),
     };
 
@@ -40,7 +57,7 @@ async function main() {
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, 'pv.json'), JSON.stringify(output, null, 2) + '\n');
 
-    console.log('Saved data/pv.json:', output);
+    console.log('Saved data/pv.json:', { ...output, realCurveToday: `${output.realCurveToday.length} bodov` });
 }
 
 main().catch((err) => {
