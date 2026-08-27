@@ -130,17 +130,21 @@ function daypartFor(dateUtc) {
     return 'neskôr';
 }
 
-// Hodinové pole pre graf (predpoveď výroby): {hour, kw}, zoradené podľa hodiny.
+// Hodinové pole pre graf (predpoveď výroby): {hour, kw, cloud}, zoradené podľa hodiny.
 function hourlySeries(entries) {
     return entries
-        .map((h) => ({ hour: localHour(h.dateUtc), kw: Number(h.acKw.toFixed(2)) }))
+        .map((h) => ({
+            hour: localHour(h.dateUtc),
+            kw: Number(h.acKw.toFixed(2)),
+            cloud: Number.isFinite(h.cloudPct) ? Math.round(h.cloudPct) : null,
+        }))
         .sort((a, b) => a.hour - b.hour);
 }
 
 async function main() {
     const url = 'https://api.open-meteo.com/v1/forecast'
         + `?latitude=${LAT}&longitude=${LON}`
-        + '&hourly=shortwave_radiation,direct_normal_irradiance,diffuse_radiation,temperature_2m'
+        + '&hourly=shortwave_radiation,direct_normal_irradiance,diffuse_radiation,temperature_2m,cloud_cover'
         + '&forecast_days=3&timezone=UTC';
 
     const res = await fetch(url);
@@ -152,6 +156,7 @@ async function main() {
     const dniArr = data.hourly.direct_normal_irradiance;
     const dhiArr = data.hourly.diffuse_radiation;
     const tempArr = data.hourly.temperature_2m;
+    const cloudArr = data.hourly.cloud_cover;
 
     const now = new Date();
     const todayKey = localDateKey(now);
@@ -162,7 +167,7 @@ async function main() {
     const hourly = times.map((t, i) => {
         const dateUtc = new Date(`${t}Z`);
         const acKw = forecastAcKw(ghiArr[i], dniArr[i], dhiArr[i], tempArr[i], dateUtc);
-        return { dateUtc, acKw, localDate: localDateKey(dateUtc) };
+        return { dateUtc, acKw, localDate: localDateKey(dateUtc), cloudPct: cloudArr ? cloudArr[i] : null };
     });
 
     const currentHourEntry = hourly.find((h) => h.dateUtc.getTime() === nowHourUtc.getTime());
