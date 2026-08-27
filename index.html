@@ -220,12 +220,14 @@
         .stat { flex: 1; }
         .stat + .stat { border-left: 1px solid var(--ink-12); padding-left: 18px; margin-left: 18px; }
         .stat .lbl { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); display: block; margin-bottom: 6px; }
-        .stat .val { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-        .stat .val .u { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 400; color: var(--ink-45); }
-        .stat .val-real { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--green); margin-top: 2px; }
-        .stat .val-real .u { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 400; color: var(--green); opacity: 0.75; }
-        .stat .sub { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-35); margin-top: 4px; }
-        .stat .sub-real { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--green); margin-top: 2px; }
+        .stat .cols { display: flex; gap: 18px; }
+        .stat .col-pred, .stat .col-real { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; row-gap: 2px; min-width: 0; }
+        .stat .col-pred .num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+        .stat .col-real .num { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--green); }
+        .stat .col-pred .u { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 400; color: var(--ink-45); }
+        .stat .col-real .u { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 400; color: var(--green); opacity: 0.75; }
+        .stat .col-pred .subtxt { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-35); }
+        .stat .col-real .subtxt { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--green); }
 
         .chart-card { margin: 4px 0 24px; position: relative; }
         .chart-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -351,17 +353,25 @@
                 <div class="stat-pair" id="today-stat-pair">
                     <div class="stat">
                         <span class="lbl">Špička</span>
-                        <div class="val"><span id="today-peak">–</span><span class="u"> kW</span></div>
-                        <div class="val-real hidden" id="today-peak-real"></div>
-                        <div class="sub" id="today-peak-time">–</div>
-                        <div class="sub-real hidden" id="today-peak-real-time"></div>
+                        <div class="cols">
+                            <div class="col-pred">
+                                <span class="num" id="today-peak">–</span><span class="u"> kW</span><span class="subtxt" id="today-peak-time">–</span>
+                            </div>
+                            <div class="col-real hidden" id="today-peak-real-col">
+                                <span class="num" id="today-peak-real"></span><span class="u"> kW</span><span class="subtxt" id="today-peak-real-time"></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="stat">
                         <span class="lbl">Odhad výroby</span>
-                        <div class="val"><span id="today-total">–</span><span class="u"> kWh</span></div>
-                        <div class="val-real hidden" id="today-total-real"></div>
-                        <div class="sub">za celý deň</div>
-                        <div class="sub-real hidden" id="today-total-real-label">doteraz</div>
+                        <div class="cols">
+                            <div class="col-pred">
+                                <span class="num" id="today-total">–</span><span class="u"> kWh</span><span class="subtxt">za celý deň</span>
+                            </div>
+                            <div class="col-real hidden" id="today-total-real-col">
+                                <span class="num" id="today-total-real"></span><span class="u"> kWh</span><span class="subtxt">doteraz</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -499,17 +509,25 @@
             <div class="stat-pair">
                 <div class="stat">
                     <span class="lbl">Špička</span>
-                    <div class="val"><span id="forecast-peak">–</span><span class="u"> kW</span></div>
-                    <div class="val-real hidden" id="forecast-peak-real"></div>
-                    <div class="sub" id="forecast-peak-time">–</div>
-                    <div class="sub-real hidden" id="forecast-peak-real-time"></div>
+                    <div class="cols">
+                        <div class="col-pred">
+                            <span class="num" id="forecast-peak">–</span><span class="u"> kW</span><span class="subtxt" id="forecast-peak-time">–</span>
+                        </div>
+                        <div class="col-real hidden" id="forecast-peak-real-col">
+                            <span class="num" id="forecast-peak-real"></span><span class="u"> kW</span><span class="subtxt" id="forecast-peak-real-time"></span>
+                        </div>
+                    </div>
                 </div>
                 <div class="stat">
                     <span class="lbl">Odhad výroby</span>
-                    <div class="val"><span id="forecast-total">–</span><span class="u"> kWh</span></div>
-                    <div class="val-real hidden" id="forecast-total-real"></div>
-                    <div class="sub">za celý deň</div>
-                    <div class="sub-real hidden" id="forecast-total-real-label">doteraz</div>
+                    <div class="cols">
+                        <div class="col-pred">
+                            <span class="num" id="forecast-total">–</span><span class="u"> kWh</span><span class="subtxt">za celý deň</span>
+                        </div>
+                        <div class="col-real hidden" id="forecast-total-real-col">
+                            <span class="num" id="forecast-total-real"></span><span class="u"> kWh</span><span class="subtxt">doteraz</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -889,26 +907,22 @@
             return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
         }
 
-        function applyRealStats(peakValueEl, peakTimeEl, totalValueEl, totalLabelEl) {
+        function applyRealStats(peakColEl, peakValueEl, peakTimeEl, totalColEl, totalValueEl) {
             const real = realProductionSoFar();
 
             if (real && Number.isFinite(real.peakKw) && Number.isFinite(real.peakHour)) {
-                peakValueEl.innerHTML = `${real.peakKw.toFixed(1)}<span class="u"> kW</span>`;
-                peakValueEl.classList.remove('hidden');
+                peakValueEl.innerText = real.peakKw.toFixed(1);
                 peakTimeEl.innerText = `o ${formatHourAsTime(real.peakHour)}`;
-                peakTimeEl.classList.remove('hidden');
+                peakColEl.classList.remove('hidden');
             } else {
-                peakValueEl.classList.add('hidden');
-                peakTimeEl.classList.add('hidden');
+                peakColEl.classList.add('hidden');
             }
 
             if (real && Number.isFinite(real.total)) {
-                totalValueEl.innerHTML = `${real.total.toFixed(1)}<span class="u"> kWh</span>`;
-                totalValueEl.classList.remove('hidden');
-                totalLabelEl.classList.remove('hidden');
+                totalValueEl.innerText = real.total.toFixed(1);
+                totalColEl.classList.remove('hidden');
             } else {
-                totalValueEl.classList.add('hidden');
-                totalLabelEl.classList.add('hidden');
+                totalColEl.classList.add('hidden');
             }
         }
 
@@ -919,10 +933,11 @@
             const peakEl = document.getElementById('today-peak');
             const peakTimeEl = document.getElementById('today-peak-time');
             const totalEl = document.getElementById('today-total');
+            const peakRealColEl = document.getElementById('today-peak-real-col');
             const peakRealEl = document.getElementById('today-peak-real');
             const peakRealTimeEl = document.getElementById('today-peak-real-time');
+            const totalRealColEl = document.getElementById('today-total-real-col');
             const totalRealEl = document.getElementById('today-total-real');
-            const totalRealLabelEl = document.getElementById('today-total-real-label');
             if (!titleEl) return;
 
             const pts = latestForecastData ? latestForecastData.hourlyToday : null;
@@ -932,10 +947,8 @@
                 peakEl.innerText = '–';
                 peakTimeEl.innerText = '–';
                 totalEl.innerText = '–';
-                peakRealEl.classList.add('hidden');
-                peakRealTimeEl.classList.add('hidden');
-                totalRealEl.classList.add('hidden');
-                totalRealLabelEl.classList.add('hidden');
+                peakRealColEl.classList.add('hidden');
+                totalRealColEl.classList.add('hidden');
                 return;
             }
 
@@ -949,7 +962,7 @@
             peakTimeEl.innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
             totalEl.innerText = total;
 
-            applyRealStats(peakRealEl, peakRealTimeEl, totalRealEl, totalRealLabelEl);
+            applyRealStats(peakRealColEl, peakRealEl, peakRealTimeEl, totalRealColEl, totalRealEl);
         }
 
         // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
@@ -1170,10 +1183,11 @@
             const liveLegend = document.getElementById('forecast-live-legend');
             const titleEl = document.getElementById('forecast-message-title');
             const bodyEl = document.getElementById('forecast-message-body');
+            const peakRealColEl = document.getElementById('forecast-peak-real-col');
             const peakRealEl = document.getElementById('forecast-peak-real');
             const peakRealTimeEl = document.getElementById('forecast-peak-real-time');
+            const totalRealColEl = document.getElementById('forecast-total-real-col');
             const totalRealEl = document.getElementById('forecast-total-real');
-            const totalRealLabelEl = document.getElementById('forecast-total-real-label');
 
             if (!pts || !pts.length) {
                 svg.innerHTML = '';
@@ -1183,10 +1197,8 @@
                 document.getElementById('forecast-peak').innerText = '–';
                 document.getElementById('forecast-peak-time').innerText = '–';
                 document.getElementById('forecast-total').innerText = '–';
-                peakRealEl.classList.add('hidden');
-                peakRealTimeEl.classList.add('hidden');
-                totalRealEl.classList.add('hidden');
-                totalRealLabelEl.classList.add('hidden');
+                peakRealColEl.classList.add('hidden');
+                totalRealColEl.classList.add('hidden');
                 titleEl.innerText = 'Predpoveď sa pripravuje';
                 bodyEl.innerText = 'Hodinové dáta zatiaľ nie sú k dispozícii, skús to o chvíľu.';
                 return;
@@ -1265,12 +1277,10 @@
             document.getElementById('forecast-total').innerText = total;
 
             if (currentForecastDay === 'today') {
-                applyRealStats(peakRealEl, peakRealTimeEl, totalRealEl, totalRealLabelEl);
+                applyRealStats(peakRealColEl, peakRealEl, peakRealTimeEl, totalRealColEl, totalRealEl);
             } else {
-                peakRealEl.classList.add('hidden');
-                peakRealTimeEl.classList.add('hidden');
-                totalRealEl.classList.add('hidden');
-                totalRealLabelEl.classList.add('hidden');
+                peakRealColEl.classList.add('hidden');
+                totalRealColEl.classList.add('hidden');
             }
 
             const msg = forecastDayMessage(pts, currentForecastDay === 'today');
