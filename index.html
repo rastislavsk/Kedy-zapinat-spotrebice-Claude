@@ -256,6 +256,9 @@
         .forecast-tooltip .tt-kw { color: var(--ink); font-size: 12.5px; margin-top: 2px; }
         .forecast-tooltip.visible { opacity: 1; }
 
+        .today-forecast-link { cursor: pointer; transition: opacity 0.15s ease; }
+        .today-forecast-link:active { opacity: 0.7; }
+
         .msg-block { border-top: 1px solid var(--ink-12); padding-top: 18px; margin-top: 4px; }
         .msg-block h4 { margin: 0 0 6px; font-size: 15px; font-weight: 600; }
         .msg-block p { margin: 0; font-size: 12px; color: var(--ink-45); font-weight: 400; line-height: 1.55; }
@@ -331,21 +334,23 @@
 
             <div class="season-indicator" id="season-indicator">Leto</div>
 
-            <div class="msg-block" id="today-msg-block">
-                <h4 id="today-message-title">Načítavam…</h4>
-                <p id="today-message-body">Predpoveď sa načítava.</p>
-            </div>
-
-            <div class="stat-pair" id="today-stat-pair">
-                <div class="stat">
-                    <span class="lbl">Špička</span>
-                    <div class="val"><span id="today-peak">–</span><span class="u"> kW</span></div>
-                    <div class="sub" id="today-peak-time">–</div>
+            <div class="today-forecast-link" onclick="setPanel('predpoved')">
+                <div class="msg-block" id="today-msg-block">
+                    <h4 id="today-message-title">Načítavam…</h4>
+                    <p id="today-message-body">Predpoveď sa načítava.</p>
                 </div>
-                <div class="stat">
-                    <span class="lbl">Odhad výroby</span>
-                    <div class="val"><span id="today-total">–</span><span class="u"> kWh</span></div>
-                    <div class="sub">za celý deň</div>
+
+                <div class="stat-pair" id="today-stat-pair">
+                    <div class="stat">
+                        <span class="lbl">Špička</span>
+                        <div class="val"><span id="today-peak">–</span><span class="u"> kW</span></div>
+                        <div class="sub" id="today-peak-time">–</div>
+                    </div>
+                    <div class="stat">
+                        <span class="lbl">Odhad výroby</span>
+                        <div class="val"><span id="today-total">–</span><span class="u"> kWh</span></div>
+                        <div class="sub">za celý deň</div>
+                    </div>
                 </div>
             </div>
 
