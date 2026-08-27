@@ -145,6 +145,13 @@
         .strip-ticks { display: flex; justify-content: space-between; margin-top: 8px; }
         .strip-ticks span { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); }
 
+        .season-indicator {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--ink-35);
+            margin: 22px 0 4px;
+        }
+
         /* --- Underline tabs (season / day switch) --- */
         .utabs { display: flex; gap: 24px; border-bottom: 1px solid var(--ink-12); margin: 22px 0 4px; }
         .utab {
@@ -322,10 +329,7 @@
                 <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
             </div>
 
-            <div class="utabs">
-                <button id="btn-summer" class="utab active" onclick="setSeason('summer')">Leto</button>
-                <button id="btn-winter" class="utab" onclick="setSeason('winter')">Zima</button>
-            </div>
+            <div class="season-indicator" id="season-indicator">Leto</div>
 
             <div class="tl" id="timeline-container">
 
@@ -555,7 +559,7 @@
                 correctLevel : QRCode.CorrectLevel.H
             });
 
-            renderDayStrip(currentSeason);
+            setSeason(detectSeason());
             setForecastDay('today');
             setInterval(updateTimeAndHighlight, 1000 * 30);
             updateTimeAndHighlight();
@@ -675,10 +679,16 @@
             }
         }
 
+        // Leto = marec až október, zima = november až február. Žiadny manuálny prepínač.
+        function detectSeason() {
+            const month = new Date().getMonth() + 1;
+            return (month >= 3 && month <= 10) ? 'summer' : 'winter';
+        }
+
         function setSeason(season) {
             currentSeason = season;
-            document.getElementById('btn-summer').classList.toggle('active', season === 'summer');
-            document.getElementById('btn-winter').classList.toggle('active', season === 'winter');
+            const indicator = document.getElementById('season-indicator');
+            if (indicator) indicator.textContent = season === 'summer' ? 'Leto' : 'Zima';
             document.querySelectorAll('.season-summer').forEach(el => el.classList.toggle('hidden', season !== 'summer'));
             document.querySelectorAll('.season-winter').forEach(el => el.classList.toggle('hidden', season !== 'winter'));
             renderDayStrip(season);
