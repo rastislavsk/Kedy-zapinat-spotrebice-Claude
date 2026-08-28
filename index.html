@@ -686,10 +686,10 @@
         }
 
         function buildEyebrow(blockType, power, isNightSlot) {
-            const tariffPhrase = blockType === 'green' ? 'Zadarmo' : blockType === 'amber' ? 'Lacná sieť' : 'Drahá sieť';
+            const tariffPhrase = blockType === 'green' ? 'Zadarmo' : blockType === 'amber' ? 'Lacná sieť' : 'Drahá elektrina';
             if (isNightSlot) return `${tariffPhrase} · noc`;
             const level = productionLevel(power);
-            const sunPhrase = level === 'vys' ? 'silné slnko' : level === 'str' ? 'mierne slnko' : level === 'niz' ? 'slnko nepridáva' : null;
+            const sunPhrase = level === 'vys' ? 'silné slnko' : level === 'str' ? 'mierne slnko' : level === 'niz' ? 'slnko je slabé' : null;
             return sunPhrase ? `${tariffPhrase} · ${sunPhrase}` : tariffPhrase;
         }
 
