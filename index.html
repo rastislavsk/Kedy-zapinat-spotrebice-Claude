@@ -76,6 +76,12 @@
             letter-spacing: 0.18em;
             color: var(--ink-35);
         }
+        .appbar-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
         .appbar-clock {
             display: flex;
             align-items: center;
@@ -83,6 +89,13 @@
             font-family: 'IBM Plex Mono', monospace;
             font-size: 12px;
             color: var(--ink-70);
+        }
+        .appbar-pv {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink-70);
+            transition: color 0.4s ease;
         }
         .live-dot {
             width: 6px; height: 6px; border-radius: 50%;
@@ -126,9 +139,6 @@
 
         .pv-updated-line { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-top: 6px; }
         .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-        .footline-left { display: flex; align-items: baseline; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); }
-        .footline-left .kw { font-size: 13px; font-weight: 600; color: var(--ink-70); transition: color 0.4s ease; }
-        .footline-left .sep { color: var(--ink-20); }
 
         /* --- Day strip: whole day at a glance --- */
         .daystrip-wrap { margin-bottom: 24px; }
@@ -307,9 +317,12 @@
         <div class="appbar-inner">
             <div class="appbar-top">
                 <span class="appbar-label">ENERGIA</span>
-                <div class="appbar-clock">
-                    <span id="header-status-dot" class="live-dot"></span>
-                    <span id="current-time-display">00:00</span>
+                <div class="appbar-right">
+                    <div class="appbar-clock">
+                        <span id="header-status-dot" class="live-dot"></span>
+                        <span id="current-time-display">00:00</span>
+                    </div>
+                    <span id="pv-power" class="appbar-pv">–</span>
                 </div>
             </div>
             <div class="pv-updated-line" id="pv-updated-line">
@@ -342,10 +355,6 @@
             </div>
 
             <div class="footline">
-                <div class="footline-left">
-                    <span id="pv-power" class="kw">–</span><span class="sep">·</span>
-                    <span>aktuálna výroba fotovoltiky</span>
-                </div>
                 <span class="season-indicator" id="season-indicator">Leto</span>
             </div>
 
