@@ -264,7 +264,7 @@
         .forecast-tooltip .tt-kw { color: var(--ink); font-size: 12.5px; margin-top: 2px; }
         .forecast-tooltip.visible { opacity: 1; }
 
-        .today-forecast-link { cursor: pointer; transition: opacity 0.15s ease; }
+        .today-forecast-link { cursor: pointer; transition: opacity 0.15s ease; margin-bottom: 22px; }
         .today-forecast-link:active { opacity: 0.7; }
 
         .msg-block { border-top: 1px solid var(--ink-12); padding-top: 18px; margin-top: 4px; }
@@ -323,6 +323,13 @@
         <!-- PANEL: SPOTREBIČE -->
         <div id="panel-spotrebice">
 
+            <div class="today-forecast-link" onclick="setPanel('predpoved')">
+                <div class="msg-block" id="today-msg-block">
+                    <h4 id="today-message-title">Načítavam…</h4>
+                    <p id="today-message-body">Predpoveď sa načítava.</p>
+                </div>
+            </div>
+
             <div class="verdict" id="verdict">
                 <div class="eyebrow" id="verdict-eyebrow">—</div>
                 <h1 id="verdict-headline">Načítavam…</h1>
@@ -345,13 +352,6 @@
             <div class="daystrip-wrap">
                 <div class="daystrip" id="daystrip"></div>
                 <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
-            </div>
-
-            <div class="today-forecast-link" onclick="setPanel('predpoved')">
-                <div class="msg-block" id="today-msg-block">
-                    <h4 id="today-message-title">Načítavam…</h4>
-                    <p id="today-message-body">Predpoveď sa načítava.</p>
-                </div>
             </div>
 
             <div class="tl hidden" id="timeline-container">
