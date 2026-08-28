@@ -352,31 +352,6 @@
                     <h4 id="today-message-title">Načítavam…</h4>
                     <p id="today-message-body">Predpoveď sa načítava.</p>
                 </div>
-
-                <div class="stat-pair" id="today-stat-pair">
-                    <div class="stat">
-                        <span class="lbl">Špička</span>
-                        <div class="cols">
-                            <div class="col-pred">
-                                <span class="num" id="today-peak">–</span><span class="u"> kW</span><span class="subtxt" id="today-peak-time">–</span>
-                            </div>
-                            <div class="col-real hidden" id="today-peak-real-col">
-                                <span class="num" id="today-peak-real"></span><span class="u"> kW</span><span class="subtxt" id="today-peak-real-time"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat">
-                        <span class="lbl">Odhad výroby</span>
-                        <div class="cols">
-                            <div class="col-pred">
-                                <span class="num" id="today-total">–</span><span class="u"> kWh</span><span class="subtxt">za celý deň</span>
-                            </div>
-                            <div class="col-real hidden" id="today-total-real-col">
-                                <span class="num" id="today-total-real"></span><span class="u"> kWh</span><span class="subtxt">doteraz</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="tl hidden" id="timeline-container">
@@ -933,39 +908,18 @@
         function renderTodaySummary() {
             const titleEl = document.getElementById('today-message-title');
             const bodyEl = document.getElementById('today-message-body');
-            const peakEl = document.getElementById('today-peak');
-            const peakTimeEl = document.getElementById('today-peak-time');
-            const totalEl = document.getElementById('today-total');
-            const peakRealColEl = document.getElementById('today-peak-real-col');
-            const peakRealEl = document.getElementById('today-peak-real');
-            const peakRealTimeEl = document.getElementById('today-peak-real-time');
-            const totalRealColEl = document.getElementById('today-total-real-col');
-            const totalRealEl = document.getElementById('today-total-real');
             if (!titleEl) return;
 
             const pts = latestForecastData ? latestForecastData.hourlyToday : null;
             if (!pts || !pts.length) {
                 titleEl.innerText = 'Predpoveď sa pripravuje';
                 bodyEl.innerText = 'Hodinové dáta zatiaľ nie sú k dispozícii, skús to o chvíľu.';
-                peakEl.innerText = '–';
-                peakTimeEl.innerText = '–';
-                totalEl.innerText = '–';
-                peakRealColEl.classList.add('hidden');
-                totalRealColEl.classList.add('hidden');
                 return;
             }
 
             const msg = forecastDayMessage(pts, true);
             titleEl.innerText = msg.title;
             bodyEl.innerText = msg.body;
-
-            const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]);
-            const total = Math.round(pts.reduce((s, p) => s + p.kw, 0) * 10) / 10;
-            peakEl.innerText = peak.kw.toFixed(1);
-            peakTimeEl.innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
-            totalEl.innerText = total;
-
-            applyRealStats(peakRealColEl, peakRealEl, peakRealTimeEl, totalRealColEl, totalRealEl);
         }
 
         // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
