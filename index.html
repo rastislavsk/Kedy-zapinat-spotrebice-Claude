@@ -686,7 +686,7 @@
         }
 
         function buildEyebrow(blockType, power, isNightSlot) {
-            const tariffPhrase = blockType === 'green' ? 'Zadarmo' : blockType === 'amber' ? 'Lacná sieť' : 'Drahá elektrina';
+            const tariffPhrase = blockType === 'green' ? "IT'S GREENTIME 🙂" : blockType === 'amber' ? 'Lacná elektrina' : 'Drahá elektrina';
             if (isNightSlot) return `${tariffPhrase} · noc`;
             const level = productionLevel(power);
             const sunPhrase = level === 'vys' ? 'silné slnko' : level === 'str' ? 'mierne slnko' : level === 'niz' ? 'slnko je slabé' : null;
