@@ -1,19 +1,19 @@
-name: Fetch PV production data
+name: Compute solar forecast
 
 on:
   schedule:
-    - cron: '2-59/5 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
 concurrency:
-  group: fetch-pv
+  group: fetch-forecast
   cancel-in-progress: true
 
 jobs:
-  fetch:
+  forecast:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,18 +24,16 @@ jobs:
         with:
           node-version: 20
 
-      - name: Fetch FusionSolar kiosk data
-        env:
-          KIOSK_URL: https://uni004eu5.fusionsolar.huawei.com/rest/pvms/web/kiosk/v1/station-kiosk-file?kk=fNpkjQuEAOvn4Cn8hdu9k2GvPD9oPMuq
-        run: node scripts/fetch-pv.js
+      - name: Compute solar forecast
+        run: node scripts/forecast.js
 
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/pv.json
+          git add data/forecast.json
           git diff --cached --quiet && exit 0
-          git commit -m "chore: update PV production data"
+          git commit -m "chore: update solar forecast"
           for i in 1 2 3; do
             git push && exit 0
             git fetch origin

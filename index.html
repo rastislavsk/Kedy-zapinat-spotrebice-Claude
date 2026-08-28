@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
     <style>
         :root {
             --bg: #0A0A0A;
@@ -580,38 +580,103 @@
     </div>
 
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            initForecastChartInteraction();
-
-            const appUrl = "https://rastislavsk.github.io/Kedy-zapinat-spotrebice-Claude/";
-
-            new QRCode(document.getElementById("qrcode"), {
-                text: appUrl,
-                width: 256,
-                height: 256,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
-            setSeason(detectSeason());
-            setForecastDay('today');
-            setInterval(updateTimeAndHighlight, 1000 * 30);
-            updateTimeAndHighlight();
-            updatePvProduction();
-            setInterval(updatePvProduction, 1000 * 60);
-            updateForecast();
-            setInterval(updateForecast, 1000 * 60 * 5);
-        });
-
         const PV_LIVE_URL = 'https://pv-proxy.rastislav-racek.workers.dev/';
 
         let currentSeason = 'summer';
+        let currentPanel = 'spotrebice';
         let latestPvData = null;
         let latestForecastData = null;
         let currentBlockType = null;
         let currentForecastDay = 'today';
         let forecastChartState = null;
+        let qrInitialized = false;
+
+        // Casto pouzivane DOM referencie nacitane raz (skript bezi az po naparsovani <body>,
+        // takze vsetky elementy uz existuju).
+        const dom = {
+            headerStatusDot: document.getElementById('header-status-dot'),
+            currentTimeDisplay: document.getElementById('current-time-display'),
+            pvUpdated: document.getElementById('pv-updated'),
+            pvPower: document.getElementById('pv-power'),
+            seasonIndicator: document.getElementById('season-indicator'),
+            daystrip: document.getElementById('daystrip'),
+            tlRows: document.querySelectorAll('.tl-row'),
+            todayMessageTitle: document.getElementById('today-message-title'),
+            todayMessageBody: document.getElementById('today-message-body'),
+            verdict: document.getElementById('verdict'),
+            verdictEyebrow: document.getElementById('verdict-eyebrow'),
+            verdictHeadline: document.getElementById('verdict-headline'),
+            verdictBody: document.getElementById('verdict-body'),
+            verdictGoRow: document.getElementById('verdict-go-row'),
+            verdictWaitChip: document.getElementById('verdict-wait-chip'),
+            verdictWaitTime: document.getElementById('verdict-wait-time'),
+            dayBtnToday: document.getElementById('day-btn-today'),
+            dayBtnTomorrow: document.getElementById('day-btn-tomorrow'),
+            forecastChart: document.getElementById('forecast-chart'),
+            forecastNowBadge: document.getElementById('forecast-now-badge'),
+            forecastNowTime: document.getElementById('forecast-now-time'),
+            forecastLiveLegend: document.getElementById('forecast-live-legend'),
+            forecastMessageTitle: document.getElementById('forecast-message-title'),
+            forecastMessageBody: document.getElementById('forecast-message-body'),
+            forecastPeak: document.getElementById('forecast-peak'),
+            forecastPeakTime: document.getElementById('forecast-peak-time'),
+            forecastTotal: document.getElementById('forecast-total'),
+            forecastPeakRealCol: document.getElementById('forecast-peak-real-col'),
+            forecastPeakReal: document.getElementById('forecast-peak-real'),
+            forecastPeakRealTime: document.getElementById('forecast-peak-real-time'),
+            forecastTotalRealCol: document.getElementById('forecast-total-real-col'),
+            forecastTotalReal: document.getElementById('forecast-total-real'),
+            panels: {
+                spotrebice: document.getElementById('panel-spotrebice'),
+                predpoved: document.getElementById('panel-predpoved'),
+                zdielat: document.getElementById('panel-zdielat'),
+            },
+            navs: {
+                spotrebice: document.getElementById('nav-spotrebice'),
+                predpoved: document.getElementById('nav-predpoved'),
+                zdielat: document.getElementById('nav-zdielat'),
+            },
+        };
+
+        // QR kod sa generuje az pri prvom otvoreni panelu Zdielat, nie hned pri starte appky.
+        function ensureQrCode() {
+            if (qrInitialized) return;
+            qrInitialized = true;
+            new QRCode(document.getElementById('qrcode'), {
+                text: 'https://rastislavsk.github.io/Kedy-zapinat-spotrebice-Claude/',
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H,
+            });
+        }
+
+        // Pri behu appky na pozadi (skryta karta) vynechame fetch/prekreslovanie; po navrate sa hned obnovi.
+        function tick30s() { if (!document.hidden) updateTimeAndHighlight(); }
+        function tick60s() { if (!document.hidden) updatePvProduction(); }
+        function tick5min() { if (!document.hidden) updateForecast(); }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                updateTimeAndHighlight();
+                updatePvProduction();
+                updateForecast();
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initForecastChartInteraction();
+
+            setSeason(detectSeason());
+            setForecastDay('today');
+            setInterval(tick30s, 1000 * 30);
+            updateTimeAndHighlight();
+            updatePvProduction();
+            setInterval(tick60s, 1000 * 60);
+            updateForecast();
+            setInterval(tick5min, 1000 * 60 * 5);
+        });
 
         // Segmenty pásu dňa (minúty v danom pásme), rovnaké hranice ako v zozname nižšie.
         const STRIP_SEGMENTS = {
@@ -628,7 +693,7 @@
         };
 
         function renderDayStrip(season) {
-            const strip = document.getElementById('daystrip');
+            const strip = dom.daystrip;
             if (!strip) return;
             const segs = STRIP_SEGMENTS[season] || STRIP_SEGMENTS.summer;
             strip.innerHTML = segs.map(s => `<div class="seg ${s.cls}" style="flex:${s.min};"></div>`).join('')
@@ -671,13 +736,13 @@
         // Hero odpoveď: "môžeš" ukáže konkrétne spotrebiče (z data-devices aktívneho slotu),
         // "počkaj" ukáže rovno kedy bude lepšie (z predpovede), inak len text rady.
         function renderVerdict(blockType, power, activeRow, msg, isNightSlot) {
-            const verdictEl = document.getElementById('verdict');
-            const eyebrowEl = document.getElementById('verdict-eyebrow');
-            const headlineEl = document.getElementById('verdict-headline');
-            const bodyEl = document.getElementById('verdict-body');
-            const goRow = document.getElementById('verdict-go-row');
-            const waitChip = document.getElementById('verdict-wait-chip');
-            const waitTime = document.getElementById('verdict-wait-time');
+            const verdictEl = dom.verdict;
+            const eyebrowEl = dom.verdictEyebrow;
+            const headlineEl = dom.verdictHeadline;
+            const bodyEl = dom.verdictBody;
+            const goRow = dom.verdictGoRow;
+            const waitChip = dom.verdictWaitChip;
+            const waitTime = dom.verdictWaitTime;
 
             if (!blockType || !msg) {
                 verdictEl.style.setProperty('--accent', 'var(--ink-20)');
@@ -722,7 +787,7 @@
 
         function setSeason(season) {
             currentSeason = season;
-            const indicator = document.getElementById('season-indicator');
+            const indicator = dom.seasonIndicator;
             if (indicator) indicator.textContent = season === 'summer' ? 'Leto' : 'Zima';
             document.querySelectorAll('.season-summer').forEach(el => el.classList.toggle('hidden', season !== 'summer'));
             document.querySelectorAll('.season-winter').forEach(el => el.classList.toggle('hidden', season !== 'winter'));
@@ -732,11 +797,13 @@
 
         // Prepínanie hlavných obrazoviek appky cez spodnú navigáciu
         function setPanel(panel) {
+            currentPanel = panel;
             ['spotrebice', 'predpoved', 'zdielat'].forEach(p => {
-                document.getElementById(`panel-${p}`).classList.toggle('hidden', p !== panel);
-                document.getElementById(`nav-${p}`).classList.toggle('active', p === panel);
+                dom.panels[p].classList.toggle('hidden', p !== panel);
+                dom.navs[p].classList.toggle('active', p === panel);
             });
             if (panel === 'predpoved') renderForecastChart();
+            if (panel === 'zdielat') ensureQrCode();
         }
 
         function updateTimeAndHighlight() {
@@ -744,10 +811,10 @@
             const h = now.getHours().toString().padStart(2, '0');
             const m = now.getMinutes().toString().padStart(2, '0');
             const currentTimeStr = `${h}:${m}`;
-            document.getElementById('current-time-display').innerText = currentTimeStr;
+            dom.currentTimeDisplay.innerText = currentTimeStr;
             updateStripMarker();
 
-            const rows = document.querySelectorAll('.tl-row');
+            const rows = dom.tlRows;
             let activeRow = null;
 
             rows.forEach(row => {
@@ -758,7 +825,7 @@
                 if (isCurrentTimeInBlock(currentTimeStr, start, end)) activeRow = row;
             });
 
-            const headerDot = document.getElementById('header-status-dot');
+            const headerDot = dom.headerStatusDot;
 
             if (activeRow) {
                 const blockType = activeRow.getAttribute('data-status') || 'green';
@@ -811,21 +878,21 @@
         // kiosk, obchádza chýbajúci CORS), a ak by Worker nebežal, spadne na dáta z GitHub Action (data/pv.json).
         async function fetchPvData() {
             try {
-                const res = await fetch(`${PV_LIVE_URL}?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetch(PV_LIVE_URL, { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
                 return data;
             } catch (err) {
-                const res = await fetch(`data/pv.json?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetch('data/pv.json', { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 return await res.json();
             }
         }
 
         async function updatePvProduction() {
-            const powerEl = document.getElementById('pv-power');
-            const updatedEl = document.getElementById('pv-updated');
+            const powerEl = dom.pvPower;
+            const updatedEl = dom.pvUpdated;
             if (!powerEl) return;
 
             try {
@@ -850,15 +917,14 @@
                 latestPvData = null;
             }
 
-            applyPvColors();
             updateTimeAndHighlight();
-            renderForecastChart();
+            if (currentPanel === 'predpoved') renderForecastChart();
         }
 
         // Predpoveď na zvyšok dňa a na zajtra (dáta počíta GitHub Action zo scripts/forecast.js, viď data/forecast.json)
         async function updateForecast() {
             try {
-                const res = await fetch(`data/forecast.json?t=${Date.now()}`, { cache: 'no-store' });
+                const res = await fetch('data/forecast.json', { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 latestForecastData = await res.json();
             } catch (err) {
@@ -866,7 +932,7 @@
             }
 
             updateTimeAndHighlight();
-            renderForecastChart();
+            if (currentPanel === 'predpoved') renderForecastChart();
             renderTodaySummary();
         }
 
@@ -906,8 +972,8 @@
 
         // Výber z Predpovede pre panel Spotrebiče: správa dňa + špička/odhad výroby, len pre dnešok.
         function renderTodaySummary() {
-            const titleEl = document.getElementById('today-message-title');
-            const bodyEl = document.getElementById('today-message-body');
+            const titleEl = dom.todayMessageTitle;
+            const bodyEl = dom.todayMessageBody;
             if (!titleEl) return;
 
             const pts = latestForecastData ? latestForecastData.hourlyToday : null;
@@ -1036,7 +1102,7 @@
         function applyPvColors() {
             const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
             const color = getPvColor(power);
-            const powerEl = document.getElementById('pv-power');
+            const powerEl = dom.pvPower;
             if (powerEl) powerEl.style.color = color;
         }
 
@@ -1044,8 +1110,8 @@
 
         function setForecastDay(day) {
             currentForecastDay = day;
-            document.getElementById('day-btn-today').classList.toggle('active', day === 'today');
-            document.getElementById('day-btn-tomorrow').classList.toggle('active', day === 'tomorrow');
+            dom.dayBtnToday.classList.toggle('active', day === 'today');
+            dom.dayBtnTomorrow.classList.toggle('active', day === 'tomorrow');
             renderForecastChart();
         }
 
@@ -1129,31 +1195,31 @@
         }
 
         function renderForecastChart() {
-            const svg = document.getElementById('forecast-chart');
+            const svg = dom.forecastChart;
             if (!svg) return;
 
             const pts = latestForecastData
                 ? (currentForecastDay === 'today' ? latestForecastData.hourlyToday : latestForecastData.hourlyTomorrow)
                 : null;
 
-            const nowBadge = document.getElementById('forecast-now-badge');
-            const liveLegend = document.getElementById('forecast-live-legend');
-            const titleEl = document.getElementById('forecast-message-title');
-            const bodyEl = document.getElementById('forecast-message-body');
-            const peakRealColEl = document.getElementById('forecast-peak-real-col');
-            const peakRealEl = document.getElementById('forecast-peak-real');
-            const peakRealTimeEl = document.getElementById('forecast-peak-real-time');
-            const totalRealColEl = document.getElementById('forecast-total-real-col');
-            const totalRealEl = document.getElementById('forecast-total-real');
+            const nowBadge = dom.forecastNowBadge;
+            const liveLegend = dom.forecastLiveLegend;
+            const titleEl = dom.forecastMessageTitle;
+            const bodyEl = dom.forecastMessageBody;
+            const peakRealColEl = dom.forecastPeakRealCol;
+            const peakRealEl = dom.forecastPeakReal;
+            const peakRealTimeEl = dom.forecastPeakRealTime;
+            const totalRealColEl = dom.forecastTotalRealCol;
+            const totalRealEl = dom.forecastTotalReal;
 
             if (!pts || !pts.length) {
                 svg.innerHTML = '';
                 forecastChartState = null;
                 nowBadge.classList.add('hidden');
                 liveLegend.classList.add('hidden');
-                document.getElementById('forecast-peak').innerText = '–';
-                document.getElementById('forecast-peak-time').innerText = '–';
-                document.getElementById('forecast-total').innerText = '–';
+                dom.forecastPeak.innerText = '–';
+                dom.forecastPeakTime.innerText = '–';
+                dom.forecastTotal.innerText = '–';
                 peakRealColEl.classList.add('hidden');
                 totalRealColEl.classList.add('hidden');
                 titleEl.innerText = 'Predpoveď sa pripravuje';
@@ -1211,7 +1277,7 @@
                 const { x: nowX } = forecastXY(clampedHour, 0, hMin, hMax, maxKw, dims);
                 nowMarker = `<line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.35)" stroke-width="1.2" stroke-dasharray="2 3"/>`;
                 nowBadge.classList.remove('hidden');
-                document.getElementById('forecast-now-time').innerText = `teraz ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                dom.forecastNowTime.innerText = `teraz ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             } else {
                 nowBadge.classList.add('hidden');
             }
@@ -1229,9 +1295,9 @@
 
             const peak = pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]);
             const total = Math.round(pts.reduce((s, p) => s + p.kw, 0) * 10) / 10;
-            document.getElementById('forecast-peak').innerText = peak.kw.toFixed(1);
-            document.getElementById('forecast-peak-time').innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
-            document.getElementById('forecast-total').innerText = total;
+            dom.forecastPeak.innerText = peak.kw.toFixed(1);
+            dom.forecastPeakTime.innerText = `o ${String(peak.hour).padStart(2, '0')}:00`;
+            dom.forecastTotal.innerText = total;
 
             if (currentForecastDay === 'today') {
                 applyRealStats(peakRealColEl, peakRealEl, peakRealTimeEl, totalRealColEl, totalRealEl);
