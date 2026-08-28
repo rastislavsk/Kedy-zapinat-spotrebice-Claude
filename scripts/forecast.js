@@ -5,6 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { fetchWithRetry } = require('./http');
 
 const LAT = 48.4800;
 const LON = 18.1200;
@@ -147,8 +148,7 @@ async function main() {
         + '&hourly=shortwave_radiation,direct_normal_irradiance,diffuse_radiation,temperature_2m,cloud_cover'
         + '&forecast_days=3&timezone=UTC';
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Open-Meteo request failed: ${res.status}`);
+    const res = await fetchWithRetry(url);
     const data = await res.json();
 
     const times = data.hourly.time;

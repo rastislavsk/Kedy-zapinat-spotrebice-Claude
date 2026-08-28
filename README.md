@@ -15,9 +15,24 @@ ukladá ich do [`data/pv.json`](data/pv.json), ktorý appka číta.
 - Skript: [`scripts/fetch-pv.js`](scripts/fetch-pv.js)
 - Zdroj dát: verejný kiosk link FusionSolar (bez prihlásenia)
 
+## Predpoveď výroby
+
+Predpoveď na zvyšok dňa a na zajtra počíta samostatný workflow
+[`fetch-forecast.yml`](.github/workflows/fetch-forecast.yml) raz za hodinu (nie
+5 minút ako pri live výkone — podkladové meteo dáta z Open-Meteo sa tak často
+nemenia) a ukladá ju do [`data/forecast.json`](data/forecast.json).
+
+- Skript: [`scripts/forecast.js`](scripts/forecast.js)
+- Zdroj dát: Open-Meteo (žiarenie, teplota, oblačnosť)
+
+Oba skripty pri dočasnom výpadku siete skúsia fetch zopakovať (viď
+[`scripts/http.js`](scripts/http.js)), aby jeden prechodný chybný request
+nezhodil celý beh workflow.
+
 Ak repozitár 60 dní nemá žiadny commit, GitHub automaticky pozastaví
-naplánované workflowy — stačí spustiť workflow ručne (tab *Actions* →
-*Fetch PV production data* → *Run workflow*) a beh pokračuje ďalej.
+naplánované workflowy — stačí spustiť príslušný workflow ručne (tab *Actions* →
+*Fetch PV production data* alebo *Compute solar forecast* → *Run workflow*) a
+beh pokračuje ďalej.
 
 ## Nasadenie (GitHub Pages)
 

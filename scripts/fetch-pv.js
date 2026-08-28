@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { fetchWithRetry } = require('./http');
 
 const KIOSK_URL = process.env.KIOSK_URL;
 
@@ -33,11 +34,7 @@ async function main() {
         throw new Error('KIOSK_URL env var is not set');
     }
 
-    const res = await fetch(KIOSK_URL);
-    if (!res.ok) {
-        throw new Error(`Kiosk request failed with status ${res.status}`);
-    }
-
+    const res = await fetchWithRetry(KIOSK_URL);
     const outer = await res.json();
     const inner = JSON.parse(decodeEntities(outer.data));
     const kpi = inner.realKpi || {};
