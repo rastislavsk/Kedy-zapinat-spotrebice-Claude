@@ -23,12 +23,12 @@
         :root {
             --bg: #0A0A0A;
             --ink: #F2F0EA;
-            --ink-70: rgba(242,240,234,0.72);
-            --ink-45: rgba(242,240,234,0.45);
-            --ink-35: rgba(242,240,234,0.35);
-            --ink-20: rgba(242,240,234,0.20);
-            --ink-12: rgba(242,240,234,0.12);
-            --ink-08: rgba(242,240,234,0.08);
+            --ink-70: rgba(242,240,234,0.94);
+            --ink-45: rgba(242,240,234,0.59);
+            --ink-35: rgba(242,240,234,0.46);
+            --ink-20: rgba(242,240,234,0.26);
+            --ink-12: rgba(242,240,234,0.16);
+            --ink-08: rgba(242,240,234,0.10);
 
             --green: #9EF25B;
             --amber: #FFC24B;
@@ -154,7 +154,7 @@
             width: 0; height: 0;
             border-left: 6.4px solid transparent; border-right: 6.4px solid transparent;
             border-top: 11.2px solid var(--ink);
-            filter: drop-shadow(0 0 5px rgba(242,240,234,0.55));
+            filter: drop-shadow(0 0 5px rgba(242,240,234,0.72));
         }
         .strip-ticks { display: flex; justify-content: space-between; margin-top: 8px; }
         .strip-ticks span { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); }
@@ -1254,7 +1254,7 @@
             for (let h = hMin; h <= hMax; h++) {
                 if (h % 3 !== 0) continue;
                 const { x } = forecastXY(h, 0, hMin, hMax, maxKw, dims);
-                gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.07)" stroke-width="1"/>`;
+                gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.09)" stroke-width="1"/>`;
                 // Krajné popisky zarovnaj k okraju (nie na stred), aby sa nerezali o okraj SVG.
                 const anchor = h === hMin ? 'start' : (h === hMax ? 'end' : 'middle');
                 gridLines += `<text class="axis-label" x="${x}" y="${dims.h - 6}" text-anchor="${anchor}">${h}:00</text>`;
@@ -1262,7 +1262,7 @@
 
             const cloudAvailable = pts.every(p => Number.isFinite(p.cloud));
             const cloudPath = cloudAvailable
-                ? `<path d="${forecastCloudSmoothPath(pts, hMin, hMax, dims)}" fill="none" stroke="rgba(242,240,234,0.4)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>`
+                ? `<path d="${forecastCloudSmoothPath(pts, hMin, hMax, dims)}" fill="none" stroke="rgba(242,240,234,0.52)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>`
                 : '';
 
             let realPath = '';
@@ -1284,7 +1284,7 @@
             if (currentForecastDay === 'today') {
                 const clampedHour = Math.max(hMin, Math.min(hMax, nowHour));
                 const { x: nowX } = forecastXY(clampedHour, 0, hMin, hMax, maxKw, dims);
-                nowMarker = `<line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.35)" stroke-width="1.2" stroke-dasharray="2 3"/>`;
+                nowMarker = `<line x1="${nowX}" y1="${dims.padT}" x2="${nowX}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.46)" stroke-width="1.2" stroke-dasharray="2 3"/>`;
                 nowBadge.classList.remove('hidden');
                 dom.forecastNowTime.innerText = `teraz ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
             } else {
