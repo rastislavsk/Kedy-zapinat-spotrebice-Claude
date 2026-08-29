@@ -39,7 +39,11 @@
 
         body {
             margin: 0;
-            background: var(--bg);
+            background:
+                radial-gradient(circle at 20% 0%, rgba(255,194,75,0.14) 0%, rgba(255,194,75,0) 42%),
+                radial-gradient(circle at 82% 5%, rgba(158,242,91,0.13) 0%, rgba(158,242,91,0) 46%),
+                var(--bg);
+            background-attachment: fixed;
             color: var(--ink);
             font-family: 'Space Grotesk', -apple-system, Arial, sans-serif;
             font-variant-numeric: tabular-nums;
@@ -76,12 +80,6 @@
             letter-spacing: 0.18em;
             color: var(--ink-35);
         }
-        .appbar-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
         .appbar-clock {
             display: flex;
             align-items: center;
@@ -89,13 +87,6 @@
             font-family: 'IBM Plex Mono', monospace;
             font-size: 12px;
             color: var(--ink-70);
-        }
-        .appbar-pv {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--ink-70);
-            transition: color 0.4s ease;
         }
         .live-dot {
             width: 6px; height: 6px; border-radius: 50%;
@@ -109,28 +100,53 @@
         /* --- Page --- */
         .page { max-width: 480px; margin: 0 auto; padding: 22px 20px 112px; }
 
-        /* --- Verdict: the recommendation itself, as the hero --- */
-        .verdict { position: relative; padding: 2px 0 22px 18px; margin-bottom: 20px; border-bottom: 1px solid var(--ink-08); }
-        .verdict::before { content: ''; position: absolute; left: 0; top: 3px; bottom: 24px; width: 4px; border-radius: 2px; background: var(--accent, var(--ink-20)); transition: background-color 0.4s ease; }
-        .verdict .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent, var(--ink-45)); margin-bottom: 9px; opacity: 0.9; transition: color 0.4s ease; }
-        .verdict h1 { font-size: 26px; font-weight: 700; line-height: 1.18; letter-spacing: -0.02em; margin: 0 0 10px; color: var(--ink); }
-        .verdict .body { font-size: 13.5px; line-height: 1.55; color: var(--ink-45); margin: 0 0 18px; max-width: 34ch; }
-
-        .go-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .go-chip {
-            display: flex; align-items: center; gap: 7px;
-            border: 1px solid rgba(158,242,91,0.35);
-            background: rgba(158,242,91,0.08);
-            border-radius: 10px; padding: 8px 11px;
-            font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 500; letter-spacing: 0.02em;
-            color: #DFFFC0;
+        /* --- Dial hero: live PV power as a radial dial, badge + caption, tap through to Predpoveď --- */
+        .dial-hero { text-align: center; padding-top: 4px; margin-bottom: 22px; }
+        .badge-row { display: flex; justify-content: center; margin-bottom: 4px; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            border: 1px solid color-mix(in srgb, var(--accent, var(--ink-35)) 40%, transparent);
+            background: color-mix(in srgb, var(--accent, var(--ink-35)) 16%, transparent);
+            border-radius: 999px; padding: 6px 14px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--accent, var(--ink-45));
+            transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
         }
-        .go-chip svg { width: 15px; height: 15px; stroke: var(--green); flex-shrink: 0; }
+        .dial-wrap { position: relative; display: flex; justify-content: center; margin: 18px 0 4px; }
+        .dial-svg { width: 208px; height: 208px; }
+        .dial-ring {
+            stroke: var(--accent, var(--ink-20));
+            transition: stroke 0.4s ease, stroke-dashoffset 0.6s ease;
+        }
+        .dial-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -46%); text-align: center; }
+        .dial-num .val { font-size: 46px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--ink); transition: color 0.4s ease; }
+        .dial-num .unit { display: block; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; color: var(--ink-35); }
+        #today-message-title { display: none; }
+        .dial-caption { font-family: 'IBM Plex Mono', monospace; font-size: 11px; line-height: 1.5; color: var(--ink-35); max-width: 30ch; margin: 6px auto 0; }
+
+        /* --- Verdict: headline + body, centered under the dial --- */
+        .verdict { margin-bottom: 20px; }
+        .verdict h1 { font-size: 23px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 8px; color: var(--ink); text-align: center; }
+        .verdict .body { font-size: 13px; line-height: 1.55; color: var(--ink-45); margin: 0 auto 18px; max-width: 32ch; text-align: center; }
+
+        .go-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+        .go-chip {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            padding: 10px 2px;
+            border-radius: 14px;
+            border: 1px solid color-mix(in srgb, var(--green) 22%, transparent);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--green) 16%, transparent), color-mix(in srgb, var(--green) 5%, transparent));
+            font-family: 'IBM Plex Mono', monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+            color: #DFFFC0;
+            text-align: center;
+        }
+        .go-chip svg { width: 18px; height: 18px; stroke: var(--green); flex-shrink: 0; }
 
         .wait-chip {
-            display: inline-flex; align-items: center; gap: 8px;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            margin: 0 auto;
             border: 1px solid var(--ink-12);
-            border-radius: 10px; padding: 10px 13px;
+            border-radius: 999px; padding: 10px 16px;
             font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500;
             color: var(--ink-45);
         }
@@ -138,24 +154,15 @@
         .wait-chip b { color: var(--ink); font-weight: 600; }
 
         .pv-updated-line { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-top: 6px; }
-        .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+        .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .chart-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); }
 
-        /* --- Day strip: whole day at a glance --- */
-        .daystrip-wrap { margin-bottom: 24px; }
-        .daystrip { display: flex; height: 7px; border-radius: 4px; position: relative; background: var(--ink-08); }
-        .daystrip .seg { opacity: 0.85; }
-        .daystrip .seg:first-child { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
-        .daystrip .seg:last-child { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
-        .daystrip .seg.green { background: var(--green); }
-        .daystrip .seg.amber { background: var(--amber); }
-        .daystrip .seg.red { background: var(--red); }
-        .daystrip .now-marker {
-            position: absolute; top: -11.2px; left: 50%; transform: translateX(-50%);
-            width: 0; height: 0;
-            border-left: 6.4px solid transparent; border-right: 6.4px solid transparent;
-            border-top: 11.2px solid var(--ink);
-            filter: drop-shadow(0 0 5px rgba(242,240,234,0.72));
-        }
+        /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami --- */
+        .daystrip-wrap { position: relative; margin-bottom: 24px; }
+        .daystrip { border-radius: 8px; overflow: hidden; }
+        .daystrip svg { display: block; width: 100%; height: 60px; }
+        .strip-marker { position: absolute; top: 0; width: 0; height: 60px; border-left: 1.5px dashed rgba(242,240,234,0.5); pointer-events: none; }
+        .strip-marker-dot { position: absolute; left: -4.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--bg); border: 2px solid var(--green); transform: translateY(-50%); }
         .strip-ticks { display: flex; justify-content: space-between; margin-top: 8px; }
         .strip-ticks span { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); }
 
@@ -317,12 +324,9 @@
         <div class="appbar-inner">
             <div class="appbar-top">
                 <span class="appbar-label">ENERGIA</span>
-                <div class="appbar-right">
-                    <div class="appbar-clock">
-                        <span id="header-status-dot" class="live-dot"></span>
-                        <span id="current-time-display">00:00</span>
-                    </div>
-                    <span id="pv-power" class="appbar-pv">–</span>
+                <div class="appbar-clock">
+                    <span id="header-status-dot" class="live-dot"></span>
+                    <span id="current-time-display">00:00</span>
                 </div>
             </div>
             <div class="pv-updated-line" id="pv-updated-line">
@@ -336,15 +340,25 @@
         <!-- PANEL: SPOTREBIČE -->
         <div id="panel-spotrebice">
 
-            <div class="today-forecast-link" onclick="setPanel('predpoved')">
-                <div class="msg-block" id="today-msg-block">
+            <div class="today-forecast-link dial-hero" onclick="setPanel('predpoved')">
+                <div class="badge-row"><div class="badge" id="verdict-eyebrow">—</div></div>
+                <div class="dial-wrap">
+                    <svg class="dial-svg" viewBox="0 0 220 220">
+                        <circle cx="110" cy="110" r="92" fill="none" stroke="var(--ink-08)" stroke-width="14"/>
+                        <circle id="dial-ring" class="dial-ring" cx="110" cy="110" r="92" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="578" stroke-dashoffset="578" transform="rotate(-90 110 110)"/>
+                    </svg>
+                    <div class="dial-num">
+                        <span class="val" id="pv-power">–</span>
+                        <span class="unit">kW teraz</span>
+                    </div>
+                </div>
+                <div id="today-msg-block">
                     <h4 id="today-message-title">Načítavam…</h4>
-                    <p id="today-message-body">Predpoveď sa načítava.</p>
+                    <p class="dial-caption" id="today-message-body">Predpoveď sa načítava.</p>
                 </div>
             </div>
 
             <div class="verdict" id="verdict">
-                <div class="eyebrow" id="verdict-eyebrow">—</div>
                 <h1 id="verdict-headline">Načítavam…</h1>
                 <p class="body" id="verdict-body"></p>
                 <div class="go-row hidden" id="verdict-go-row"></div>
@@ -355,11 +369,13 @@
             </div>
 
             <div class="footline">
+                <span class="chart-label">Priebeh dňa</span>
                 <span class="season-indicator" id="season-indicator">Leto</span>
             </div>
 
             <div class="daystrip-wrap">
                 <div class="daystrip" id="daystrip"></div>
+                <div class="strip-marker" id="strip-now-marker"><span class="strip-marker-dot"></span></div>
                 <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
             </div>
 
@@ -607,12 +623,12 @@
             currentTimeDisplay: document.getElementById('current-time-display'),
             pvUpdated: document.getElementById('pv-updated'),
             pvPower: document.getElementById('pv-power'),
+            dialRing: document.getElementById('dial-ring'),
             seasonIndicator: document.getElementById('season-indicator'),
             daystrip: document.getElementById('daystrip'),
             tlRows: document.querySelectorAll('.tl-row'),
             todayMessageTitle: document.getElementById('today-message-title'),
             todayMessageBody: document.getElementById('today-message-body'),
-            verdict: document.getElementById('verdict'),
             verdictEyebrow: document.getElementById('verdict-eyebrow'),
             verdictHeadline: document.getElementById('verdict-headline'),
             verdictBody: document.getElementById('verdict-body'),
@@ -701,21 +717,87 @@
             ],
         };
 
+        // Farebné pásma priebehu dňa vykreslené ako plocha s dekoratívnou krivkou (vrchol v strede
+        // "zeleného" okna) — rovnaké hranice ako STRIP_SEGMENTS, len namiesto rovného pásu graf.
+        const STRIP_BAND_FILL = {
+            green: 'rgba(158,242,91,0.14)',
+            amber: 'rgba(255,194,75,0.12)',
+            red: 'rgba(255,107,87,0.16)',
+        };
+        let stripCurveState = null;
+
+        function stripSegmentBounds(segs) {
+            let cum = 0;
+            return segs.map(s => {
+                const bounds = { cls: s.cls, min: s.min, start: cum, end: cum + s.min };
+                cum += s.min;
+                return bounds;
+            });
+        }
+
+        function stripCurvePoints(bounds) {
+            const green = bounds.find(s => s.cls === 'green');
+            if (!green) return [{ x: 0, y: 54 }, { x: 1440, y: 54 }];
+            const mid = (green.start + green.end) / 2;
+            return [
+                { x: 0, y: 54 }, { x: green.start, y: 40 }, { x: mid, y: 8 },
+                { x: green.end, y: 40 }, { x: 1440, y: 54 },
+            ];
+        }
+
+        function stripCurveSmoothPath(points) {
+            let d = `M ${points[0].x} ${points[0].y}`;
+            for (let i = 0; i < points.length - 1; i++) {
+                const p0 = points[i], p1 = points[i + 1];
+                const cx = (p0.x + p1.x) / 2;
+                d += ` C ${cx} ${p0.y}, ${cx} ${p1.y}, ${p1.x} ${p1.y}`;
+            }
+            return d;
+        }
+
+        function stripCurveY(points, x) {
+            if (x <= points[0].x) return points[0].y;
+            if (x >= points[points.length - 1].x) return points[points.length - 1].y;
+            for (let i = 0; i < points.length - 1; i++) {
+                if (x >= points[i].x && x <= points[i + 1].x) {
+                    const t = (x - points[i].x) / (points[i + 1].x - points[i].x);
+                    return points[i].y + (points[i + 1].y - points[i].y) * t;
+                }
+            }
+            return points[points.length - 1].y;
+        }
+
         function renderDayStrip(season) {
             const strip = dom.daystrip;
             if (!strip) return;
             const segs = STRIP_SEGMENTS[season] || STRIP_SEGMENTS.summer;
-            strip.innerHTML = segs.map(s => `<div class="seg ${s.cls}" style="flex:${s.min};"></div>`).join('')
-                + '<div class="now-marker" id="strip-now-marker"></div>';
+            const bounds = stripSegmentBounds(segs);
+            const points = stripCurvePoints(bounds);
+            stripCurveState = points;
+
+            const bandRects = bounds.map(s => `<rect x="${s.start}" y="0" width="${s.min}" height="60" fill="${STRIP_BAND_FILL[s.cls]}"/>`).join('');
+            const curvePath = stripCurveSmoothPath(points);
+
+            strip.innerHTML = `<svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+                <defs><linearGradient id="strip-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#9EF25B" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#9EF25B" stop-opacity="0"/>
+                </linearGradient></defs>
+                ${bandRects}
+                <path d="${curvePath} L 1440 60 L 0 60 Z" fill="url(#strip-fill)"/>
+                <path d="${curvePath}" fill="none" stroke="#9EF25B" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>`;
             updateStripMarker();
         }
 
         function updateStripMarker() {
             const marker = document.getElementById('strip-now-marker');
-            if (!marker) return;
+            if (!marker || !stripCurveState) return;
             const now = new Date();
             const minutes = now.getHours() * 60 + now.getMinutes();
             marker.style.left = `${(minutes / 1440) * 100}%`;
+            const dot = marker.querySelector('.strip-marker-dot');
+            if (dot) dot.style.top = `${(stripCurveY(stripCurveState, minutes) / 60) * 100}%`;
         }
 
         // Ikony pre spotrebiče v "go" stave (rovnaké mená ako v data-devices atribútoch nižšie)
@@ -745,7 +827,7 @@
         // Hero odpoveď: "môžeš" ukáže konkrétne spotrebiče (z data-devices aktívneho slotu),
         // "počkaj" ukáže rovno kedy bude lepšie (z predpovede), inak len text rady.
         function renderVerdict(blockType, power, activeRow, msg, isNightSlot) {
-            const verdictEl = dom.verdict;
+            const accentScope = dom.panels.spotrebice;
             const eyebrowEl = dom.verdictEyebrow;
             const headlineEl = dom.verdictHeadline;
             const bodyEl = dom.verdictBody;
@@ -754,7 +836,7 @@
             const waitTime = dom.verdictWaitTime;
 
             if (!blockType || !msg) {
-                verdictEl.style.setProperty('--accent', 'var(--ink-20)');
+                accentScope.style.setProperty('--accent', 'var(--ink-20)');
                 eyebrowEl.textContent = '—';
                 headlineEl.textContent = 'Načítavam…';
                 bodyEl.textContent = '';
@@ -763,7 +845,7 @@
                 return;
             }
 
-            verdictEl.style.setProperty('--accent', tariffColorVar(blockType));
+            accentScope.style.setProperty('--accent', tariffColorVar(blockType));
             eyebrowEl.textContent = buildEyebrow(blockType, power, isNightSlot);
             headlineEl.textContent = msg.headline;
             bodyEl.textContent = msg.body;
@@ -869,6 +951,7 @@
             }
 
             applyPvColors();
+            updateDialRing();
         }
 
         function isCurrentTimeInBlock(current, start, end) {
@@ -908,7 +991,7 @@
                 const data = await fetchPvData();
 
                 const power = Number(data.realTimePowerKw);
-                powerEl.innerText = Number.isFinite(power) ? `${power.toFixed(2)} kW` : '–';
+                powerEl.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
 
                 if (data.updatedAt) {
                     const updated = new Date(data.updatedAt);
@@ -1113,6 +1196,26 @@
             const color = getPvColor(power);
             const powerEl = dom.pvPower;
             if (powerEl) powerEl.style.color = color;
+        }
+
+        // Radiálny ukazovateľ na dashboarde: aktuálny výkon ako % dnešnej odhadovanej špičky.
+        const DIAL_CIRCUMFERENCE = 2 * Math.PI * 92;
+
+        function todayForecastPeakKw() {
+            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
+            if (!pts || !pts.length) return null;
+            return pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]).kw;
+        }
+
+        function updateDialRing() {
+            const ring = dom.dialRing;
+            if (!ring) return;
+            const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+            const peak = todayForecastPeakKw();
+            const fraction = (Number.isFinite(power) && Number.isFinite(peak) && peak > 0)
+                ? Math.max(0, Math.min(1, power / peak))
+                : 0;
+            ring.style.strokeDashoffset = DIAL_CIRCUMFERENCE * (1 - fraction);
         }
 
         // ================= PANEL PREDPOVEĎ =================
