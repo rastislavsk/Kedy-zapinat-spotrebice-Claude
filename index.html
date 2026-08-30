@@ -100,8 +100,32 @@
         /* --- Page --- */
         .page { max-width: 480px; margin: 0 auto; padding: 22px 20px 112px; }
 
+        /* --- Náhľad iného času: potiahnutím markera na osi sa hero naživo prekreslí na zvolený čas --- */
+        .preview-banner { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; }
+        .preview-pill {
+            display: flex; align-items: center; gap: 7px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1px dashed color-mix(in srgb, var(--preview-accent, var(--amber)) 50%, transparent);
+            background: color-mix(in srgb, var(--preview-accent, var(--amber)) 10%, transparent);
+            font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+            color: var(--preview-accent, var(--amber));
+        }
+        .preview-pill svg { width: 13px; height: 13px; stroke: var(--preview-accent, var(--amber)); flex-shrink: 0; }
+        .preview-reset {
+            display: flex; align-items: center; gap: 5px;
+            padding: 7px 12px;
+            border-radius: 999px; border: none; cursor: pointer;
+            background: var(--preview-accent, var(--amber));
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+            color: #0A0A0A;
+        }
+        .preview-reset svg { width: 12px; height: 12px; stroke: #0A0A0A; }
+
         /* --- Dial hero: live PV power as a radial dial, badge + caption, tap through to Predpoveď --- */
         .dial-hero { text-align: center; padding-top: 4px; margin-bottom: 22px; }
+        #panel-spotrebice.preview-dim .dial-hero,
+        #panel-spotrebice.preview-dim .verdict { opacity: 0.55; transition: opacity 0.15s ease; }
         .badge-row { display: flex; justify-content: center; margin-bottom: 4px; }
         .badge {
             display: inline-flex; align-items: center; gap: 6px;
@@ -157,36 +181,35 @@
         .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .chart-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); }
 
-        /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami, ťuknutím interaktívny --- */
-        .daystrip-wrap { position: relative; margin-bottom: 12px; }
-        .daystrip { border-radius: 8px; overflow: hidden; cursor: pointer; }
+        /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami, marker sa dá ťahať --- */
+        .daystrip-wrap { position: relative; margin-bottom: 24px; }
+        .daystrip { border-radius: 8px; overflow: hidden; }
         .daystrip svg { display: block; width: 100%; height: 60px; }
         .strip-marker { position: absolute; top: 0; width: 0; height: 60px; border-left: 1.5px dashed rgba(242,240,234,0.5); pointer-events: none; }
         .strip-marker-dot { position: absolute; left: -4.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--bg); border: 2px solid var(--green); transform: translateY(-50%); }
-        .strip-tap-marker { border-left: 2px solid var(--tap-accent, var(--green)); }
-        .strip-tap-marker-dot { position: absolute; top: -6px; left: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--tap-accent, var(--green)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tap-accent, var(--green)) 25%, transparent); }
+        .strip-marker-handle {
+            position: absolute; left: -16px; top: -16px; width: 32px; height: 32px;
+            border-radius: 50%; background: var(--bg); border: 2px solid var(--green);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 14%, transparent);
+            pointer-events: auto; cursor: grab; touch-action: none;
+        }
+        .strip-marker-handle svg { width: 12px; height: 12px; stroke: var(--green); pointer-events: none; }
+        .strip-now-ghost { position: absolute; top: 0; width: 0; height: 60px; border-left: 1.5px dashed rgba(242,240,234,0.3); pointer-events: none; }
+        .strip-now-ghost-dot { position: absolute; left: -3.5px; top: -3.5px; width: 7px; height: 7px; border-radius: 50%; background: rgba(242,240,234,0.3); }
+        .strip-now-ghost-label { position: absolute; top: -20px; left: -14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: rgba(242,240,234,0.3); white-space: nowrap; }
+        .drag-tooltip {
+            position: absolute; top: -46px; left: 50%; transform: translateX(-50%);
+            background: #000; border: 1px solid var(--ink-20); border-radius: 4px; padding: 6px 11px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink);
+            white-space: nowrap; pointer-events: none;
+        }
+        .drag-tooltip::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) rotate(45deg);
+            width: 8px; height: 8px; background: #000; border-right: 1px solid var(--ink-20); border-bottom: 1px solid var(--ink-20);
+        }
         .strip-ticks { display: flex; justify-content: space-between; margin-top: 8px; }
         .strip-ticks span { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); }
-
-        .tap-hint { text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); margin: 10px 0 24px; letter-spacing: 0.02em; }
-
-        .slot-detail { margin: 12px 0 24px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--slot-accent, var(--green)) 30%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--slot-accent, var(--green)) 10%, transparent), transparent); padding: 14px 16px 16px; }
-        .slot-detail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .slot-detail-time { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-70); }
-        .slot-detail-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--slot-accent, var(--green)); }
-        .slot-detail-controls { display: flex; align-items: center; gap: 4px; }
-        .slot-detail-btn { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ink-12); background: rgba(255,255,255,0.03); padding: 0; cursor: pointer; }
-        .slot-detail-btn svg { width: 14px; height: 14px; stroke: var(--ink-45); }
-        .slot-detail-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
-        .slot-detail-sub { font-size: 12.5px; line-height: 1.5; color: var(--ink-45); }
-        .slot-detail-devices { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-        .slot-device-chip { display: flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--green) 30%, transparent); background: color-mix(in srgb, var(--green) 10%, transparent); font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; color: #DFFFC0; }
-        .slot-device-chip svg { width: 12px; height: 12px; stroke: var(--green); }
-
-        #panel-spotrebice:has(#slot-detail:not(.hidden)) .go-row,
-        #panel-spotrebice:has(#slot-detail:not(.hidden)) .wait-chip {
-            display: none !important;
-        }
 
         .season-indicator {
             font-family: 'IBM Plex Mono', monospace;
@@ -362,6 +385,17 @@
         <!-- PANEL: SPOTREBIČE -->
         <div id="panel-spotrebice">
 
+            <div class="preview-banner hidden" id="preview-banner">
+                <div class="preview-pill" id="preview-pill">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                    <span id="preview-time-label">Náhľad · --:--</span>
+                </div>
+                <button class="preview-reset" onclick="resetTimePreview()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4-4 4-4"/><path d="M5 10h9a5 5 0 015 5v1"/></svg>
+                    Teraz
+                </button>
+            </div>
+
             <div class="today-forecast-link dial-hero" onclick="setPanel('predpoved')">
                 <div class="badge-row"><div class="badge" id="verdict-eyebrow">—</div></div>
                 <div class="dial-wrap">
@@ -371,7 +405,7 @@
                     </svg>
                     <div class="dial-num">
                         <span class="val" id="pv-power">–</span>
-                        <span class="unit">kW teraz</span>
+                        <span class="unit" id="pv-power-unit">kW teraz</span>
                     </div>
                 </div>
                 <div id="today-msg-block">
@@ -397,25 +431,18 @@
 
             <div class="daystrip-wrap">
                 <div class="daystrip" id="daystrip"></div>
-                <div class="strip-marker" id="strip-now-marker"><span class="strip-marker-dot"></span></div>
-                <div class="strip-marker strip-tap-marker hidden" id="strip-tap-marker"><span class="strip-tap-marker-dot"></span></div>
-                <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
-            </div>
-
-            <div class="tap-hint" id="tap-hint">· ťukni na graf pre detail slotu ·</div>
-
-            <div class="slot-detail hidden" id="slot-detail">
-                <div class="slot-detail-head">
-                    <div class="slot-detail-time"><span class="slot-detail-dot" id="slot-detail-dot"></span><span id="slot-detail-range">--:-- – --:--</span></div>
-                    <div class="slot-detail-controls">
-                        <button class="slot-detail-btn" onclick="stepSlotDetail(-1)" aria-label="Predchádzajúci slot"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-                        <button class="slot-detail-btn" onclick="stepSlotDetail(1)" aria-label="Nasledujúci slot"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
-                        <button class="slot-detail-btn" onclick="closeSlotDetail()" aria-label="Zavrieť"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-                    </div>
+                <div class="strip-now-ghost hidden" id="strip-now-ghost">
+                    <span class="strip-now-ghost-dot"></span>
+                    <span class="strip-now-ghost-label">teraz</span>
                 </div>
-                <div class="slot-detail-title" id="slot-detail-title"></div>
-                <div class="slot-detail-sub hidden" id="slot-detail-sub"></div>
-                <div class="slot-detail-devices hidden" id="slot-detail-devices"></div>
+                <div class="strip-marker" id="strip-now-marker">
+                    <span class="strip-marker-dot"></span>
+                    <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
+                    <span class="strip-marker-handle" id="strip-marker-handle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+                    </span>
+                </div>
+                <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
             </div>
 
             <div class="tl hidden" id="timeline-container">
@@ -654,6 +681,8 @@
         let currentForecastDay = 'today';
         let forecastChartState = null;
         let qrInitialized = false;
+        let previewMinutes = null; // null = live "teraz"; inak minúty dňa (0-1439) ťahaného/zafixovaného náhľadu
+        let isDraggingPreview = false;
 
         // Casto pouzivane DOM referencie nacitane raz (skript bezi az po naparsovani <body>,
         // takze vsetky elementy uz existuju).
@@ -662,17 +691,17 @@
             currentTimeDisplay: document.getElementById('current-time-display'),
             pvUpdated: document.getElementById('pv-updated'),
             pvPower: document.getElementById('pv-power'),
+            pvPowerUnit: document.getElementById('pv-power-unit'),
             dialRing: document.getElementById('dial-ring'),
             seasonIndicator: document.getElementById('season-indicator'),
             daystrip: document.getElementById('daystrip'),
-            stripTapMarker: document.getElementById('strip-tap-marker'),
-            tapHint: document.getElementById('tap-hint'),
-            slotDetail: document.getElementById('slot-detail'),
-            slotDetailRange: document.getElementById('slot-detail-range'),
-            slotDetailDot: document.getElementById('slot-detail-dot'),
-            slotDetailTitle: document.getElementById('slot-detail-title'),
-            slotDetailSub: document.getElementById('slot-detail-sub'),
-            slotDetailDevices: document.getElementById('slot-detail-devices'),
+            stripNowMarker: document.getElementById('strip-now-marker'),
+            stripNowGhost: document.getElementById('strip-now-ghost'),
+            stripMarkerHandle: document.getElementById('strip-marker-handle'),
+            dragTooltip: document.getElementById('drag-tooltip'),
+            previewBanner: document.getElementById('preview-banner'),
+            previewPill: document.getElementById('preview-pill'),
+            previewTimeLabel: document.getElementById('preview-time-label'),
             tlRows: document.querySelectorAll('.tl-row'),
             todayMessageTitle: document.getElementById('today-message-title'),
             todayMessageBody: document.getElementById('today-message-body'),
@@ -739,7 +768,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initForecastChartInteraction();
-            initDaystripInteraction();
+            initTimePreviewInteraction();
 
             setSeason(detectSeason());
             setForecastDay('today');
@@ -838,14 +867,28 @@
             updateStripMarker();
         }
 
-        function updateStripMarker() {
-            const marker = document.getElementById('strip-now-marker');
-            if (!marker || !stripCurveState) return;
+        function realNowMinutes() {
             const now = new Date();
-            const minutes = now.getHours() * 60 + now.getMinutes();
-            marker.style.left = `${(minutes / 1440) * 100}%`;
-            const dot = marker.querySelector('.strip-marker-dot');
+            return now.getHours() * 60 + now.getMinutes();
+        }
+
+        // Spoločné umiestnenie hocktorého markera (skutočné "teraz", duch, alebo ťahaný náhľad)
+        // na krivku priebehu dňa - pozícia aj výška bodky podľa aktuálnej sezónnej krivky.
+        function positionMarkerAt(el, minutes) {
+            if (!el || !stripCurveState) return;
+            el.style.left = `${(minutes / 1440) * 100}%`;
+            const dot = el.querySelector('.strip-marker-dot, .strip-now-ghost-dot');
             if (dot) dot.style.top = `${(stripCurveY(stripCurveState, minutes) / 60) * 100}%`;
+        }
+
+        // Počas náhľadu iného času zostáva hlavný marker na ťahanej/zafixovanej pozícii -
+        // vtedy sa naživo posúva iba "duch" markera na skutočnom čase, aby sa nestratil.
+        function updateStripMarker() {
+            if (previewMinutes === null) {
+                positionMarkerAt(dom.stripNowMarker, realNowMinutes());
+            } else {
+                positionMarkerAt(dom.stripNowGhost, realNowMinutes());
+            }
         }
 
         // Ikony pre spotrebiče v "go" stave (rovnaké mená ako v data-devices atribútoch nižšie)
@@ -862,105 +905,6 @@
             if (blockType === 'amber') return 'var(--amber)';
             if (blockType === 'red') return 'var(--red)';
             return 'var(--ink-20)';
-        }
-
-        // ============ Interaktívny priebeh dňa: ťuknutím na graf sa zobrazí detail slotu ============
-        // Zdroj obsahu je ten istý skrytý zoznam .tl-row, čo poháňa aj hero odpoveď vyššie.
-        let openSlotRow = null;
-
-        function timeStrToMinutes(str) {
-            const [h, m] = str.split(':').map(Number);
-            return h * 60 + m;
-        }
-
-        function minutesToTimeStr(minutes) {
-            const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
-            return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-        }
-
-        function visibleSlotRows() {
-            return Array.from(dom.tlRows).filter(row => !row.classList.contains('hidden'));
-        }
-
-        function findSlotRowAt(timeStr) {
-            return visibleSlotRows().find(row => isCurrentTimeInBlock(timeStr, row.getAttribute('data-start'), row.getAttribute('data-end'))) || null;
-        }
-
-        function slotMidpointMinutes(row) {
-            const start = timeStrToMinutes(row.getAttribute('data-start'));
-            let end = timeStrToMinutes(row.getAttribute('data-end'));
-            if (end <= start) end += 1440;
-            return (start + end) / 2;
-        }
-
-        function handleStripTap(clientX) {
-            const svg = dom.daystrip.querySelector('svg');
-            if (!svg) return;
-            const rect = svg.getBoundingClientRect();
-            const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-            const row = findSlotRowAt(minutesToTimeStr((relX / rect.width) * 1440));
-            if (row) openSlotDetail(row);
-        }
-
-        function openSlotDetail(row) {
-            openSlotRow = row;
-            renderSlotDetail();
-        }
-
-        function closeSlotDetail() {
-            openSlotRow = null;
-            dom.slotDetail.classList.add('hidden');
-            dom.tapHint.classList.remove('hidden');
-            dom.stripTapMarker.classList.add('hidden');
-        }
-
-        function stepSlotDetail(direction) {
-            if (!openSlotRow) return;
-            const rows = visibleSlotRows();
-            const idx = rows.indexOf(openSlotRow);
-            if (idx === -1) return;
-            openSlotDetail(rows[(idx + direction + rows.length) % rows.length]);
-        }
-
-        function renderSlotDetail() {
-            const row = openSlotRow;
-            if (!row) return;
-            const status = row.getAttribute('data-status') || 'green';
-            const sub = row.querySelector('.sub')?.textContent || '';
-            const devices = row.dataset.devices
-                ? row.dataset.devices.split('·').map(s => s.trim()).filter(Boolean)
-                : [];
-
-            dom.slotDetailRange.textContent = `${row.getAttribute('data-start')} – ${row.getAttribute('data-end')}`;
-            dom.slotDetailTitle.textContent = row.querySelector('.ttl')?.textContent || '';
-            dom.slotDetailSub.textContent = sub;
-            dom.slotDetailSub.classList.toggle('hidden', !sub.trim());
-            dom.slotDetail.style.setProperty('--slot-accent', tariffColorVar(status));
-            dom.stripTapMarker.style.setProperty('--tap-accent', tariffColorVar(status));
-
-            if (devices.length) {
-                dom.slotDetailDevices.innerHTML = devices.map(name => `<div class="slot-device-chip">${DEVICE_ICONS[name] || ''}${name}</div>`).join('');
-                dom.slotDetailDevices.classList.remove('hidden');
-            } else {
-                dom.slotDetailDevices.classList.add('hidden');
-            }
-
-            dom.slotDetail.classList.remove('hidden');
-            dom.tapHint.classList.add('hidden');
-            updateTapMarker();
-        }
-
-        function updateTapMarker() {
-            if (!openSlotRow || !stripCurveState) return;
-            const minutes = slotMidpointMinutes(openSlotRow) % 1440;
-            dom.stripTapMarker.style.left = `${(minutes / 1440) * 100}%`;
-            const dot = dom.stripTapMarker.querySelector('.strip-tap-marker-dot');
-            if (dot) dot.style.top = `${(stripCurveY(stripCurveState, minutes) / 60) * 100}%`;
-            dom.stripTapMarker.classList.remove('hidden');
-        }
-
-        function initDaystripInteraction() {
-            dom.daystrip.addEventListener('click', (e) => handleStripTap(e.clientX));
         }
 
         function buildEyebrow(blockType, power, isNightSlot) {
@@ -1029,7 +973,7 @@
             if (indicator) indicator.textContent = season === 'summer' ? 'Leto' : 'Zima';
             document.querySelectorAll('.season-summer').forEach(el => el.classList.toggle('hidden', season !== 'summer'));
             document.querySelectorAll('.season-winter').forEach(el => el.classList.toggle('hidden', season !== 'winter'));
-            closeSlotDetail();
+            resetTimePreview();
             renderDayStrip(season);
             updateTimeAndHighlight();
         }
@@ -1091,15 +1035,19 @@
                 }
 
                 headerDot.className = 'live-dot' + (blockType === 'red' ? ' status-red' : blockType === 'amber' ? ' status-amber' : '');
-                renderVerdict(blockType, power, activeRow, msg, isNightSlot);
+                if (previewMinutes === null) renderVerdict(blockType, power, activeRow, msg, isNightSlot);
             } else {
                 currentBlockType = null;
                 headerDot.className = 'live-dot';
-                renderVerdict(null, NaN, null, null, false);
+                if (previewMinutes === null) renderVerdict(null, NaN, null, null, false);
             }
 
-            applyPvColors();
-            updateDialRing();
+            // Kým je zafixovaný/ťahaný náhľad iného času, hero ostáva pod jeho kontrolou -
+            // živé prekreslenie farby a ciferníka by ho prepísalo.
+            if (previewMinutes === null) {
+                applyPvColors();
+                updateDialRing();
+            }
         }
 
         function isCurrentTimeInBlock(current, start, end) {
@@ -1355,15 +1303,157 @@
             return pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]).kw;
         }
 
-        function updateDialRing() {
+        function setDialRingForPower(power) {
             const ring = dom.dialRing;
             if (!ring) return;
-            const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
             const peak = todayForecastPeakKw();
             const fraction = (Number.isFinite(power) && Number.isFinite(peak) && peak > 0)
                 ? Math.max(0, Math.min(1, power / peak))
                 : 0;
             ring.style.strokeDashoffset = DIAL_CIRCUMFERENCE * (1 - fraction);
+        }
+
+        function updateDialRing() {
+            const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+            setDialRingForPower(power);
+        }
+
+        // ============ Náhľad iného času: potiahnutím markera sa hero naživo prekreslí ============
+        // Zdroj slotu (čas/status/titulok/popis/spotrebiče) je ten istý skrytý zoznam .tl-row, čo
+        // poháňa aj živú odpoveď; výkon pre daný čas berieme z hodinovej predpovede (rovnaká krivka
+        // ako v paneli Predpoveď), nie z reálneho merania, ktoré pre iný než skutočný čas nemáme.
+        function minutesToTimeStr(minutes) {
+            const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
+            return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+        }
+
+        function findSlotRowAt(timeStr) {
+            for (const row of dom.tlRows) {
+                if (row.classList.contains('hidden')) continue;
+                if (isCurrentTimeInBlock(timeStr, row.getAttribute('data-start'), row.getAttribute('data-end'))) return row;
+            }
+            return null;
+        }
+
+        function forecastPowerAt(hour) {
+            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
+            if (!pts || !pts.length) return NaN;
+            return forecastInterpolate(pts, hour, 'kw');
+        }
+
+        function minutesFromClientX(clientX) {
+            const svg = dom.daystrip.querySelector('svg');
+            if (!svg) return realNowMinutes();
+            const rect = svg.getBoundingClientRect();
+            const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            return Math.round((relX / rect.width) * 1440) % 1440;
+        }
+
+        // Prekreslí hero (badge, ciferník, nadpis/text, spotrebiče) tak, ako by vyzeral v danú minútu
+        // dňa - rovnakou logikou ako pre živé "teraz" (buildEyebrow/getSlotMessage), len s
+        // predpovedaným namiesto nameraného výkonom.
+        function renderHeroForMinutes(minutes, dim) {
+            dom.panels.spotrebice.classList.toggle('preview-dim', dim);
+            const row = findSlotRowAt(minutesToTimeStr(minutes));
+            if (!row) return;
+
+            const blockType = row.getAttribute('data-status') || 'green';
+            const isNightSlot = row.getAttribute('data-start') === '23:30';
+            const power = forecastPowerAt(minutes / 60);
+
+            dom.panels.spotrebice.style.setProperty('--accent', tariffColorVar(blockType));
+            dom.verdictEyebrow.textContent = buildEyebrow(blockType, power, isNightSlot);
+
+            let msg = null;
+            if (!isNightSlot) msg = getSlotMessage(blockType, power, latestForecastData);
+            if (!msg) {
+                msg = {
+                    headline: row.querySelector('.ttl')?.textContent || '',
+                    body: row.querySelector('.sub')?.textContent || '',
+                };
+            }
+            dom.verdictHeadline.textContent = msg.headline;
+            dom.verdictBody.textContent = msg.body;
+
+            const devices = row.dataset.devices
+                ? row.dataset.devices.split('·').map(s => s.trim()).filter(Boolean)
+                : [];
+            if (devices.length) {
+                dom.verdictGoRow.innerHTML = devices.map(name => `<div class="go-chip">${DEVICE_ICONS[name] || ''}${name}</div>`).join('');
+                dom.verdictGoRow.classList.remove('hidden');
+            } else {
+                dom.verdictGoRow.classList.add('hidden');
+            }
+            dom.verdictWaitChip.classList.add('hidden');
+
+            dom.pvPower.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
+            dom.pvPower.style.color = tariffColorVar(blockType);
+            dom.pvPowerUnit.textContent = 'kW (odhad)';
+            setDialRingForPower(power);
+
+            return { blockType };
+        }
+
+        function updatePreviewToMinutes(minutes, dim) {
+            previewMinutes = minutes;
+            positionMarkerAt(dom.stripNowMarker, minutes);
+            dom.stripNowGhost.classList.remove('hidden');
+            positionMarkerAt(dom.stripNowGhost, realNowMinutes());
+            renderHeroForMinutes(minutes, dim);
+        }
+
+        function startPreviewDrag(clientX) {
+            isDraggingPreview = true;
+            dom.dragTooltip.classList.remove('hidden');
+            dom.dragTooltip.textContent = minutesToTimeStr(minutesFromClientX(clientX));
+            updatePreviewToMinutes(minutesFromClientX(clientX), true);
+        }
+
+        function movePreviewDrag(clientX) {
+            if (!isDraggingPreview) return;
+            const minutes = minutesFromClientX(clientX);
+            dom.dragTooltip.textContent = minutesToTimeStr(minutes);
+            updatePreviewToMinutes(minutes, true);
+        }
+
+        function endPreviewDrag() {
+            if (!isDraggingPreview) return;
+            isDraggingPreview = false;
+            dom.dragTooltip.classList.add('hidden');
+            pinPreview();
+        }
+
+        function pinPreview() {
+            const result = renderHeroForMinutes(previewMinutes, false);
+            dom.previewTimeLabel.textContent = `Náhľad · ${minutesToTimeStr(previewMinutes)}`;
+            dom.previewPill.style.setProperty('--preview-accent', tariffColorVar(result ? result.blockType : 'green'));
+            dom.previewBanner.classList.remove('hidden');
+        }
+
+        function resetTimePreview() {
+            previewMinutes = null;
+            isDraggingPreview = false;
+            dom.panels.spotrebice.classList.remove('preview-dim');
+            dom.previewBanner.classList.add('hidden');
+            dom.stripNowGhost.classList.add('hidden');
+            dom.dragTooltip.classList.add('hidden');
+            dom.pvPowerUnit.textContent = 'kW teraz';
+            const power = latestPvData ? Number(latestPvData.realTimePowerKw) : NaN;
+            dom.pvPower.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
+            updateTimeAndHighlight();
+        }
+
+        function initTimePreviewInteraction() {
+            const handle = dom.stripMarkerHandle;
+            if (!handle) return;
+            handle.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                handle.setPointerCapture(e.pointerId);
+                startPreviewDrag(e.clientX);
+            });
+            handle.addEventListener('pointermove', (e) => movePreviewDrag(e.clientX));
+            handle.addEventListener('pointerup', endPreviewDrag);
+            handle.addEventListener('pointercancel', endPreviewDrag);
         }
 
         // ================= PANEL PREDPOVEĎ =================
