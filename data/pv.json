@@ -1,9 +1,9 @@
 {
-  "realTimePowerKw": 6.19,
-  "dailyEnergyKwh": 11.92,
-  "monthEnergyKwh": 1438.85,
-  "yearEnergyKwh": 9573.54,
-  "cumulativeEnergyKwh": 26869.46,
+  "realTimePowerKw": 6.64,
+  "dailyEnergyKwh": 15.07,
+  "monthEnergyKwh": 1442,
+  "yearEnergyKwh": 9576.69,
+  "cumulativeEnergyKwh": 26872.61,
   "stationName": "RR PV kiosk",
   "realCurveToday": [
     {
@@ -493,7 +493,31 @@
     {
       "hour": 10.0833,
       "kw": 6.2
+    },
+    {
+      "hour": 10.1667,
+      "kw": 6.28
+    },
+    {
+      "hour": 10.25,
+      "kw": 6.37
+    },
+    {
+      "hour": 10.3333,
+      "kw": 6.43
+    },
+    {
+      "hour": 10.4167,
+      "kw": 6.51
+    },
+    {
+      "hour": 10.5,
+      "kw": 6.6
+    },
+    {
+      "hour": 10.5833,
+      "kw": 6.65
     }
   ],
-  "updatedAt": "2026-08-30T08:35:54.901Z"
+  "updatedAt": "2026-08-30T08:40:54.734Z"
 }
