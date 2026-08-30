@@ -157,14 +157,36 @@
         .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .chart-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); }
 
-        /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami --- */
-        .daystrip-wrap { position: relative; margin-bottom: 24px; }
-        .daystrip { border-radius: 8px; overflow: hidden; }
+        /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami, ťuknutím interaktívny --- */
+        .daystrip-wrap { position: relative; margin-bottom: 12px; }
+        .daystrip { border-radius: 8px; overflow: hidden; cursor: pointer; }
         .daystrip svg { display: block; width: 100%; height: 60px; }
         .strip-marker { position: absolute; top: 0; width: 0; height: 60px; border-left: 1.5px dashed rgba(242,240,234,0.5); pointer-events: none; }
         .strip-marker-dot { position: absolute; left: -4.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--bg); border: 2px solid var(--green); transform: translateY(-50%); }
+        .strip-tap-marker { border-left: 2px solid var(--tap-accent, var(--green)); }
+        .strip-tap-marker-dot { position: absolute; top: -6px; left: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--tap-accent, var(--green)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tap-accent, var(--green)) 25%, transparent); }
         .strip-ticks { display: flex; justify-content: space-between; margin-top: 8px; }
         .strip-ticks span { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); }
+
+        .tap-hint { text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: var(--ink-20); margin: 10px 0 24px; letter-spacing: 0.02em; }
+
+        .slot-detail { margin: 12px 0 24px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--slot-accent, var(--green)) 30%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--slot-accent, var(--green)) 10%, transparent), transparent); padding: 14px 16px 16px; }
+        .slot-detail-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .slot-detail-time { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-70); }
+        .slot-detail-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--slot-accent, var(--green)); }
+        .slot-detail-controls { display: flex; align-items: center; gap: 4px; }
+        .slot-detail-btn { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ink-12); background: rgba(255,255,255,0.03); padding: 0; cursor: pointer; }
+        .slot-detail-btn svg { width: 14px; height: 14px; stroke: var(--ink-45); }
+        .slot-detail-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+        .slot-detail-sub { font-size: 12.5px; line-height: 1.5; color: var(--ink-45); }
+        .slot-detail-devices { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+        .slot-device-chip { display: flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--green) 30%, transparent); background: color-mix(in srgb, var(--green) 10%, transparent); font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 600; color: #DFFFC0; }
+        .slot-device-chip svg { width: 12px; height: 12px; stroke: var(--green); }
+
+        #panel-spotrebice:has(#slot-detail:not(.hidden)) .go-row,
+        #panel-spotrebice:has(#slot-detail:not(.hidden)) .wait-chip {
+            display: none !important;
+        }
 
         .season-indicator {
             font-family: 'IBM Plex Mono', monospace;
@@ -376,7 +398,24 @@
             <div class="daystrip-wrap">
                 <div class="daystrip" id="daystrip"></div>
                 <div class="strip-marker" id="strip-now-marker"><span class="strip-marker-dot"></span></div>
+                <div class="strip-marker strip-tap-marker hidden" id="strip-tap-marker"><span class="strip-tap-marker-dot"></span></div>
                 <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+            </div>
+
+            <div class="tap-hint" id="tap-hint">· ťukni na graf pre detail slotu ·</div>
+
+            <div class="slot-detail hidden" id="slot-detail">
+                <div class="slot-detail-head">
+                    <div class="slot-detail-time"><span class="slot-detail-dot" id="slot-detail-dot"></span><span id="slot-detail-range">--:-- – --:--</span></div>
+                    <div class="slot-detail-controls">
+                        <button class="slot-detail-btn" onclick="stepSlotDetail(-1)" aria-label="Predchádzajúci slot"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+                        <button class="slot-detail-btn" onclick="stepSlotDetail(1)" aria-label="Nasledujúci slot"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+                        <button class="slot-detail-btn" onclick="closeSlotDetail()" aria-label="Zavrieť"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+                    </div>
+                </div>
+                <div class="slot-detail-title" id="slot-detail-title"></div>
+                <div class="slot-detail-sub hidden" id="slot-detail-sub"></div>
+                <div class="slot-detail-devices hidden" id="slot-detail-devices"></div>
             </div>
 
             <div class="tl hidden" id="timeline-container">
@@ -626,6 +665,14 @@
             dialRing: document.getElementById('dial-ring'),
             seasonIndicator: document.getElementById('season-indicator'),
             daystrip: document.getElementById('daystrip'),
+            stripTapMarker: document.getElementById('strip-tap-marker'),
+            tapHint: document.getElementById('tap-hint'),
+            slotDetail: document.getElementById('slot-detail'),
+            slotDetailRange: document.getElementById('slot-detail-range'),
+            slotDetailDot: document.getElementById('slot-detail-dot'),
+            slotDetailTitle: document.getElementById('slot-detail-title'),
+            slotDetailSub: document.getElementById('slot-detail-sub'),
+            slotDetailDevices: document.getElementById('slot-detail-devices'),
             tlRows: document.querySelectorAll('.tl-row'),
             todayMessageTitle: document.getElementById('today-message-title'),
             todayMessageBody: document.getElementById('today-message-body'),
@@ -692,6 +739,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             initForecastChartInteraction();
+            initDaystripInteraction();
 
             setSeason(detectSeason());
             setForecastDay('today');
@@ -816,6 +864,105 @@
             return 'var(--ink-20)';
         }
 
+        // ============ Interaktívny priebeh dňa: ťuknutím na graf sa zobrazí detail slotu ============
+        // Zdroj obsahu je ten istý skrytý zoznam .tl-row, čo poháňa aj hero odpoveď vyššie.
+        let openSlotRow = null;
+
+        function timeStrToMinutes(str) {
+            const [h, m] = str.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function minutesToTimeStr(minutes) {
+            const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
+            return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+        }
+
+        function visibleSlotRows() {
+            return Array.from(dom.tlRows).filter(row => !row.classList.contains('hidden'));
+        }
+
+        function findSlotRowAt(timeStr) {
+            return visibleSlotRows().find(row => isCurrentTimeInBlock(timeStr, row.getAttribute('data-start'), row.getAttribute('data-end'))) || null;
+        }
+
+        function slotMidpointMinutes(row) {
+            const start = timeStrToMinutes(row.getAttribute('data-start'));
+            let end = timeStrToMinutes(row.getAttribute('data-end'));
+            if (end <= start) end += 1440;
+            return (start + end) / 2;
+        }
+
+        function handleStripTap(clientX) {
+            const svg = dom.daystrip.querySelector('svg');
+            if (!svg) return;
+            const rect = svg.getBoundingClientRect();
+            const relX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            const row = findSlotRowAt(minutesToTimeStr((relX / rect.width) * 1440));
+            if (row) openSlotDetail(row);
+        }
+
+        function openSlotDetail(row) {
+            openSlotRow = row;
+            renderSlotDetail();
+        }
+
+        function closeSlotDetail() {
+            openSlotRow = null;
+            dom.slotDetail.classList.add('hidden');
+            dom.tapHint.classList.remove('hidden');
+            dom.stripTapMarker.classList.add('hidden');
+        }
+
+        function stepSlotDetail(direction) {
+            if (!openSlotRow) return;
+            const rows = visibleSlotRows();
+            const idx = rows.indexOf(openSlotRow);
+            if (idx === -1) return;
+            openSlotDetail(rows[(idx + direction + rows.length) % rows.length]);
+        }
+
+        function renderSlotDetail() {
+            const row = openSlotRow;
+            if (!row) return;
+            const status = row.getAttribute('data-status') || 'green';
+            const sub = row.querySelector('.sub')?.textContent || '';
+            const devices = row.dataset.devices
+                ? row.dataset.devices.split('·').map(s => s.trim()).filter(Boolean)
+                : [];
+
+            dom.slotDetailRange.textContent = `${row.getAttribute('data-start')} – ${row.getAttribute('data-end')}`;
+            dom.slotDetailTitle.textContent = row.querySelector('.ttl')?.textContent || '';
+            dom.slotDetailSub.textContent = sub;
+            dom.slotDetailSub.classList.toggle('hidden', !sub.trim());
+            dom.slotDetail.style.setProperty('--slot-accent', tariffColorVar(status));
+            dom.stripTapMarker.style.setProperty('--tap-accent', tariffColorVar(status));
+
+            if (devices.length) {
+                dom.slotDetailDevices.innerHTML = devices.map(name => `<div class="slot-device-chip">${DEVICE_ICONS[name] || ''}${name}</div>`).join('');
+                dom.slotDetailDevices.classList.remove('hidden');
+            } else {
+                dom.slotDetailDevices.classList.add('hidden');
+            }
+
+            dom.slotDetail.classList.remove('hidden');
+            dom.tapHint.classList.add('hidden');
+            updateTapMarker();
+        }
+
+        function updateTapMarker() {
+            if (!openSlotRow || !stripCurveState) return;
+            const minutes = slotMidpointMinutes(openSlotRow) % 1440;
+            dom.stripTapMarker.style.left = `${(minutes / 1440) * 100}%`;
+            const dot = dom.stripTapMarker.querySelector('.strip-tap-marker-dot');
+            if (dot) dot.style.top = `${(stripCurveY(stripCurveState, minutes) / 60) * 100}%`;
+            dom.stripTapMarker.classList.remove('hidden');
+        }
+
+        function initDaystripInteraction() {
+            dom.daystrip.addEventListener('click', (e) => handleStripTap(e.clientX));
+        }
+
         function buildEyebrow(blockType, power, isNightSlot) {
             const tariffPhrase = blockType === 'green' ? "IT'S GREENTIME 🙂" : blockType === 'amber' ? 'Lacná elektrina' : 'Drahá elektrina';
             if (isNightSlot) return `${tariffPhrase} · noc`;
@@ -882,6 +1029,7 @@
             if (indicator) indicator.textContent = season === 'summer' ? 'Leto' : 'Zima';
             document.querySelectorAll('.season-summer').forEach(el => el.classList.toggle('hidden', season !== 'summer'));
             document.querySelectorAll('.season-winter').forEach(el => el.classList.toggle('hidden', season !== 'winter'));
+            closeSlotDetail();
             renderDayStrip(season);
             updateTimeAndHighlight();
         }
