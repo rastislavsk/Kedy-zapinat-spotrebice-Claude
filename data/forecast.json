@@ -59,32 +59,32 @@
     {
       "hour": 12,
       "kw": 6.33,
-      "cloud": 0
+      "cloud": 38
     },
     {
       "hour": 13,
       "kw": 6.02,
-      "cloud": 41
+      "cloud": 80
     },
     {
       "hour": 14,
       "kw": 4.83,
-      "cloud": 56
+      "cloud": 51
     },
     {
       "hour": 15,
       "kw": 3.67,
-      "cloud": 64
+      "cloud": 78
     },
     {
       "hour": 16,
       "kw": 2.74,
-      "cloud": 73
+      "cloud": 67
     },
     {
       "hour": 17,
       "kw": 2.16,
-      "cloud": 86
+      "cloud": 100
     },
     {
       "hour": 18,
@@ -94,7 +94,7 @@
     {
       "hour": 19,
       "kw": 0.43,
-      "cloud": 100
+      "cloud": 66
     },
     {
       "hour": 20,
@@ -131,12 +131,12 @@
     {
       "hour": 2,
       "kw": 0,
-      "cloud": 100
+      "cloud": 91
     },
     {
       "hour": 3,
       "kw": 0,
-      "cloud": 83
+      "cloud": 0
     },
     {
       "hour": 4,
@@ -171,47 +171,47 @@
     {
       "hour": 10,
       "kw": 5.46,
-      "cloud": 0
+      "cloud": 2
     },
     {
       "hour": 11,
       "kw": 6.26,
-      "cloud": 4
+      "cloud": 10
     },
     {
       "hour": 12,
       "kw": 6.68,
-      "cloud": 4
+      "cloud": 13
     },
     {
       "hour": 13,
       "kw": 5.01,
-      "cloud": 92
+      "cloud": 40
     },
     {
       "hour": 14,
       "kw": 4.49,
-      "cloud": 84
+      "cloud": 51
     },
     {
       "hour": 15,
       "kw": 3.99,
-      "cloud": 93
+      "cloud": 40
     },
     {
       "hour": 16,
       "kw": 3.18,
-      "cloud": 41
+      "cloud": 8
     },
     {
       "hour": 17,
       "kw": 2.44,
-      "cloud": 8
+      "cloud": 14
     },
     {
       "hour": 18,
       "kw": 1.41,
-      "cloud": 0
+      "cloud": 7
     },
     {
       "hour": 19,
@@ -231,13 +231,13 @@
     {
       "hour": 22,
       "kw": 0,
-      "cloud": 29
+      "cloud": 0
     },
     {
       "hour": 23,
       "kw": 0,
-      "cloud": 100
+      "cloud": 87
     }
   ],
-  "updatedAt": "2026-08-31T07:31:12.178Z"
+  "updatedAt": "2026-08-31T07:36:11.693Z"
 }
