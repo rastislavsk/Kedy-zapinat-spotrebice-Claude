@@ -4,7 +4,7 @@
   "peakKw": null,
   "hoursAhead": null,
   "tomorrowSunny": true,
-  "tomorrowPeakKw": 6.59,
+  "tomorrowPeakKw": 5.76,
   "hourlyToday": [
     {
       "hour": 2,
@@ -53,42 +53,42 @@
     },
     {
       "hour": 11,
-      "kw": 6.35,
+      "kw": 6.36,
       "cloud": 4
     },
     {
       "hour": 12,
-      "kw": 6.73,
+      "kw": 6.75,
       "cloud": 73
     },
     {
       "hour": 13,
-      "kw": 5.88,
+      "kw": 6.26,
       "cloud": 13
     },
     {
       "hour": 14,
-      "kw": 5.94,
+      "kw": 5.99,
       "cloud": 0
     },
     {
       "hour": 15,
-      "kw": 4.94,
+      "kw": 4.6,
       "cloud": 0
     },
     {
       "hour": 16,
-      "kw": 3.22,
+      "kw": 2.71,
       "cloud": 53
     },
     {
       "hour": 17,
-      "kw": 2.57,
+      "kw": 2.41,
       "cloud": 24
     },
     {
       "hour": 18,
-      "kw": 1.44,
+      "kw": 1.42,
       "cloud": 8
     },
     {
@@ -155,42 +155,42 @@
     },
     {
       "hour": 7,
-      "kw": 0.24,
+      "kw": 0.19,
       "cloud": 100
     },
     {
       "hour": 8,
-      "kw": 1.11,
+      "kw": 1.29,
       "cloud": 100
     },
     {
       "hour": 9,
-      "kw": 3.32,
+      "kw": 2.4,
       "cloud": 100
     },
     {
       "hour": 10,
-      "kw": 4.13,
+      "kw": 4.25,
       "cloud": 94
     },
     {
       "hour": 11,
-      "kw": 5.48,
+      "kw": 5.01,
       "cloud": 100
     },
     {
       "hour": 12,
-      "kw": 6.59,
+      "kw": 5.37,
       "cloud": 28
     },
     {
       "hour": 13,
-      "kw": 5.66,
+      "kw": 5.76,
       "cloud": 34
     },
     {
       "hour": 14,
-      "kw": 4.42,
+      "kw": 4.04,
       "cloud": 75
     },
     {
@@ -200,22 +200,22 @@
     },
     {
       "hour": 16,
-      "kw": 3.23,
+      "kw": 3.26,
       "cloud": 100
     },
     {
       "hour": 17,
-      "kw": 1.96,
+      "kw": 2.3,
       "cloud": 100
     },
     {
       "hour": 18,
-      "kw": 1.29,
+      "kw": 1.43,
       "cloud": 100
     },
     {
       "hour": 19,
-      "kw": 0.55,
+      "kw": 0.48,
       "cloud": 100
     },
     {
@@ -239,5 +239,5 @@
       "cloud": 86
     }
   ],
-  "updatedAt": "2026-09-01T10:26:13.726Z"
+  "updatedAt": "2026-09-01T10:31:17.834Z"
 }
