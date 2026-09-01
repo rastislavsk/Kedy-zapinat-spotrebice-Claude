@@ -54,47 +54,47 @@
     {
       "hour": 11,
       "kw": 6.35,
-      "cloud": 0
+      "cloud": 4
     },
     {
       "hour": 12,
       "kw": 6.73,
-      "cloud": 0
+      "cloud": 73
     },
     {
       "hour": 13,
       "kw": 5.88,
-      "cloud": 2
+      "cloud": 13
     },
     {
       "hour": 14,
       "kw": 5.94,
-      "cloud": 2
+      "cloud": 0
     },
     {
       "hour": 15,
       "kw": 4.94,
-      "cloud": 68
+      "cloud": 0
     },
     {
       "hour": 16,
       "kw": 3.22,
-      "cloud": 4
+      "cloud": 53
     },
     {
       "hour": 17,
       "kw": 2.57,
-      "cloud": 90
+      "cloud": 24
     },
     {
       "hour": 18,
       "kw": 1.44,
-      "cloud": 0
+      "cloud": 8
     },
     {
       "hour": 19,
       "kw": 0.44,
-      "cloud": 0
+      "cloud": 14
     },
     {
       "hour": 20,
@@ -104,17 +104,17 @@
     {
       "hour": 21,
       "kw": 0,
-      "cloud": 0
+      "cloud": 29
     },
     {
       "hour": 22,
       "kw": 0,
-      "cloud": 45
+      "cloud": 0
     },
     {
       "hour": 23,
       "kw": 0,
-      "cloud": 100
+      "cloud": 20
     }
   ],
   "hourlyTomorrow": [
@@ -136,7 +136,7 @@
     {
       "hour": 3,
       "kw": 0,
-      "cloud": 97
+      "cloud": 100
     },
     {
       "hour": 4,
@@ -166,37 +166,37 @@
     {
       "hour": 9,
       "kw": 3.32,
-      "cloud": 87
+      "cloud": 100
     },
     {
       "hour": 10,
       "kw": 4.13,
-      "cloud": 100
+      "cloud": 94
     },
     {
       "hour": 11,
       "kw": 5.48,
-      "cloud": 21
+      "cloud": 100
     },
     {
       "hour": 12,
       "kw": 6.59,
-      "cloud": 0
+      "cloud": 28
     },
     {
       "hour": 13,
       "kw": 5.66,
-      "cloud": 52
+      "cloud": 34
     },
     {
       "hour": 14,
       "kw": 4.42,
-      "cloud": 41
+      "cloud": 75
     },
     {
       "hour": 15,
       "kw": 3.94,
-      "cloud": 33
+      "cloud": 32
     },
     {
       "hour": 16,
@@ -236,8 +236,8 @@
     {
       "hour": 23,
       "kw": 0,
-      "cloud": 100
+      "cloud": 86
     }
   ],
-  "updatedAt": "2026-09-01T10:21:13.719Z"
+  "updatedAt": "2026-09-01T10:26:13.726Z"
 }
