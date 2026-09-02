@@ -1,5 +1,6 @@
-# Cloudflare Workers Builds: Root directory musí byť nastavené na "worker"
-# (Settings -> Builds), inak build nenájde tento súbor a nasadí to ako static assets.
+# Cloudflare Workers Builds: Version command (PR/non-production branch) musí mať
+# --config worker/wrangler.toml (Settings -> Build), lebo Root directory sa naň
+# neaplikuje a beží z koreňa repa — pozri worker/README.md#troubleshooting.
 name = "pv-proxy"
 main = "src/index.js"
 compatibility_date = "2026-08-29"
