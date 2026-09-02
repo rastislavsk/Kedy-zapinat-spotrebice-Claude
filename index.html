@@ -163,8 +163,21 @@
             font-family: 'IBM Plex Mono', monospace; font-size: 8px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
             color: #DFFFC0;
             text-align: center;
+            position: relative; cursor: pointer;
         }
         .go-chip svg { width: 18px; height: 18px; stroke: var(--green); flex-shrink: 0; }
+        .chip-tooltip {
+            position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+            background: #000; border: 1px solid var(--ink-20); border-radius: 4px; padding: 6px 11px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--ink);
+            white-space: nowrap; pointer-events: none; z-index: 5;
+            opacity: 0; visibility: hidden; transition: opacity 0.12s ease;
+        }
+        .chip-tooltip::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%) rotate(45deg);
+            width: 8px; height: 8px; background: #000; border-right: 1px solid var(--ink-20); border-bottom: 1px solid var(--ink-20);
+        }
+        .go-chip.tooltip-open .chip-tooltip { opacity: 1; visibility: visible; }
 
         .wait-chip {
             display: flex; justify-content: center; align-items: center; gap: 8px;
@@ -900,6 +913,29 @@
             'Bojler': '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z"/></svg>',
         };
 
+        // Príkon spotrebičov v kW, zobrazený v tooltipe po kliknutí na ikonu
+        const DEVICE_POWER_KW = {
+            'Práčka': 2,
+            'Sušička': 1.5,
+            'Umývačka': 1.5,
+            'Auto': 11,
+            'Bojler': 2,
+        };
+
+        function goChipHTML(name) {
+            const power = DEVICE_POWER_KW[name];
+            const tooltip = power != null ? `<span class="chip-tooltip">${power} kW</span>` : '';
+            return `<div class="go-chip" data-device="${name}">${DEVICE_ICONS[name] || ''}${name}${tooltip}</div>`;
+        }
+
+        // Klik na ikonu spotrebiča prepne tooltip s jeho príkonom; klik mimo ikony ho zatvorí.
+        document.addEventListener('click', (e) => {
+            const chip = e.target.closest('.go-chip');
+            const wasOpen = chip && chip.classList.contains('tooltip-open');
+            document.querySelectorAll('.go-chip.tooltip-open').forEach(c => c.classList.remove('tooltip-open'));
+            if (chip && !wasOpen) chip.classList.add('tooltip-open');
+        });
+
         function tariffColorVar(blockType) {
             if (blockType === 'green') return 'var(--green)';
             if (blockType === 'amber') return 'var(--amber)';
@@ -946,7 +982,7 @@
                 : [];
 
             if (devices.length) {
-                goRow.innerHTML = devices.map(name => `<div class="go-chip">${DEVICE_ICONS[name] || ''}${name}</div>`).join('');
+                goRow.innerHTML = devices.map(goChipHTML).join('');
                 goRow.classList.remove('hidden');
                 waitChip.classList.add('hidden');
             } else if (latestForecastData && latestForecastData.strongerWindowAhead && Number.isFinite(latestForecastData.hoursAhead)) {
@@ -1373,7 +1409,7 @@
                 ? row.dataset.devices.split('·').map(s => s.trim()).filter(Boolean)
                 : [];
             if (devices.length) {
-                dom.verdictGoRow.innerHTML = devices.map(name => `<div class="go-chip">${DEVICE_ICONS[name] || ''}${name}</div>`).join('');
+                dom.verdictGoRow.innerHTML = devices.map(goChipHTML).join('');
                 dom.verdictGoRow.classList.remove('hidden');
             } else {
                 dom.verdictGoRow.classList.add('hidden');
