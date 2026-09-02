@@ -20,3 +20,12 @@ sú spoľahlivejšie, tak spúšťajú oba GH Actions workflow namiesto GH plán
    - Type: Secret (encrypted)
 3. Cron trigger (`*/5 * * * *`) je definovaný v [`wrangler.toml`](wrangler.toml) —
    Git-connected deploy ho nastaví automaticky, netreba nič klikať navyše.
+
+## Troubleshooting: červený check "Workers Builds: pv-proxy" na PR
+
+Ak build zlyhá s tým, že nenájde `wrangler.toml`/`src/index.js`, Cloudflare
+build ho hľadá v zlom adresári — Root directory sa v Cloudflare dashboarde
+občas resetne (typicky po odpojení/znovupripojení Git integrácie). Over/oprav:
+
+Cloudflare dashboard → Workers & Pages → `pv-proxy` → Settings → Build →
+Root directory → musí byť `worker`.
