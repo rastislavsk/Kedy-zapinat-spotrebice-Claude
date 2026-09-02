@@ -184,8 +184,8 @@
         /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami, marker sa dá ťahať --- */
         .daystrip-wrap { position: relative; margin-bottom: 24px; }
         .daystrip { border-radius: 8px; overflow: hidden; }
-        .daystrip svg { display: block; width: 100%; height: 60px; }
-        .strip-marker { position: absolute; top: 0; width: 0; height: 60px; border-left: 1.5px dashed rgba(242,240,234,0.5); pointer-events: none; }
+        .daystrip svg { display: block; width: 100%; height: 90px; }
+        .strip-marker { position: absolute; top: 0; width: 0; height: 90px; border-left: 1.5px dashed rgba(242,240,234,0.5); pointer-events: none; }
         .strip-marker-dot { position: absolute; left: -4.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--bg); border: 2px solid var(--green); transform: translateY(-50%); }
         .strip-marker-handle {
             position: absolute; left: -16px; top: -16px; width: 32px; height: 32px;
@@ -195,7 +195,7 @@
             pointer-events: auto; cursor: grab; touch-action: none;
         }
         .strip-marker-handle svg { width: 12px; height: 12px; stroke: var(--green); pointer-events: none; }
-        .strip-now-ghost { position: absolute; top: 0; width: 0; height: 60px; border-left: 1.5px dashed rgba(242,240,234,0.3); pointer-events: none; }
+        .strip-now-ghost { position: absolute; top: 0; width: 0; height: 90px; border-left: 1.5px dashed rgba(242,240,234,0.3); pointer-events: none; }
         .strip-now-ghost-dot { position: absolute; left: -3.5px; top: -3.5px; width: 7px; height: 7px; border-radius: 50%; background: rgba(242,240,234,0.3); }
         .strip-now-ghost-label { position: absolute; top: -20px; left: -14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: rgba(242,240,234,0.3); white-space: nowrap; }
         .drag-tooltip {
