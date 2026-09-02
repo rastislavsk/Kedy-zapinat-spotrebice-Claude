@@ -23,9 +23,15 @@ sú spoľahlivejšie, tak spúšťajú oba GH Actions workflow namiesto GH plán
 
 ## Troubleshooting: červený check "Workers Builds: pv-proxy" na PR
 
-Ak build zlyhá s tým, že nenájde `wrangler.toml`/`src/index.js`, Cloudflare
-build ho hľadá v zlom adresári — Root directory sa v Cloudflare dashboarde
-občas resetne (typicky po odpojení/znovupripojení Git integrácie). Over/oprav:
+Dve nezávislé príčiny, ktoré vedeli spôsobiť tento check červený:
 
-Cloudflare dashboard → Workers & Pages → `pv-proxy` → Settings → Build →
-Root directory → musí byť `worker`.
+1. **Root directory resetnuté v dashboarde** (typicky po odpojení/znovupripojení
+   Git integrácie) — build potom hľadá `wrangler.toml`/`src/index.js` v zlom
+   adresári. Over/oprav: Cloudflare dashboard → Workers & Pages → `pv-proxy` →
+   Settings → Build → Root directory → musí byť `worker`.
+2. **Chýbajúci `package.json`** — Cloudflare Workers Builds berie verziu
+   Wranglera z `package.json` (`npx wrangler ...`); bez neho bol `deploy`
+   (produkčný branch) aj `versions upload` (PR/non-production branch) menej
+   predvídateľný a `versions upload` zlyhával s "Missing entry-point to
+   Worker script" aj keď `wrangler.toml` bol v poriadku. Fix: `worker/package.json`
+   s pinnutou verziou `wrangler` v `devDependencies`.

@@ -1,0 +1,7 @@
+{
+  "name": "pv-proxy",
+  "private": true,
+  "devDependencies": {
+    "wrangler": "^4.128.0"
+  }
+}
