@@ -1294,21 +1294,15 @@
             if (powerEl) powerEl.style.color = color;
         }
 
-        // Radiálny ukazovateľ na dashboarde: aktuálny výkon ako % dnešnej odhadovanej špičky.
+        // Radiálny ukazovateľ na dashboarde: aktuálny výkon ako % inštalovaného výkonu FV (10,4 kWp).
         const DIAL_CIRCUMFERENCE = 2 * Math.PI * 92;
-
-        function todayForecastPeakKw() {
-            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
-            if (!pts || !pts.length) return null;
-            return pts.reduce((a, b) => (b.kw > a.kw ? b : a), pts[0]).kw;
-        }
+        const INSTALLED_PV_KW = 10.4;
 
         function setDialRingForPower(power) {
             const ring = dom.dialRing;
             if (!ring) return;
-            const peak = todayForecastPeakKw();
-            const fraction = (Number.isFinite(power) && Number.isFinite(peak) && peak > 0)
-                ? Math.max(0, Math.min(1, power / peak))
+            const fraction = Number.isFinite(power)
+                ? Math.max(0, Math.min(1, power / INSTALLED_PV_KW))
                 : 0;
             ring.style.strokeDashoffset = DIAL_CIRCUMFERENCE * (1 - fraction);
         }
