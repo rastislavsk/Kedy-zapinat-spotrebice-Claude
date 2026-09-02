@@ -23,15 +23,26 @@ sú spoľahlivejšie, tak spúšťajú oba GH Actions workflow namiesto GH plán
 
 ## Troubleshooting: červený check "Workers Builds: pv-proxy" na PR
 
-Dve nezávislé príčiny, ktoré vedeli spôsobiť tento check červený:
+**Potvrdená príčina (overené diagnostickým `pwd && ls -la` priamo v builde):**
+Nastavenie **Root directory** (`worker`) v Cloudflare dashboarde ovplyvňuje working
+directory len pre **Build command**. Pre **Version command** (non-production branch —
+teda presne PR buildy) sa napriek tomu spúšťa z koreňa repozitára
+(`/opt/buildhome/repo`), kde `wrangler.toml` nie je — preto `npx wrangler versions
+upload` padal na "Missing entry-point to Worker script", aj keď produkčný `wrangler
+deploy` na `main` fungoval spoľahlivo.
 
-1. **Root directory resetnuté v dashboarde** (typicky po odpojení/znovupripojení
-   Git integrácie) — build potom hľadá `wrangler.toml`/`src/index.js` v zlom
-   adresári. Over/oprav: Cloudflare dashboard → Workers & Pages → `pv-proxy` →
-   Settings → Build → Root directory → musí byť `worker`.
-2. **Chýbajúci `package.json`** — Cloudflare Workers Builds berie verziu
-   Wranglera z `package.json` (`npx wrangler ...`); bez neho bol `deploy`
-   (produkčný branch) aj `versions upload` (PR/non-production branch) menej
-   predvídateľný a `versions upload` zlyhával s "Missing entry-point to
-   Worker script" aj keď `wrangler.toml` bol v poriadku. Fix: `worker/package.json`
-   s pinnutou verziou `wrangler` v `devDependencies`.
+Fix: Cloudflare dashboard → Workers & Pages → `pv-proxy` → Settings → Build →
+Build configuration → **Version command** nastav na:
+
+```
+npx wrangler versions upload --config worker/wrangler.toml
+```
+
+(`--config` je cesta relatívna ku koreňu repozitára, nie k Root directory.) Pre
+istotu je vhodné rovnaký `--config` flag pridať aj do **Deploy command**
+(`npx wrangler deploy --config worker/wrangler.toml`), aj keď produkčný build
+bez neho fungoval.
+
+Vedľajšia zmena: `worker/package.json` pinuje verziu `wrangler` — nebola to
+príčina tohto konkrétneho zlyhania, ale je to dobrá prax, nech je verzia
+Wranglera medzi buildmi konzistentná.
