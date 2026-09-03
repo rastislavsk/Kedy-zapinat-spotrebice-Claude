@@ -381,6 +381,10 @@
         /* Hlavicky kariet sa ukazuju az od tabletu, na mobile by len zaberali miesto. */
         .card-hd { display: none; }
 
+        /* Zdielanie je na mobile bezny panel, takze obal karty ani zatvaracie
+           tlacidlo tam nic nerobia. Od 768 px sa z panelu stava modal. */
+        .modal-close { display: none; }
+
         /* ============================================================
            TABLET (>= 768px)
            Spodna lista sa meni na zvisly rail vlavo, obsah dostava karty.
@@ -438,7 +442,7 @@
             .verdict,
             .col-b,
             #panel-predpoved,
-            #panel-zdielat {
+            .modal-card {
                 background: var(--card-bg);
                 border: 1px solid var(--card-line);
                 border-radius: 12px;
@@ -500,6 +504,41 @@
             .go-chip.state-no svg { stroke: var(--ink-35); }
             .go-chip.state-no .go-name { color: var(--ink-45); }
             #panel-predpoved .section-head { margin-top: 0; }
+
+            /* --- Zdielat ako modal --- */
+            /* Panel sa vytiahne z toku stranky a prekryje ju; dashboard pod nim
+               zostava vidiet, len stmavne. Zavriet sa da klikom vedla, krizikom
+               alebo klavesom Esc. */
+            #panel-zdielat {
+                position: fixed;
+                inset: 0;
+                z-index: 60;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+                background: rgba(6, 8, 6, 0.62);
+                backdrop-filter: blur(2px);
+            }
+            .modal-card {
+                position: relative;
+                width: 100%;
+                max-width: 380px;
+                padding: 26px 24px 24px;
+                box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+            }
+            .modal-close {
+                display: flex; align-items: center; justify-content: center;
+                position: absolute; top: 12px; right: 12px;
+                width: 30px; height: 30px;
+                border: 1px solid var(--ink-12); border-radius: 50%;
+                background: transparent; cursor: pointer;
+            }
+            .modal-close svg { width: 14px; height: 14px; stroke: var(--ink-45); }
+            .modal-close:hover svg { stroke: var(--ink); }
+            .modal-close:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+            #panel-zdielat .share-panel { padding: 20px 0 4px; }
+            .wa-btn { max-width: 340px; }
             .msg-block { margin-bottom: 0; }
         }
 
@@ -532,7 +571,6 @@
             .col-b { grid-column: 1 / -1; order: -1; }   /* pas dna cez celu sirku, ten z nej tazi najviac */
             .col-a { grid-column: 1; }
             #panel-predpoved { grid-column: 2; }
-            #panel-zdielat { grid-column: 1 / -1; }
 
             /* Spotrebice aj Predpoved su viditelne vzdy, okrem pohladu Zdielat.
                Selektor je specifickejsi ako .hidden, takze ho prebije. */
@@ -542,7 +580,6 @@
             .page[data-panel="predpoved"] > #panel-predpoved { display: block !important; }
 
             .qr-frame { width: 208px; height: 208px; }
-            .wa-btn { max-width: 340px; }
         }
 
         /* ============================================================
@@ -852,7 +889,12 @@
         <!-- /PANEL: PREDPOVEĎ -->
 
         <!-- PANEL: ZDIEĽAŤ -->
-        <div id="panel-zdielat" class="hidden">
+        <div id="panel-zdielat" class="hidden" onclick="shareBackdropClick(event)">
+          <div class="modal-card">
+
+            <button class="modal-close" type="button" onclick="closeShareModal()" aria-label="Zavrieť">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
 
             <div class="section-head" style="text-align:center;">
                 <div class="section-title">Zdieľať appku</div>
@@ -867,6 +909,7 @@
                 </a>
             </div>
 
+          </div>
         </div>
         <!-- /PANEL: ZDIEĽAŤ -->
 
@@ -965,6 +1008,10 @@
         // QR kod sa generuje az pri prvom otvoreni panelu Zdielat, nie hned pri starte appky.
         function ensureQrCode() {
             if (qrInitialized) return;
+            // Knižnica sa načítava z CDN s atribútom defer. Ak tam ešte nie je
+            // (pomalá sieť, skorý klik), príznak sa nenastaví a ďalšie otvorenie
+            // to skúsi znova - zvyšok panelu funguje aj bez QR kódu.
+            if (typeof QRCode === 'undefined') return;
             qrInitialized = true;
             new QRCode(document.getElementById('qrcode'), {
                 text: 'https://rastislavsk.github.io/Kedy-zapinat-spotrebice-Claude/',
@@ -1001,6 +1048,12 @@
             // Prechod cez 768 px mení veľkosť plátna grafu, takže ho treba prekresliť.
             WIDE_CHART_MQ.addEventListener('change', () => {
                 if (isForecastVisible()) renderForecastChart();
+            });
+            // Pri tej istej hranici sa zdieľanie prepína medzi panelom a modálom.
+            // Bez toho by po zmene šírky okna ostalo viset v nesprávnej podobe.
+            SHARE_MODAL_MQ.addEventListener('change', (e) => {
+                if (!e.matches) { closeShareModal(); return; }
+                if (currentPanel === 'zdielat') { setPanel('spotrebice'); openShareModal(); }
             });
             setForecastDay('today');
             setInterval(tick30s, 1000 * 30);
@@ -1294,7 +1347,38 @@
             return currentPanel === 'predpoved' || (DESKTOP_MQ.matches && currentPanel !== 'zdielat');
         }
 
+        // Od 768 px je zdieľanie modál nad appkou, nie samostatný pohľad - poslať
+        // niekomu link je krátky úkon, nemá kvôli nemu miznúť celý dashboard.
+        const SHARE_MODAL_MQ = window.matchMedia('(min-width: 768px)');
+
+        function openShareModal() {
+            // Najprv zobraziť, až potom kresliť QR - keby sa knižnica nenačítala,
+            // modál sa aj tak otvorí a odkaz cez WhatsApp funguje.
+            dom.panels.zdielat.classList.remove('hidden');
+            ensureQrCode();
+            document.addEventListener('keydown', shareModalKeydown);
+            const closeBtn = dom.panels.zdielat.querySelector('.modal-close');
+            if (closeBtn) closeBtn.focus();
+        }
+
+        function closeShareModal() {
+            dom.panels.zdielat.classList.add('hidden');
+            document.removeEventListener('keydown', shareModalKeydown);
+            dom.navs.zdielat.blur();
+        }
+
+        function shareModalKeydown(e) {
+            if (e.key === 'Escape') closeShareModal();
+        }
+
+        // Klik mimo karty zatvára; klik vnútri nie. Na mobile je to bežný panel,
+        // tam sa nesmie stať nič.
+        function shareBackdropClick(e) {
+            if (SHARE_MODAL_MQ.matches && e.target === e.currentTarget) closeShareModal();
+        }
+
         function setPanel(panel) {
+            if (SHARE_MODAL_MQ.matches && panel === 'zdielat') { openShareModal(); return; }
             if (DESKTOP_MQ.matches && panel === 'predpoved') panel = 'spotrebice';
             currentPanel = panel;
             dom.page.dataset.panel = panel;
