@@ -371,6 +371,10 @@
         /* Hlavicky kariet sa ukazuju az od tabletu, na mobile by len zaberali miesto. */
         .card-hd { display: none; }
 
+        /* Rozvrh dna sa zobrazuje az od tabletu - pas dna nad nim hovori to iste
+           a na displeji telefonu by devat riadkov len predlzilo skrolovanie. */
+        @media (max-width: 767px) { #timeline-container { display: none; } }
+
         /* ============================================================
            TABLET (>= 768px)
            Spodna lista sa meni na zvisly rail vlavo, obsah dostava karty.
@@ -426,6 +430,7 @@
             }
             .today-forecast-link,
             .verdict,
+            #timeline-container,
             .col-b,
             #panel-predpoved,
             #panel-zdielat {
@@ -440,8 +445,11 @@
             #panel-spotrebice { display: flex; flex-direction: column; gap: 16px; }
             .col-a { display: flex; flex-direction: column; gap: 16px; }
             .col-a > *, .col-b > .daystrip-wrap { margin-bottom: 0; }
-            .preview-banner { margin-bottom: 0; }
+            /* Pas dna je prehlad celeho dna, patri nad detail - aj v jednom stlpci. */
+            .preview-banner { margin-bottom: 0; order: -2; }
+            .col-b { order: -1; }
             .footline { margin-bottom: 14px; }
+            .tl-row:last-child { border-bottom: none; padding-bottom: 0; }
             #panel-predpoved .section-head { margin-top: 0; }
             .msg-block { margin-bottom: 0; }
         }
@@ -481,10 +489,6 @@
             .page[data-panel="predpoved"] > #panel-spotrebice { display: contents !important; }
             .page[data-panel="spotrebice"] > #panel-predpoved,
             .page[data-panel="predpoved"] > #panel-predpoved { display: block !important; }
-
-            /* Graf sa este kresli do pevneho platna 320x150 a v sirsej karte sa
-               zvacsuje aj s popismi osi. Docasna kompenzacia, kym platno neprekreslime. */
-            .axis-label { font-size: 6px; }
 
             .qr-frame { width: 208px; height: 208px; }
             .wa-btn { max-width: 340px; }
@@ -585,32 +589,8 @@
                 </div>
             </div>
 
-            </div><!-- /col-a -->
-
-            <div class="col-b">
-
-            <div class="footline">
-                <span class="chart-label">Priebeh dňa</span>
-                <span class="season-indicator" id="season-indicator">Leto</span>
-            </div>
-
-            <div class="daystrip-wrap">
-                <div class="daystrip" id="daystrip"></div>
-                <div class="strip-now-ghost hidden" id="strip-now-ghost">
-                    <span class="strip-now-ghost-dot"></span>
-                    <span class="strip-now-ghost-label">teraz</span>
-                </div>
-                <div class="strip-marker" id="strip-now-marker">
-                    <span class="strip-marker-dot"></span>
-                    <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
-                    <span class="strip-marker-handle" id="strip-marker-handle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
-                    </span>
-                </div>
-                <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
-            </div>
-
-            <div class="tl hidden" id="timeline-container">
+            <div class="tl" id="timeline-container">
+                <div class="card-hd">Rozvrh dňa</div>
 
                 <!-- NOC (23:30 - 07:30) -->
                 <div class="tl-row" data-start="23:30" data-end="07:30" data-status="amber">
@@ -722,6 +702,31 @@
                     <span class="dot" style="background:var(--red);"></span>
                 </div>
 
+            </div>
+
+            </div><!-- /col-a -->
+
+            <div class="col-b">
+
+            <div class="footline">
+                <span class="chart-label">Priebeh dňa</span>
+                <span class="season-indicator" id="season-indicator">Leto</span>
+            </div>
+
+            <div class="daystrip-wrap">
+                <div class="daystrip" id="daystrip"></div>
+                <div class="strip-now-ghost hidden" id="strip-now-ghost">
+                    <span class="strip-now-ghost-dot"></span>
+                    <span class="strip-now-ghost-label">teraz</span>
+                </div>
+                <div class="strip-marker" id="strip-now-marker">
+                    <span class="strip-marker-dot"></span>
+                    <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
+                    <span class="strip-marker-handle" id="strip-marker-handle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+                    </span>
+                </div>
+                <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
             </div>
 
             </div><!-- /col-b -->
@@ -943,6 +948,10 @@
             // Prechod cez hranicu 1024 px (zmena velkosti okna, otocenie tabletu):
             // setPanel znova poskladá pohlad a v pripade potreby prekresli graf.
             DESKTOP_MQ.addEventListener('change', () => setPanel(currentPanel));
+            // Prechod cez 768 px mení veľkosť plátna grafu, takže ho treba prekresliť.
+            WIDE_CHART_MQ.addEventListener('change', () => {
+                if (isForecastVisible()) renderForecastChart();
+            });
             setForecastDay('today');
             setInterval(tick30s, 1000 * 30);
             updateTimeAndHighlight();
@@ -1666,6 +1675,27 @@
             renderForecastChart();
         }
 
+        // Graf sa kreslí do dvoch veľkostí plátna. Mobilné ostáva pôvodné 320x150,
+        // od 768 px sa karta zoširoka a plátno s ňou — vďaka tomu je popis osi
+        // pri oboch veľkostiach vykreslený zhruba 1:1 a nezväčšuje sa spolu s krivkou.
+        const WIDE_CHART_MQ = window.matchMedia('(min-width: 768px)');
+
+        function chartDims() {
+            return WIDE_CHART_MQ.matches
+                ? { w: 680, h: 300, padL: 42, padR: 14, padT: 16, padB: 30, hourStep: 2, xLabelGap: 8, yAxis: true }
+                : { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22, hourStep: 3, xLabelGap: 6, yAxis: false };
+        }
+
+        // Krok vodorovnej mriežky: taký, aby na osi zostali 4-6 čiar a čísla boli okrúhle.
+        function kwGridStep(maxKw) {
+            const steps = [0.25, 0.5, 1, 2, 2.5, 5, 10, 20];
+            return steps.find(s => maxKw / s <= 6) || steps[steps.length - 1];
+        }
+
+        function formatGridKw(kw) {
+            return Number.isInteger(kw) ? String(kw) : kw.toFixed(1).replace('.', ',');
+        }
+
         function forecastXY(hour, kw, hMin, hMax, maxKw, dims) {
             const x = dims.padL + ((hour - hMin) / (hMax - hMin || 1)) * (dims.w - dims.padL - dims.padR);
             const y = dims.padT + (1 - kw / maxKw) * (dims.h - dims.padT - dims.padB);
@@ -1778,7 +1808,8 @@
                 return;
             }
 
-            const dims = { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22 };
+            const dims = chartDims();
+            svg.setAttribute('viewBox', `0 0 ${dims.w} ${dims.h}`);
             // Os X je fixná od 06:00 do 21:00 — pokrýva celé produkčné okno dňa.
             const hMin = 6;
             const hMax = 21;
@@ -1794,12 +1825,26 @@
 
             let gridLines = '';
             for (let h = hMin; h <= hMax; h++) {
-                if (h % 3 !== 0) continue;
+                if (h % dims.hourStep !== 0) continue;
                 const { x } = forecastXY(h, 0, hMin, hMax, maxKw, dims);
                 gridLines += `<line x1="${x}" y1="${dims.padT}" x2="${x}" y2="${dims.h - dims.padB}" stroke="rgba(242,240,234,0.09)" stroke-width="1"/>`;
                 // Krajné popisky zarovnaj k okraju (nie na stred), aby sa nerezali o okraj SVG.
                 const anchor = h === hMin ? 'start' : (h === hMax ? 'end' : 'middle');
-                gridLines += `<text class="axis-label" x="${x}" y="${dims.h - 6}" text-anchor="${anchor}">${h}:00</text>`;
+                gridLines += `<text class="axis-label" x="${x}" y="${dims.h - dims.xLabelGap}" text-anchor="${anchor}">${h}:00</text>`;
+            }
+
+            // Vodorovná mriežka s popiskami v kW. Na širokom plátne je na ňu miesto,
+            // na mobile by len zahustila obrázok, takže tam sa nekreslí (dims.padL je úzky).
+            if (dims.yAxis) {
+                // Násobenie krokom (nie pripočítavanie) - inak by sa nazbierala
+                // desatinná chyba a z 3 by bolo 3.0000000000000004.
+                const kwStep = kwGridStep(maxKw);
+                for (let i = 0; i * kwStep <= maxKw; i++) {
+                    const kw = i * kwStep;
+                    const { y } = forecastXY(hMin, kw, hMin, hMax, maxKw, dims);
+                    gridLines += `<line x1="${dims.padL}" y1="${y}" x2="${dims.w - dims.padR}" y2="${y}" stroke="rgba(242,240,234,0.07)" stroke-width="1"/>`;
+                    gridLines += `<text class="axis-label" x="${dims.padL - 9}" y="${y + 3.5}" text-anchor="end">${formatGridKw(kw)}</text>`;
+                }
             }
 
             const cloudAvailable = pts.every(p => Number.isFinite(p.cloud));
