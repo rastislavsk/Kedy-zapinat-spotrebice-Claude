@@ -183,7 +183,7 @@
 
         /* Na mobile karta ukazuje len spotrebice, ktore su prave teraz na rade -
            presne ako doteraz. Cas a stav su az pre siroky layout nizsie. */
-        .go-chip .go-when, .go-chip .go-state { display: none; }
+        .go-chip .go-power { display: none; }
         .go-chip:not(.state-go) { display: none; }
         .go-row:not(:has(.state-go)) { display: none; }
 
@@ -457,13 +457,16 @@
             .col-b { order: -1; }
             .footline { margin-bottom: 14px; }
 
-            /* --- Spotrebice: z ciarok sa stavaju riadky s casovym oknom a stavom --- */
+            /* --- Spotrebice: z ciarok sa stavaju riadky s vykonom a stavom --- */
             .go-row { grid-template-columns: 1fr; gap: 6px; }
             /* Zrusenie mobilneho skryvania - kazdy prvok sa vracia k svojmu vlastnemu
                typu zobrazenia, .go-row je mriezka a .go-chip flex kontajner. */
             .go-row:not(:has(.state-go)) { display: grid; }
             .go-chip:not(.state-go) { display: flex; }
-            .go-chip .go-when, .go-chip .go-state { display: block; }
+            /* Na sirsom displeji uz je miesto na natvrdo zobrazeny vykon - cas
+               a slovny stav (Pockaj/Chod) sa neukazuju, farba ramceka staci. */
+            .go-chip .go-power { display: block; }
+            .chip-tooltip { display: none; }
             .go-chip {
                 flex-direction: row;
                 align-items: center;
@@ -479,10 +482,10 @@
                 font-size: 12.5px; font-weight: 600; letter-spacing: -0.005em; text-transform: none;
                 color: var(--ink);
             }
-            .go-when { font-size: 9px; letter-spacing: 0.02em; text-transform: none; opacity: 0.85; }
-            .go-state {
+            .go-power {
                 flex-shrink: 0;
-                font-size: 8.5px; font-weight: 700; letter-spacing: 0.09em;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
                 padding-left: 11px;
                 border-left: 1px solid var(--ink-12);
             }
@@ -1193,7 +1196,6 @@
         // Poradie spotrebičov v karte je pevné, aby riadky pri každom prekreslení
         // zostali na tom istom mieste a nepreskakovali.
         const ALL_DEVICES = ['Práčka', 'Sušička', 'Umývačka', 'Auto', 'Bojler'];
-        const DEVICE_STATE_LABEL = { go: 'Choď', wait: 'Počkaj', no: 'Nie' };
 
         // V rozvrhu je jediný slot s odporúčanými spotrebičmi - zelené okno
         // (v lete 10:30-17:30, v zime 10:30-14:30, viď atribút data-devices).
@@ -1218,22 +1220,22 @@
             const inWindow = minutes >= start && minutes < end;
 
             return ALL_DEVICES.map(name => {
-                if (!win.devices.includes(name)) return { name, state: 'no', when: 'mimo dnešného okna' };
-                if (inWindow) return { name, state: 'go', when: `do ${win.end}` };
-                if (minutes < start) return { name, state: 'wait', when: `od ${win.start}` };
-                return { name, state: 'wait', when: `zajtra od ${win.start}` };
+                if (!win.devices.includes(name)) return { name, state: 'no' };
+                if (inWindow) return { name, state: 'go' };
+                return { name, state: 'wait' };
             });
         }
 
+        // Vykon je pevny udaj zo zoznamu spotrebicov, nie odvodeny z merania -
+        // na tablete/PC sa ukazuje natvrdo v riadku, na mobile len po kliku (tooltip).
         function deviceRowHTML(d) {
             const power = DEVICE_POWER_KW[d.name];
-            const tooltip = power != null ? `<span class="chip-tooltip">${power} kW</span>` : '';
+            const powerLabel = power != null ? `${power} kW` : '';
             return `<div class="go-chip state-${d.state}" data-device="${d.name}">`
                 + (DEVICE_ICONS[d.name] || '')
                 + `<span class="go-name">${d.name}</span>`
-                + `<span class="go-when">${d.when}</span>`
-                + `<span class="go-state">${DEVICE_STATE_LABEL[d.state]}</span>`
-                + tooltip
+                + `<span class="go-power">${powerLabel}</span>`
+                + `<span class="chip-tooltip">${powerLabel}</span>`
                 + '</div>';
         }
 
@@ -1294,9 +1296,8 @@
             const now = new Date();
             renderDeviceRows(now.getHours() * 60 + now.getMinutes());
 
-            // Riadky spotrebičov teraz hovoria "Počkaj · od 10:30" samy, ale odznak
-            // pod nimi berie čas z predpovede (nie z rozvrhu), takže nesie inú
-            // informáciu a zostáva. Ukáže sa len mimo okna, ako doteraz.
+            // Odznak pod riadkami spotrebičov berie čas z predpovede (nie z rozvrhu),
+            // takže nesie inú informáciu ako riadky samotné. Ukáže sa len mimo okna.
             const hasDevicesNow = !!(activeRow && activeRow.dataset.devices);
             const strongerAhead = latestForecastData
                 && latestForecastData.strongerWindowAhead
