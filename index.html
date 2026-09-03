@@ -1294,7 +1294,7 @@
                 return;
             }
 
-            accentScope.style.setProperty('--accent', tariffColorVar(blockType));
+            accentScope.style.setProperty('--accent', tariffColorVar(smartTier(blockType, power)));
             eyebrowEl.textContent = buildEyebrow(blockType, power, isNightSlot);
             headlineEl.textContent = msg.headline;
             bodyEl.textContent = msg.body;
@@ -1435,7 +1435,8 @@
                     };
                 }
 
-                headerDot.className = 'live-dot' + (blockType === 'red' ? ' status-red' : blockType === 'amber' ? ' status-amber' : '');
+                const dotTier = smartTier(blockType, power);
+                headerDot.className = 'live-dot' + (dotTier === 'red' ? ' status-red' : dotTier === 'amber' ? ' status-amber' : '');
                 if (previewMinutes === null) renderVerdict(blockType, power, activeRow, msg, isNightSlot);
             } else {
                 currentBlockType = null;
@@ -1668,12 +1669,22 @@
             return { headline: entry.h, body: entry.p };
         }
 
-        // Stav výkonu FV: zelená od 2 kW; pod 2 kW je to červená v 4 najdrahších
-        // sieťových slotoch (07:30-08:30, 09:30-10:30, 20:30-21:30, 22:30-23:30), inak oranžová
+        // Farba (na rozdiel od textu v eyebrow/verdikte) reaguje aj na živý/predpovedaný výkon FV:
+        // ak FV už dáva aspoň 2 kW, dial/eyebrow rámček/bodka v hlavičke sa rozžiaria na zeleno, aj
+        // keď je podľa rozvrhu ešte drahé pásmo. Pod 2 kW zostáva farba podľa rozvrhu (červená v
+        // najdrahších slotoch, inak oranžová). Text (buildEyebrow/getSlotMessage) sa touto farbou
+        // neriadi — ten vždy hovorí o tarife, nie o výkone.
+        function smartTier(tier, powerKw, fallback = tier) {
+            if (!Number.isFinite(powerKw)) return fallback;
+            if (powerKw >= 2) return 'green';
+            return tier === 'red' ? 'red' : 'amber';
+        }
+
+        // Stav výkonu FV pre farbu číslice kW: zelená od 2 kW; pod 2 kW je to červená v 4
+        // najdrahších sieťových slotoch (07:30-08:30, 09:30-10:30, 20:30-21:30, 22:30-23:30), inak
+        // oranžová; bez dát (null) zostáva neutrálna.
         function getPvStatus(power) {
-            if (!Number.isFinite(power)) return null;
-            if (power >= 2) return 'green';
-            return currentBlockType === 'red' ? 'red' : 'amber';
+            return smartTier(currentBlockType, power, null);
         }
 
         function getPvColor(power) {
@@ -1752,7 +1763,7 @@
             const isNightSlot = row.getAttribute('data-start') === '23:30';
             const power = forecastPowerAt(minutes / 60);
 
-            dom.panels.spotrebice.style.setProperty('--accent', tariffColorVar(blockType));
+            dom.panels.spotrebice.style.setProperty('--accent', tariffColorVar(smartTier(blockType, power)));
             dom.verdictEyebrow.textContent = buildEyebrow(blockType, power, isNightSlot);
 
             let msg = null;
@@ -1770,11 +1781,11 @@
             dom.verdictWaitChip.classList.add('hidden');
 
             dom.pvPower.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
-            dom.pvPower.style.color = tariffColorVar(blockType);
+            dom.pvPower.style.color = tariffColorVar(smartTier(blockType, power));
             dom.pvPowerUnit.textContent = 'kW (odhad)';
             setDialRingForPower(power);
 
-            return { blockType };
+            return { blockType, tier: smartTier(blockType, power) };
         }
 
         function updatePreviewToMinutes(minutes, dim) {
@@ -1809,7 +1820,7 @@
         function pinPreview() {
             const result = renderHeroForMinutes(previewMinutes, false);
             dom.previewTimeLabel.textContent = `Náhľad · ${minutesToTimeStr(previewMinutes)}`;
-            dom.previewPill.style.setProperty('--preview-accent', tariffColorVar(result ? result.blockType : 'green'));
+            dom.previewPill.style.setProperty('--preview-accent', tariffColorVar(result ? result.tier : 'green'));
             dom.previewBanner.classList.remove('hidden');
         }
 
