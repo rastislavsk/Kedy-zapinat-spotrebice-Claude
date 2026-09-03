@@ -381,10 +381,6 @@
         /* Hlavicky kariet sa ukazuju az od tabletu, na mobile by len zaberali miesto. */
         .card-hd { display: none; }
 
-        /* Rozvrh dna sa zobrazuje az od tabletu - pas dna nad nim hovori to iste
-           a na displeji telefonu by devat riadkov len predlzilo skrolovanie. */
-        @media (max-width: 767px) { #timeline-container { display: none; } }
-
         /* ============================================================
            TABLET (>= 768px)
            Spodna lista sa meni na zvisly rail vlavo, obsah dostava karty.
@@ -440,7 +436,6 @@
             }
             .today-forecast-link,
             .verdict,
-            #timeline-container,
             .col-b,
             #panel-predpoved,
             #panel-zdielat {
@@ -459,7 +454,6 @@
             .preview-banner { margin-bottom: 0; order: -2; }
             .col-b { order: -1; }
             .footline { margin-bottom: 14px; }
-            .tl-row:last-child { border-bottom: none; padding-bottom: 0; }
 
             /* --- Spotrebice: z ciarok sa stavaju riadky s casovym oknom a stavom --- */
             .go-row { grid-template-columns: 1fr; gap: 6px; }
@@ -528,8 +522,10 @@
                 display: grid;
                 grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
                 gap: 16px;
-                align-items: start;
+                align-items: stretch;
             }
+            #panel-predpoved { display: flex; flex-direction: column; }
+            #panel-predpoved .msg-block { margin-top: auto; }
             /* display:contents rozpusti obal panelu, aby col-a a col-b boli priamo polozkami mriezky. */
             #panel-spotrebice { display: contents; }
             #panel-spotrebice > .preview-banner { grid-column: 1 / -1; order: -2; }
@@ -644,8 +640,32 @@
                 </div>
             </div>
 
-            <div class="tl" id="timeline-container">
-                <div class="card-hd">Rozvrh dňa</div>
+            </div><!-- /col-a -->
+
+            <div class="col-b">
+
+            <div class="footline">
+                <span class="chart-label">Priebeh dňa</span>
+                <span class="season-indicator" id="season-indicator">Leto</span>
+            </div>
+
+            <div class="daystrip-wrap">
+                <div class="daystrip" id="daystrip"></div>
+                <div class="strip-now-ghost hidden" id="strip-now-ghost">
+                    <span class="strip-now-ghost-dot"></span>
+                    <span class="strip-now-ghost-label">teraz</span>
+                </div>
+                <div class="strip-marker" id="strip-now-marker">
+                    <span class="strip-marker-dot"></span>
+                    <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
+                    <span class="strip-marker-handle" id="strip-marker-handle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
+                    </span>
+                </div>
+                <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+            </div>
+
+            <div class="tl hidden" id="timeline-container">
 
                 <!-- NOC (23:30 - 07:30) -->
                 <div class="tl-row" data-start="23:30" data-end="07:30" data-status="amber">
@@ -757,31 +777,6 @@
                     <span class="dot" style="background:var(--red);"></span>
                 </div>
 
-            </div>
-
-            </div><!-- /col-a -->
-
-            <div class="col-b">
-
-            <div class="footline">
-                <span class="chart-label">Priebeh dňa</span>
-                <span class="season-indicator" id="season-indicator">Leto</span>
-            </div>
-
-            <div class="daystrip-wrap">
-                <div class="daystrip" id="daystrip"></div>
-                <div class="strip-now-ghost hidden" id="strip-now-ghost">
-                    <span class="strip-now-ghost-dot"></span>
-                    <span class="strip-now-ghost-label">teraz</span>
-                </div>
-                <div class="strip-marker" id="strip-now-marker">
-                    <span class="strip-marker-dot"></span>
-                    <div class="drag-tooltip hidden" id="drag-tooltip">--:--</div>
-                    <span class="strip-marker-handle" id="strip-marker-handle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3"/></svg>
-                    </span>
-                </div>
-                <div class="strip-ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
             </div>
 
             </div><!-- /col-b -->
@@ -1776,7 +1771,7 @@
 
         function chartDims() {
             return WIDE_CHART_MQ.matches
-                ? { w: 680, h: 300, padL: 42, padR: 14, padT: 16, padB: 30, hourStep: 2, xLabelGap: 8, yAxis: true }
+                ? { w: 680, h: 420, padL: 42, padR: 14, padT: 18, padB: 34, hourStep: 2, xLabelGap: 10, yAxis: true }
                 : { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22, hourStep: 3, xLabelGap: 6, yAxis: false };
         }
 
