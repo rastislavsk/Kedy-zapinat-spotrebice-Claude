@@ -1706,6 +1706,18 @@
         const DIAL_CIRCUMFERENCE = 2 * Math.PI * 92;
         const INSTALLED_PV_KW = 10.4;
 
+        // Farba kruhu je zámerne odpojená od --accent (tarifa+výkon) aj od tarify úplne —
+        // je to čistý "výkonomer" FV s pevnými pásmami, nezávislý od toho, čo hovorí rozvrh
+        // alebo smartTier() (tie naďalej farbia číslo kW, eyebrow badge, wait-chip a bodku
+        // v hlavičke).
+        function dialRingColorVar(powerKw) {
+            if (!Number.isFinite(powerKw)) return 'var(--ink-20)';
+            const level = productionLevel(powerKw);
+            if (level === 'niz') return 'var(--red)';
+            if (level === 'str') return 'var(--amber)';
+            return 'var(--green)';
+        }
+
         function setDialRingForPower(power) {
             const ring = dom.dialRing;
             if (!ring) return;
@@ -1713,6 +1725,7 @@
                 ? Math.max(0, Math.min(1, power / INSTALLED_PV_KW))
                 : 0;
             ring.style.strokeDashoffset = DIAL_CIRCUMFERENCE * (1 - fraction);
+            ring.style.stroke = dialRingColorVar(power);
         }
 
         function updateDialRing() {
