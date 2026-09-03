@@ -185,6 +185,21 @@
             color: color-mix(in srgb, var(--red) 70%, white);
         }
         .go-chip.tier-red svg { stroke: var(--red); }
+
+        /* Legenda k farbam ikon - zobrazi sa len ked je nad nou naozaj vidiet aspon jeden
+           riadok spotrebica (na mobile teda len ked existuje "go" cip, viď tiez media 768px). */
+        .go-legend {
+            display: none;
+            justify-content: center; flex-wrap: wrap;
+            gap: 5px 14px;
+            margin-top: 10px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: 0.02em;
+            color: var(--ink-45);
+        }
+        .go-legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .go-legend i { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        #verdict-go-row:not(.hidden):has(.state-go) + .go-legend { display: flex; }
+
         .chip-tooltip {
             position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
             background: #000; border: 1px solid var(--ink-20); border-radius: 4px; padding: 6px 11px;
@@ -488,6 +503,9 @@
                a slovny stav (Pockaj/Chod) sa neukazuju, farba ramceka staci. */
             .go-chip .go-power { display: block; }
             .chip-tooltip { display: none; }
+            /* Tu su vidno vsetky riadky (aj cakajuce/nedostupne), takze legenda sa neviaze
+               na existenciu "go" cipu ako na mobile. */
+            #verdict-go-row:not(.hidden) + .go-legend { display: flex; justify-content: flex-start; }
             .go-chip {
                 flex-direction: row;
                 align-items: center;
@@ -684,6 +702,11 @@
                 <h1 id="verdict-headline">Načítavam…</h1>
                 <p class="body" id="verdict-body"></p>
                 <div class="go-row hidden" id="verdict-go-row"></div>
+                <div class="go-legend" id="verdict-go-legend">
+                    <span><i style="background:var(--green)"></i>najlepší čas</span>
+                    <span><i style="background:var(--amber)"></i>ok, ale drahšie</span>
+                    <span><i style="background:var(--red)"></i>radšej počkaj</span>
+                </div>
                 <div class="wait-chip hidden" id="verdict-wait-chip">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
                     <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
@@ -1268,9 +1291,10 @@
         }
 
         // Auto ma vlastnu farebnu logiku (vyssi prah vykonu FV a nocna NT sadzba bez ohladu
-        // na vykon), preto sa nefarbi rovnako ako ostatne spotrebice cez smartTier().
+        // na vykon), preto sa nefarbi rovnako ako ostatne spotrebice cez smartTier(). V noci
+        // je oranzove (dobra lacna sadzba), nie zelene - to je vyhradene pre den so slnkom.
         function autoTier(minutes, blockType, powerKw) {
-            if (isNightWindow(minutes)) return 'green';
+            if (isNightWindow(minutes)) return 'amber';
             if (!Number.isFinite(powerKw) || powerKw < 4) return 'red';
             return isLowTariff(blockType) ? 'green' : 'amber';
         }
