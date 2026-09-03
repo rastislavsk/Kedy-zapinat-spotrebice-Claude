@@ -523,6 +523,8 @@
             }
             .go-power {
                 flex-shrink: 0;
+                min-width: 56px;
+                text-align: right;
                 font-family: 'IBM Plex Mono', monospace;
                 font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
                 padding-left: 11px;
@@ -1270,7 +1272,7 @@
         // Farbu (okrem stavu "no") urcuje tier - rovnaka logika ako pri cisle Aktualny vykon.
         function deviceRowHTML(d, tier) {
             const power = DEVICE_POWER_KW[d.name];
-            const powerLabel = power != null ? `${power} kW` : '';
+            const powerLabel = power != null ? `${power.toFixed(1).replace('.', ',')} kW` : '';
             const tierClass = (d.state !== 'no' && tier) ? ` tier-${tier}` : '';
             return `<div class="go-chip state-${d.state}${tierClass}" data-device="${d.name}">`
                 + (DEVICE_ICONS[d.name] || '')
