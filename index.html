@@ -178,6 +178,16 @@
             width: 8px; height: 8px; background: #000; border-right: 1px solid var(--ink-20); border-bottom: 1px solid var(--ink-20);
         }
         .go-chip.tooltip-open .chip-tooltip { opacity: 1; visibility: visible; }
+        /* Mysou staci prejst, klik netreba. Dotykovy displej ostava na kliku vyssie. */
+        @media (hover: hover) and (pointer: fine) {
+            .go-chip:hover .chip-tooltip { opacity: 1; visibility: visible; }
+        }
+
+        /* Na mobile karta ukazuje len spotrebice, ktore su prave teraz na rade -
+           presne ako doteraz. Cas a stav su az pre siroky layout nizsie. */
+        .go-chip .go-when, .go-chip .go-state { display: none; }
+        .go-chip:not(.state-go) { display: none; }
+        .go-row:not(:has(.state-go)) { display: none; }
 
         .wait-chip {
             display: flex; justify-content: center; align-items: center; gap: 8px;
@@ -450,6 +460,51 @@
             .col-b { order: -1; }
             .footline { margin-bottom: 14px; }
             .tl-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+            /* --- Spotrebice: z ciarok sa stavaju riadky s casovym oknom a stavom --- */
+            .go-row { grid-template-columns: 1fr; gap: 6px; }
+            /* Zrusenie mobilneho skryvania - kazdy prvok sa vracia k svojmu vlastnemu
+               typu zobrazenia, .go-row je mriezka a .go-chip flex kontajner. */
+            .go-row:not(:has(.state-go)) { display: grid; }
+            .go-chip:not(.state-go) { display: flex; }
+            .go-chip .go-when, .go-chip .go-state { display: block; }
+            .go-chip {
+                flex-direction: row;
+                align-items: center;
+                gap: 11px;
+                padding: 10px 13px;
+                border-radius: 9px;
+                text-align: left;
+                cursor: default;
+            }
+            .go-name {
+                flex: 1; min-width: 0;
+                font-family: 'Space Grotesk', -apple-system, Arial, sans-serif;
+                font-size: 12.5px; font-weight: 600; letter-spacing: -0.005em; text-transform: none;
+                color: var(--ink);
+            }
+            .go-when { font-size: 9px; letter-spacing: 0.02em; text-transform: none; opacity: 0.85; }
+            .go-state {
+                flex-shrink: 0;
+                font-size: 8.5px; font-weight: 700; letter-spacing: 0.09em;
+                padding-left: 11px;
+                border-left: 1px solid var(--ink-12);
+            }
+
+            /* Cakajuce a nedostupne spotrebice nesmu vyzerat ako vyzva na zapnutie. */
+            .go-chip.state-wait {
+                border-color: color-mix(in srgb, var(--amber) 24%, transparent);
+                background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 13%, transparent), color-mix(in srgb, var(--amber) 4%, transparent));
+                color: #FFE0A6;
+            }
+            .go-chip.state-wait svg { stroke: var(--amber); }
+            .go-chip.state-no {
+                border-color: var(--ink-12);
+                background: transparent;
+                color: var(--ink-35);
+            }
+            .go-chip.state-no svg { stroke: var(--ink-35); }
+            .go-chip.state-no .go-name { color: var(--ink-45); }
             #panel-predpoved .section-head { margin-top: 0; }
             .msg-block { margin-bottom: 0; }
         }
@@ -1090,10 +1145,61 @@
             'Bojler': 2,
         };
 
-        function goChipHTML(name) {
-            const power = DEVICE_POWER_KW[name];
+        function timeStrToMinutes(str) {
+            const [h, m] = str.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        // Poradie spotrebičov v karte je pevné, aby riadky pri každom prekreslení
+        // zostali na tom istom mieste a nepreskakovali.
+        const ALL_DEVICES = ['Práčka', 'Sušička', 'Umývačka', 'Auto', 'Bojler'];
+        const DEVICE_STATE_LABEL = { go: 'Choď', wait: 'Počkaj', no: 'Nie' };
+
+        // V rozvrhu je jediný slot s odporúčanými spotrebičmi - zelené okno
+        // (v lete 10:30-17:30, v zime 10:30-14:30, viď atribút data-devices).
+        function deviceWindow() {
+            const row = [...dom.tlRows].find(r => !r.classList.contains('hidden') && r.dataset.devices);
+            if (!row) return null;
+            return {
+                start: row.dataset.start,
+                end: row.dataset.end,
+                devices: row.dataset.devices.split('·').map(s => s.trim()).filter(Boolean),
+            };
+        }
+
+        // Stav každého spotrebiča sa odvodí z toho jedného okna a zvoleného času.
+        // Nič sa nedopočítava navyše - appka nemeria jednotlivé spotrebiče, vie len
+        // to, čo je v rozvrhu.
+        function deviceStates(minutes) {
+            const win = deviceWindow();
+            if (!win) return [];
+            const start = timeStrToMinutes(win.start);
+            const end = timeStrToMinutes(win.end);
+            const inWindow = minutes >= start && minutes < end;
+
+            return ALL_DEVICES.map(name => {
+                if (!win.devices.includes(name)) return { name, state: 'no', when: 'mimo dnešného okna' };
+                if (inWindow) return { name, state: 'go', when: `do ${win.end}` };
+                if (minutes < start) return { name, state: 'wait', when: `od ${win.start}` };
+                return { name, state: 'wait', when: `zajtra od ${win.start}` };
+            });
+        }
+
+        function deviceRowHTML(d) {
+            const power = DEVICE_POWER_KW[d.name];
             const tooltip = power != null ? `<span class="chip-tooltip">${power} kW</span>` : '';
-            return `<div class="go-chip" data-device="${name}">${DEVICE_ICONS[name] || ''}${name}${tooltip}</div>`;
+            return `<div class="go-chip state-${d.state}" data-device="${d.name}">`
+                + (DEVICE_ICONS[d.name] || '')
+                + `<span class="go-name">${d.name}</span>`
+                + `<span class="go-when">${d.when}</span>`
+                + `<span class="go-state">${DEVICE_STATE_LABEL[d.state]}</span>`
+                + tooltip
+                + '</div>';
+        }
+
+        function renderDeviceRows(minutes) {
+            dom.verdictGoRow.innerHTML = deviceStates(minutes).map(deviceRowHTML).join('');
+            dom.verdictGoRow.classList.remove('hidden');
         }
 
         // Klik na ikonu spotrebiča prepne tooltip s jeho príkonom; klik mimo ikony ho zatvorí.
@@ -1145,22 +1251,22 @@
             headlineEl.textContent = msg.headline;
             bodyEl.textContent = msg.body;
 
-            const devices = activeRow && activeRow.dataset.devices
-                ? activeRow.dataset.devices.split('·').map(s => s.trim()).filter(Boolean)
-                : [];
+            const now = new Date();
+            renderDeviceRows(now.getHours() * 60 + now.getMinutes());
 
-            if (devices.length) {
-                goRow.innerHTML = devices.map(goChipHTML).join('');
-                goRow.classList.remove('hidden');
-                waitChip.classList.add('hidden');
-            } else if (latestForecastData && latestForecastData.strongerWindowAhead && Number.isFinite(latestForecastData.hoursAhead)) {
-                const now = new Date();
+            // Riadky spotrebičov teraz hovoria "Počkaj · od 10:30" samy, ale odznak
+            // pod nimi berie čas z predpovede (nie z rozvrhu), takže nesie inú
+            // informáciu a zostáva. Ukáže sa len mimo okna, ako doteraz.
+            const hasDevicesNow = !!(activeRow && activeRow.dataset.devices);
+            const strongerAhead = latestForecastData
+                && latestForecastData.strongerWindowAhead
+                && Number.isFinite(latestForecastData.hoursAhead);
+
+            if (!hasDevicesNow && strongerAhead) {
                 const targetHour = (now.getHours() + Math.round(latestForecastData.hoursAhead)) % 24;
                 waitTime.textContent = `${String(targetHour).padStart(2, '0')}:00`;
                 waitChip.classList.remove('hidden');
-                goRow.classList.add('hidden');
             } else {
-                goRow.classList.add('hidden');
                 waitChip.classList.add('hidden');
             }
         }
@@ -1267,13 +1373,9 @@
         }
 
         function isCurrentTimeInBlock(current, start, end) {
-            const toMinutes = (str) => {
-                const [h, m] = str.split(':').map(Number);
-                return h * 60 + m;
-            };
-            const curr = toMinutes(current);
-            const s = toMinutes(start);
-            const e = toMinutes(end);
+            const curr = timeStrToMinutes(current);
+            const s = timeStrToMinutes(start);
+            const e = timeStrToMinutes(end);
             if (s > e) return curr >= s || curr < e;
             return curr >= s && curr < e;
         }
@@ -1585,15 +1687,7 @@
             dom.verdictHeadline.textContent = msg.headline;
             dom.verdictBody.textContent = msg.body;
 
-            const devices = row.dataset.devices
-                ? row.dataset.devices.split('·').map(s => s.trim()).filter(Boolean)
-                : [];
-            if (devices.length) {
-                dom.verdictGoRow.innerHTML = devices.map(goChipHTML).join('');
-                dom.verdictGoRow.classList.remove('hidden');
-            } else {
-                dom.verdictGoRow.classList.add('hidden');
-            }
+            renderDeviceRows(minutes);
             dom.verdictWaitChip.classList.add('hidden');
 
             dom.pvPower.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
@@ -1686,14 +1780,18 @@
                 : { w: 320, h: 150, padL: 8, padR: 8, padT: 10, padB: 22, hourStep: 3, xLabelGap: 6, yAxis: false };
         }
 
-        // Krok vodorovnej mriežky: taký, aby na osi zostali 4-6 čiar a čísla boli okrúhle.
+        // Krok vodorovnej mriežky: najjemnejší, pri ktorom na osi zostane najviac
+        // 10 čiar a čísla ostanú okrúhle. Slabý deň tak dostane štvrťkilowattové
+        // delenie namiesto jednej čiary na celý graf.
         function kwGridStep(maxKw) {
             const steps = [0.25, 0.5, 1, 2, 2.5, 5, 10, 20];
-            return steps.find(s => maxKw / s <= 6) || steps[steps.length - 1];
+            return steps.find(s => maxKw / s <= 10) || steps[steps.length - 1];
         }
 
         function formatGridKw(kw) {
-            return Number.isInteger(kw) ? String(kw) : kw.toFixed(1).replace('.', ',');
+            if (Number.isInteger(kw)) return String(kw);
+            // Bez toFixed(1) by sa z 0,25 stalo 0,3.
+            return kw.toFixed(2).replace(/0$/, '').replace('.', ',');
         }
 
         function forecastXY(hour, kw, hMin, hMax, maxKw, dims) {
