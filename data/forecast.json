@@ -2,20 +2,10 @@
   "strongerWindowAhead": true,
   "windowDaypart": "neskôr",
   "peakKw": 4.47,
-  "hoursAhead": 10,
+  "hoursAhead": 9,
   "tomorrowSunny": true,
   "tomorrowPeakKw": 5.24,
   "hourlyToday": [
-    {
-      "hour": 0,
-      "kw": 0,
-      "cloud": 100
-    },
-    {
-      "hour": 1,
-      "kw": 0,
-      "cloud": 84
-    },
     {
       "hour": 2,
       "kw": 0,
@@ -249,5 +239,5 @@
       "cloud": 36
     }
   ],
-  "updatedAt": "2026-09-02T23:55:23.545Z"
+  "updatedAt": "2026-09-03T00:00:30.791Z"
 }
