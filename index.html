@@ -239,7 +239,7 @@
         .chart-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); }
 
         /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami, marker sa dá ťahať --- */
-        .daystrip-wrap { position: relative; margin-bottom: 24px; }
+        .daystrip-wrap { position: relative; margin-bottom: 24px; cursor: pointer; }
         .daystrip { border-radius: 8px; overflow: hidden; }
         .daystrip svg { display: block; width: 100%; height: 90px; }
         .strip-marker { position: absolute; top: 0; width: 0; height: 90px; border-left: 1.5px dashed rgba(242,240,234,0.5); pointer-events: none; }
@@ -998,6 +998,7 @@
             dialRing: document.getElementById('dial-ring'),
             seasonIndicator: document.getElementById('season-indicator'),
             daystrip: document.getElementById('daystrip'),
+            daystripWrap: document.querySelector('.daystrip-wrap'),
             stripNowMarker: document.getElementById('strip-now-marker'),
             stripNowGhost: document.getElementById('strip-now-ghost'),
             stripMarkerHandle: document.getElementById('strip-marker-handle'),
@@ -1890,6 +1891,13 @@
             updateTimeAndHighlight();
         }
 
+        // Klik hocikde na časovú os (mimo bežca, ten má vlastné ťahanie) rovno
+        // zafixuje náhľad na danom čase - bez nutnosti ťahať bežca až tam.
+        function jumpPreviewToClientX(clientX) {
+            updatePreviewToMinutes(minutesFromClientX(clientX), false);
+            pinPreview();
+        }
+
         function initTimePreviewInteraction() {
             const handle = dom.stripMarkerHandle;
             if (!handle) return;
@@ -1901,6 +1909,14 @@
             handle.addEventListener('pointermove', (e) => movePreviewDrag(e.clientX));
             handle.addEventListener('pointerup', endPreviewDrag);
             handle.addEventListener('pointercancel', endPreviewDrag);
+
+            const wrap = dom.daystripWrap;
+            if (wrap) {
+                wrap.addEventListener('click', (e) => {
+                    if (e.target.closest('.strip-marker-handle')) return;
+                    jumpPreviewToClientX(e.clientX);
+                });
+            }
         }
 
         // ================= PANEL PREDPOVEĎ =================
