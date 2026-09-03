@@ -145,8 +145,6 @@
         .dial-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -46%); text-align: center; }
         .dial-num .val { font-size: 46px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--ink); transition: color 0.4s ease; }
         .dial-num .unit { display: block; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; color: var(--ink-35); }
-        #today-message-title { display: none; }
-        .dial-caption { font-size: 12px; line-height: 1.5; color: var(--ink-45); max-width: 30ch; margin: 6px auto 0; }
 
         /* --- Verdict: headline + body, centered under the dial --- */
         .verdict { margin-bottom: 20px; }
@@ -660,10 +658,6 @@
                         <span class="unit" id="pv-power-unit">kW teraz</span>
                     </div>
                 </div>
-                <div id="today-msg-block">
-                    <h4 id="today-message-title">Načítavam…</h4>
-                    <p class="dial-caption" id="today-message-body">Predpoveď sa načítava.</p>
-                </div>
             </div>
 
             <div class="verdict" id="verdict">
@@ -968,8 +962,6 @@
             previewPill: document.getElementById('preview-pill'),
             previewTimeLabel: document.getElementById('preview-time-label'),
             tlRows: document.querySelectorAll('.tl-row'),
-            todayMessageTitle: document.getElementById('today-message-title'),
-            todayMessageBody: document.getElementById('today-message-body'),
             verdictEyebrow: document.getElementById('verdict-eyebrow'),
             verdictHeadline: document.getElementById('verdict-headline'),
             verdictBody: document.getElementById('verdict-body'),
@@ -1519,7 +1511,6 @@
 
             updateTimeAndHighlight();
             if (isForecastVisible()) renderForecastChart();
-            renderTodaySummary();
         }
 
         // Skutočná výroba dnes doteraz (z kiosku): najvyšší 5-min výkon (a jeho čas) a nabehnuté kWh za deň.
@@ -1554,24 +1545,6 @@
             } else {
                 totalColEl.classList.add('hidden');
             }
-        }
-
-        // Výber z Predpovede pre panel Spotrebiče: správa dňa + špička/odhad výroby, len pre dnešok.
-        function renderTodaySummary() {
-            const titleEl = dom.todayMessageTitle;
-            const bodyEl = dom.todayMessageBody;
-            if (!titleEl) return;
-
-            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
-            if (!pts || !pts.length) {
-                titleEl.innerText = 'Predpoveď sa pripravuje';
-                bodyEl.innerText = 'Hodinové dáta zatiaľ nie sú k dispozícii, skús to o chvíľu.';
-                return;
-            }
-
-            const msg = forecastDayMessage(pts, true);
-            titleEl.innerText = msg.title;
-            bodyEl.innerText = msg.body;
         }
 
         // Zaradenie aktuálnej výroby do pásma, rovnaké hranice ako vo farebnej logike
