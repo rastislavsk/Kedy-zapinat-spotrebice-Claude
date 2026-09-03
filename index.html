@@ -368,6 +368,148 @@
         }
         .wa-btn svg { width: 15px; height: 15px; fill: var(--green); }
 
+        /* Hlavicky kariet sa ukazuju az od tabletu, na mobile by len zaberali miesto. */
+        .card-hd { display: none; }
+
+        /* ============================================================
+           TABLET (>= 768px)
+           Spodna lista sa meni na zvisly rail vlavo, obsah dostava karty.
+           Pod 768 px sa nic z tohto neuplatni - mobil zostava nezmeneny.
+           ============================================================ */
+        @media (min-width: 768px) {
+            :root {
+                --rail-w: 90px;
+                --card-bg: #151614;
+                --card-line: rgba(242,240,234,0.09);
+            }
+
+            /* Cely obsah sa odsunie od railu; .bottomnav je fixed, takze sa ho to netyka. */
+            body { padding-left: var(--rail-w); }
+
+            .bottomnav {
+                top: 0;
+                right: auto;
+                width: var(--rail-w);
+                background: #0F1410;
+                border-top: none;
+                border-right: 1px solid var(--ink-08);
+            }
+            .bottomnav-inner {
+                max-width: none;
+                flex-direction: column;
+                gap: 6px;
+                height: 100%;
+                padding: 16px 9px;
+            }
+            .nav-item {
+                flex: 0 0 auto;
+                border-radius: 10px;
+                padding: 11px 4px;
+                gap: 5px;
+                transition: background-color 0.2s ease;
+            }
+            .nav-item .ind { display: none; }
+            .nav-item.active { background: color-mix(in srgb, var(--green) 12%, transparent); }
+            .nav-item:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+            .appbar-inner { max-width: 780px; padding: 20px 28px 15px; }
+            .page { max-width: 780px; padding: 26px 28px 56px; }
+
+            /* --- karty --- */
+            .card-hd {
+                display: block;
+                font-family: 'IBM Plex Mono', monospace;
+                font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+                color: var(--ink-35);
+                text-align: left;
+                margin-bottom: 12px;
+            }
+            .today-forecast-link,
+            .verdict,
+            .col-b,
+            #panel-predpoved,
+            #panel-zdielat {
+                background: var(--card-bg);
+                border: 1px solid var(--card-line);
+                border-radius: 12px;
+                padding: 18px 20px;
+            }
+            .today-forecast-link { padding-bottom: 22px; }
+
+            /* Rozostupy medzi kartami riesi gap, nie marginy jednotlivych blokov. */
+            #panel-spotrebice { display: flex; flex-direction: column; gap: 16px; }
+            .col-a { display: flex; flex-direction: column; gap: 16px; }
+            .col-a > *, .col-b > .daystrip-wrap { margin-bottom: 0; }
+            .preview-banner { margin-bottom: 0; }
+            .footline { margin-bottom: 14px; }
+            #panel-predpoved .section-head { margin-top: 0; }
+            .msg-block { margin-bottom: 0; }
+        }
+
+        /* ============================================================
+           DASHBOARD (>= 1024px) - tablet na sirku a PC
+           Prepinanie medzi Spotrebicmi a Predpovedou zanika, oba su
+           na obrazovke naraz vedla seba.
+           ============================================================ */
+        @media (min-width: 1024px) {
+            /* Na dashboarde je predpoved trvale vedla spotrebicov,
+               samostatna polozka v raile by nemala co prepinat. */
+            #nav-predpoved { display: none; }
+            /* Preklik z dialu na predpoved uz nema kam viest. */
+            .today-forecast-link { cursor: default; }
+            .today-forecast-link:active { opacity: 1; }
+
+            .appbar-inner, .page { max-width: 940px; }
+
+            .page {
+                display: grid;
+                grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+                gap: 16px;
+                align-items: start;
+            }
+            /* display:contents rozpusti obal panelu, aby col-a a col-b boli priamo polozkami mriezky. */
+            #panel-spotrebice { display: contents; }
+            #panel-spotrebice > .preview-banner { grid-column: 1 / -1; order: -2; }
+            .col-b { grid-column: 1 / -1; order: -1; }   /* pas dna cez celu sirku, ten z nej tazi najviac */
+            .col-a { grid-column: 1; }
+            #panel-predpoved { grid-column: 2; }
+            #panel-zdielat { grid-column: 1 / -1; }
+
+            /* Spotrebice aj Predpoved su viditelne vzdy, okrem pohladu Zdielat.
+               Selektor je specifickejsi ako .hidden, takze ho prebije. */
+            .page[data-panel="spotrebice"] > #panel-spotrebice,
+            .page[data-panel="predpoved"] > #panel-spotrebice { display: contents !important; }
+            .page[data-panel="spotrebice"] > #panel-predpoved,
+            .page[data-panel="predpoved"] > #panel-predpoved { display: block !important; }
+
+            /* Graf sa este kresli do pevneho platna 320x150 a v sirsej karte sa
+               zvacsuje aj s popismi osi. Docasna kompenzacia, kym platno neprekreslime. */
+            .axis-label { font-size: 6px; }
+
+            .qr-frame { width: 208px; height: 208px; }
+            .wa-btn { max-width: 340px; }
+        }
+
+        /* ============================================================
+           PC (>= 1200px)
+           Rail sa rozsiri a ikony dostanu popis vedla seba.
+           ============================================================ */
+        @media (min-width: 1200px) {
+            :root { --rail-w: 176px; }
+
+            .bottomnav-inner { padding: 18px 13px; }
+            .nav-item {
+                flex-direction: row;
+                justify-content: flex-start;
+                gap: 12px;
+                padding: 11px 12px;
+            }
+            .nav-item .lbl { font-size: 9.5px; }
+
+            .appbar-inner, .page { max-width: 1120px; }
+            .page { grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); }
+        }
+
         @media print {
             .bottomnav, .appbar-clock, .daystrip-wrap, .utabs, #panel-predpoved, #panel-zdielat { display: none !important; }
             body { background: #fff; color: #000; }
@@ -409,7 +551,12 @@
                 </button>
             </div>
 
+            <!-- col-a / col-b: na mobile sa správajú ako obyčajné bloky pod sebou,
+                 od 768 px z nich robia media queries karty a od 1024 px stĺpce dashboardu. -->
+            <div class="col-a">
+
             <div class="today-forecast-link dial-hero" onclick="setPanel('predpoved')">
+                <div class="card-hd">Aktuálny výkon</div>
                 <div class="badge-row"><div class="badge" id="verdict-eyebrow">—</div></div>
                 <div class="dial-wrap">
                     <svg class="dial-svg" viewBox="0 0 220 220">
@@ -428,6 +575,7 @@
             </div>
 
             <div class="verdict" id="verdict">
+                <div class="card-hd">Čo robiť teraz</div>
                 <h1 id="verdict-headline">Načítavam…</h1>
                 <p class="body" id="verdict-body"></p>
                 <div class="go-row hidden" id="verdict-go-row"></div>
@@ -436,6 +584,10 @@
                     <span>Lepšie bude o <b id="verdict-wait-time">--:--</b></span>
                 </div>
             </div>
+
+            </div><!-- /col-a -->
+
+            <div class="col-b">
 
             <div class="footline">
                 <span class="chart-label">Priebeh dňa</span>
@@ -571,6 +723,8 @@
                 </div>
 
             </div>
+
+            </div><!-- /col-b -->
 
         </div>
         <!-- /PANEL: SPOTREBIČE -->
@@ -740,6 +894,7 @@
             forecastPeakRealTime: document.getElementById('forecast-peak-real-time'),
             forecastTotalRealCol: document.getElementById('forecast-total-real-col'),
             forecastTotalReal: document.getElementById('forecast-total-real'),
+            page: document.querySelector('.page'),
             panels: {
                 spotrebice: document.getElementById('panel-spotrebice'),
                 predpoved: document.getElementById('panel-predpoved'),
@@ -784,6 +939,10 @@
             initTimePreviewInteraction();
 
             setSeason(detectSeason());
+            setPanel(currentPanel);
+            // Prechod cez hranicu 1024 px (zmena velkosti okna, otocenie tabletu):
+            // setPanel znova poskladá pohlad a v pripade potreby prekresli graf.
+            DESKTOP_MQ.addEventListener('change', () => setPanel(currentPanel));
             setForecastDay('today');
             setInterval(tick30s, 1000 * 30);
             updateTimeAndHighlight();
@@ -1015,13 +1174,25 @@
         }
 
         // Prepínanie hlavných obrazoviek appky cez spodnú navigáciu
+        // Od 1024 px su Spotrebice a Predpoved vedla seba (viz media query v <style>),
+        // takze na PC uz nie je co medzi nimi prepinat.
+        const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
+
+        // Graf treba prekreslit vzdy, ked je na obrazovke - na mobile len v svojom paneli,
+        // na PC prakticky stale.
+        function isForecastVisible() {
+            return currentPanel === 'predpoved' || (DESKTOP_MQ.matches && currentPanel !== 'zdielat');
+        }
+
         function setPanel(panel) {
+            if (DESKTOP_MQ.matches && panel === 'predpoved') panel = 'spotrebice';
             currentPanel = panel;
+            dom.page.dataset.panel = panel;
             ['spotrebice', 'predpoved', 'zdielat'].forEach(p => {
                 dom.panels[p].classList.toggle('hidden', p !== panel);
                 dom.navs[p].classList.toggle('active', p === panel);
             });
-            if (panel === 'predpoved') renderForecastChart();
+            if (isForecastVisible()) renderForecastChart();
             if (panel === 'zdielat') ensureQrCode();
         }
 
@@ -1142,7 +1313,7 @@
             }
 
             updateTimeAndHighlight();
-            if (currentPanel === 'predpoved') renderForecastChart();
+            if (isForecastVisible()) renderForecastChart();
         }
 
         // Predpoveď na zvyšok dňa a na zajtra (dáta počíta GitHub Action zo scripts/forecast.js, viď data/forecast.json)
@@ -1156,7 +1327,7 @@
             }
 
             updateTimeAndHighlight();
-            if (currentPanel === 'predpoved') renderForecastChart();
+            if (isForecastVisible()) renderForecastChart();
             renderTodaySummary();
         }
 
