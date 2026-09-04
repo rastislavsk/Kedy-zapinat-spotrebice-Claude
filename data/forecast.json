@@ -1075,43 +1075,43 @@
         },
         {
           "hour": 12,
-          "kw": 4.97,
+          "kw": 5.04,
           "cloud": 80,
           "clearKw": 8.02
         },
         {
           "hour": 13,
-          "kw": 4.53,
+          "kw": 4.83,
           "cloud": 82,
           "clearKw": 7.72
         },
         {
           "hour": 14,
-          "kw": 3.65,
+          "kw": 4.19,
           "cloud": 86,
           "clearKw": 6.89
         },
         {
           "hour": 15,
-          "kw": 2.35,
+          "kw": 3.24,
           "cloud": 93,
           "clearKw": 5.57
         },
         {
           "hour": 16,
-          "kw": 1.75,
+          "kw": 2.31,
           "cloud": 96,
           "clearKw": 4.11
         },
         {
           "hour": 17,
-          "kw": 1.22,
+          "kw": 1.48,
           "cloud": 100,
           "clearKw": 2.67
         },
         {
           "hour": 18,
-          "kw": 0.81,
+          "kw": 0.78,
           "cloud": 100,
           "clearKw": 1.07
         },
@@ -1146,7 +1146,7 @@
           "clearKw": 0
         }
       ],
-      "kwhTotal": 35.1,
+      "kwhTotal": 37.7,
       "clearKwhTotal": 61.7,
       "peakKw": 5.13,
       "peakHour": 11,
@@ -1307,5 +1307,5 @@
       "cloudAvgPct": 97
     }
   ],
-  "updatedAt": "2026-09-04T21:31:06.581Z"
+  "updatedAt": "2026-09-04T21:36:05.540Z"
 }
