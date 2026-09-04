@@ -429,7 +429,7 @@
         .week-svg { width: 100%; height: auto; display: block; }
         .day-label { font-size: 9.5px; fill: var(--ink-45); font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
         .day-label.today { fill: var(--ink); }
-        .leg-sq { width: 9px; height: 9px; border-radius: 2px; background: var(--green); display: inline-block; }
+        .leg-sq { width: 9px; height: 9px; border-radius: 2px; background: var(--ink-45); display: inline-block; }
         .heat-scale { display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink-35); }
         .heat-scale .sw { display: inline-flex; gap: 1px; }
         .heat-scale .sw i { width: 8px; height: 8px; display: inline-block; }
@@ -2776,7 +2776,7 @@
                 const usePct = d.clearKwhTotal > 0 ? Math.round(100 * d.kwhTotal / d.clearKwhTotal) : 0;
                 const barTitle = `${weekDayShort(d.date, i)} ${weekDateLabel(d.date)}`;
                 const barTip = `${d.kwhTotal.toFixed(1)} kWh · strop ${d.clearKwhTotal.toFixed(1)} kWh (${usePct} %)`;
-                out += `<rect data-tip-title="${barTitle}" data-tip="${barTip}" x="${cx - bw / 2}" y="${by}" width="${bw}" height="${bh}" rx="3" fill="${isToday ? '#9EF25B' : 'rgba(158,242,91,0.55)'}"/>`;
+                out += `<rect data-tip-title="${barTitle}" data-tip="${barTip}" x="${cx - bw / 2}" y="${by}" width="${bw}" height="${bh}" rx="3" fill="${isToday ? '#F2F0EA' : 'rgba(242,240,234,0.4)'}"/>`;
                 const cy = padT + plotH - (d.clearKwhTotal / maxV) * plotH;
                 out += `<line x1="${cx - bw / 2 - 2}" y1="${cy}" x2="${cx + bw / 2 + 2}" y2="${cy}" stroke="rgba(242,240,234,0.4)" stroke-width="1.3" stroke-dasharray="3 2"/>`;
                 out += `<text class="axis-label" x="${cx}" y="${by - 6}" text-anchor="middle" fill="${isToday ? '#F2F0EA' : 'rgba(242,240,234,0.5)'}" style="font-size:9.5px">${d.kwhTotal.toFixed(1)}</text>`;
