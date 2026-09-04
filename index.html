@@ -675,7 +675,7 @@
                 align-items: start;
                 background: none; border: none; padding: 0;
             }
-            #panel-7dni > .section-head { grid-column: 1 / -1; }
+            #panel-7dni > .section-head { grid-column: 1 / -1; grid-row: 1; }
             #panel-7dni > .stat-trio,
             #panel-7dni > .week-block,
             #panel-7dni > .msg-block {
@@ -687,16 +687,18 @@
             }
             /* Čísla Dnes/Zajtra/7 dní pod sebou namiesto vedľa seba - v bočnom stĺpci
                je to čitateľnejšie ako tri stĺpčeky vtesnané do úzkeho priestoru. */
-            #panel-7dni > .stat-trio { grid-column: 1; flex-direction: column; gap: 14px; }
+            #panel-7dni > .stat-trio { grid-column: 1; grid-row: 2; flex-direction: column; gap: 14px; }
             #panel-7dni > .stat-trio .stat { border-left: none; padding-left: 0; margin-left: 0; display: flex; align-items: baseline; justify-content: space-between; }
             #panel-7dni > .stat-trio .stat + .stat { border-top: 1px solid var(--ink-08); padding-top: 12px; margin-top: 0; }
             /* Mapa výroby cez obe hlavné stĺpce, denné stĺpce a priebeh výroby vedľa
-               seba, tabuľka a súhrn v bočnom stĺpci pod číslami. */
-            #panel-7dni > .week-block:nth-of-type(1) { grid-column: 2 / -1; }
-            #panel-7dni > .week-block:nth-of-type(2) { grid-column: 2; }
-            #panel-7dni > .week-block:nth-of-type(3) { grid-column: 3; }
-            #panel-7dni > .week-block:nth-of-type(4) { grid-column: 1; }
-            #panel-7dni > .msg-block { grid-column: 1; border-top: 1px solid var(--card-line); }
+               seba, tabuľka a súhrn v bočnom stĺpci pod číslami. Riadky sú explicitné
+               (nie auto-flow) - inak si prehliadač poradie stĺpec2→3→1 vysvetlí tak,
+               že sa vracia "dozadu" do stĺpca 1 a tabuľku hodí až do ďalšieho riadku. */
+            #panel-7dni > .week-block:nth-of-type(1) { grid-column: 2 / -1; grid-row: 2; }
+            #panel-7dni > .week-block:nth-of-type(2) { grid-column: 2; grid-row: 3; }
+            #panel-7dni > .week-block:nth-of-type(3) { grid-column: 3; grid-row: 3; }
+            #panel-7dni > .week-block:nth-of-type(4) { grid-column: 1; grid-row: 3; }
+            #panel-7dni > .msg-block { grid-column: 1; grid-row: 4; border-top: 1px solid var(--card-line); }
             /* Bočný stĺpec je úzky - tabuľka tam ukáže len deň/výrobu/špičku,
                strop/využitie/oblačnosť majú stále svoje miesto v tabuľke na mobile/tablete.
                min-width sa zruší, inak by tabuľka trvala na pôvodnej šírke pre 6 stĺpcov
@@ -2559,7 +2561,9 @@
                 const b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'utab' + (i === weekSelDay ? ' active' : '');
-                b.textContent = weekDayLabel(d.date, i);
+                // Krátky tvar (bez dátumu) - dátum je aj tak v tabuľke pod grafom,
+                // v tabe by 7 plných popiskov ("Ne 6.9." ...) nezmestilo vedľa seba.
+                b.textContent = weekDayShort(d.date, i);
                 b.addEventListener('click', () => { weekSelDay = i; renderWeekDayTabs(); renderWeekCurve(); });
                 box.appendChild(b);
             });
@@ -2626,7 +2630,7 @@
                 const dateSub = i > 1 ? `<span class="sub">${weekDateLabel(d.date)}</span>` : '';
                 return `
                 <tr class="${i === 0 ? 'today' : ''}">
-                    <td>${weekDayLabel(d.date, i)}${dateSub}</td>
+                    <td>${weekDayShort(d.date, i)}${dateSub}</td>
                     <td>${d.kwhTotal.toFixed(1)} kWh</td>
                     <td>${d.clearKwhTotal.toFixed(1)} kWh</td>
                     <td>${usePct} %</td>
