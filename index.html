@@ -399,7 +399,6 @@
         .stat-trio { display: flex; margin: 22px 0 28px; }
         .stat .num { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
         .stat .u { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 400; color: var(--ink-45); margin-left: 2px; }
-        .stat.hi .num { color: var(--green); }
         /* Obal .stat-top/.stat-num-row existuje len kvoli tabletovemu rozsireniu nizsie -
            na mobile/uzsom tablete (< 1024px) su "display:contents", takze sa spravaju,
            akoby tam vobec neboli a layout ostava presne rovnaky ako predtym. */
@@ -443,7 +442,6 @@
             padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--ink-08);
         }
         .stat-line b { color: var(--ink); font-weight: 600; }
-        .stat-line .accent { color: var(--green); font-weight: 600; }
         .week-tbl-wrap { overflow-x: auto; }
         table.week-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 480px; }
         table.week-table th { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-35); text-align: right; padding: 0 0 10px; border-bottom: 1px solid var(--ink-12); white-space: nowrap; }
@@ -2804,7 +2802,7 @@
             box.innerHTML = `
                 <span>Spolu za 7 dní <b>${fmt1(total)} kWh</b></span>
                 <span>Priemer <b>${fmt1(avg)} kWh/deň</b></span>
-                <span>Najsilnejší deň <span class="accent">${bestLabel} · ${fmt1(best.kwhTotal)} kWh</span></span>
+                <span>Najsilnejší deň <b>${bestLabel} · ${fmt1(best.kwhTotal)} kWh</b></span>
             `;
         }
 
@@ -2895,7 +2893,7 @@
                 parts.push(`<span>Špička <b>${day.peakKw.toFixed(1)} kW</b> o ${String(day.peakHour).padStart(2, '0')}:00</span>`);
             }
             if (Number.isFinite(day.kwhTotal)) {
-                parts.push(`<span>Výroba <span class="accent">${day.kwhTotal.toFixed(1).replace('.', ',')} kWh</span></span>`);
+                parts.push(`<span>Výroba <b>${day.kwhTotal.toFixed(1).replace('.', ',')} kWh</b></span>`);
             }
             if (day.cloudAvgPct != null) {
                 parts.push(`<span>Oblačnosť <b>${Math.round(day.cloudAvgPct)} %</b></span>`);
