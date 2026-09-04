@@ -235,10 +235,14 @@
         .wait-chip b { color: var(--ink); font-weight: 600; }
 
         .pv-updated-line { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-35); margin-top: 6px; }
-        .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        /* Bežec pásu prečnieva ~16 px nad krivku, preto má hlavička nad ním väčší odstup -
+           inak by jazdil cez popis a legendu. */
+        .footline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
         .chart-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-35); }
 
         /* --- Day strip: priebeh dňa ako plošný graf s farebnými pásmami, marker sa dá ťahať --- */
+        .strip-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .leg-dash-green { width: 12px; height: 0; border-top: 1.5px dashed var(--green); opacity: 0.6; display: inline-block; }
         .daystrip-wrap { position: relative; margin-bottom: 24px; cursor: pointer; }
         .daystrip { border-radius: 8px; overflow: hidden; }
         .daystrip svg { display: block; width: 100%; height: 90px; }
@@ -491,7 +495,7 @@
             /* Pas dna je prehlad celeho dna, patri nad detail - aj v jednom stlpci. */
             .preview-banner { margin-bottom: 0; order: -2; }
             .col-b { order: -1; }
-            .footline { margin-bottom: 14px; }
+            .footline { margin-bottom: 22px; }
 
             /* --- Spotrebice: z ciarok sa stavaju riadky s vykonom a stavom --- */
             .go-row { grid-template-columns: 1fr; gap: 6px; }
@@ -720,7 +724,13 @@
             <div class="col-b">
 
             <div class="footline">
-                <span class="chart-label">Priebeh dňa</span>
+                <span class="strip-head">
+                    <span class="chart-label">Priebeh dňa</span>
+                    <span class="chart-legend hidden" id="strip-legend">
+                        <span class="hidden" id="strip-legend-real"><span class="leg-line-real"></span>namerané</span>
+                        <span><span class="leg-dash-green"></span>predpoveď</span>
+                    </span>
+                </span>
                 <span class="season-indicator" id="season-indicator">Leto</span>
             </div>
 
@@ -999,6 +1009,8 @@
             seasonIndicator: document.getElementById('season-indicator'),
             daystrip: document.getElementById('daystrip'),
             daystripWrap: document.querySelector('.daystrip-wrap'),
+            stripLegend: document.getElementById('strip-legend'),
+            stripLegendReal: document.getElementById('strip-legend-real'),
             stripNowMarker: document.getElementById('strip-now-marker'),
             stripNowGhost: document.getElementById('strip-now-ghost'),
             stripMarkerHandle: document.getElementById('strip-marker-handle'),
@@ -1115,8 +1127,8 @@
             ],
         };
 
-        // Farebné pásma priebehu dňa vykreslené ako plocha s dekoratívnou krivkou (vrchol v strede
-        // "zeleného" okna) — rovnaké hranice ako STRIP_SEGMENTS, len namiesto rovného pásu graf.
+        // Farebné pásma priebehu dňa vykreslené ako plocha s krivkou výroby —
+        // rovnaké hranice ako STRIP_SEGMENTS, len namiesto rovného pásu graf.
         const STRIP_BAND_FILL = {
             green: 'rgba(158,242,91,0.14)',
             amber: 'rgba(255,194,75,0.12)',
@@ -1133,14 +1145,73 @@
             });
         }
 
+        // Náhradný, čisto dekoratívny tvar (vrchol v strede "zeleného" okna). Kreslí sa len
+        // vtedy, keď na dnešok nemáme predpoveď - nech pás nikdy nezostane prázdny.
         function stripCurvePoints(bounds) {
             const green = bounds.find(s => s.cls === 'green');
-            if (!green) return [{ x: 0, y: 54 }, { x: 1440, y: 54 }];
+            if (!green) return [{ x: 0, y: STRIP_BASE_Y }, { x: 1440, y: STRIP_BASE_Y }];
             const mid = (green.start + green.end) / 2;
             return [
-                { x: 0, y: 54 }, { x: green.start, y: 40 }, { x: mid, y: 8 },
-                { x: green.end, y: 40 }, { x: 1440, y: 54 },
+                { x: 0, y: STRIP_BASE_Y }, { x: green.start, y: 40 }, { x: mid, y: 8 },
+                { x: green.end, y: 40 }, { x: 1440, y: STRIP_BASE_Y },
             ];
+        }
+
+        // ---- Krivka pásu z reálnych dát -------------------------------------------------
+        // Pás dňa ukazuje skutočný priebeh výroby: do času "teraz" namerané hodnoty z kiosku,
+        // od "teraz" ďalej hodinovú predpoveď (prerušovaná časť krivky). Zvislá os je fixná,
+        // od 0 po inštalovaný výkon FV - rovnaká mierka ako ciferník, takže slabý deň je
+        // naozaj nízky a dva dni sa dajú porovnať medzi sebou.
+        const STRIP_BASE_Y = 54;   // 0 kW leží na dne pásu
+        const STRIP_TOP_Y = 6;     // plný inštalovaný výkon je strop pásu
+        const STRIP_SAMPLE_MIN = 15;   // vzorkovanie krivky - dosť husté na hladký tvar
+
+        function kwToStripY(kw) {
+            const frac = Number.isFinite(kw) ? Math.max(0, Math.min(1, kw / INSTALLED_PV_KW)) : 0;
+            return STRIP_BASE_Y - frac * (STRIP_BASE_Y - STRIP_TOP_Y);
+        }
+
+        // Hranica medzi nameraným a predpovedaným: posledný bod dnešnej reálnej krivky,
+        // nikdy nie v budúcnosti (keby dáta z kiosku meškali). null = dnes ešte nemeriame.
+        function realCurveBoundaryMinutes() {
+            const curve = latestPvData && Array.isArray(latestPvData.realCurveToday) ? latestPvData.realCurveToday : null;
+            if (!curve || !curve.length) return null;
+            return Math.min(curve[curve.length - 1].hour * 60, realNowMinutes());
+        }
+
+        // Výkon v ľubovoľnej minúte dňa: po hranicu meranie, za ňou predpoveď.
+        function dayKwAt(minutes) {
+            const boundary = realCurveBoundaryMinutes();
+            if (boundary !== null && minutes <= boundary) {
+                return forecastInterpolate(latestPvData.realCurveToday, minutes / 60, 'kw');
+            }
+            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
+            if (!pts || !pts.length) return NaN;
+            return forecastInterpolate(pts, minutes / 60, 'kw');
+        }
+
+        function stripDataCurvePoints() {
+            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
+            if (!pts || !pts.length) return null;
+            const points = [];
+            for (let m = 0; m <= 1440; m += STRIP_SAMPLE_MIN) {
+                points.push({ x: m, y: kwToStripY(dayKwAt(m)) });
+            }
+            return points;
+        }
+
+        // Namerané sa kreslí plnou čiarou, predpoveď od "teraz" prerušovanou. boundary === null
+        // znamená nedeliť (dekoratívna náhrada), boundary === 0 že celý deň je zatiaľ predpoveď.
+        function stripCurveStrokes(points, boundary) {
+            const solid = d => `<path d="${d}" fill="none" stroke="#9EF25B" stroke-width="2.5" stroke-linecap="round"/>`;
+            if (boundary === null) return solid(stripCurveSmoothPath(points));
+
+            const joint = { x: boundary, y: stripCurveY(points, boundary) };
+            const past = points.filter(p => p.x < boundary).concat([joint]);
+            const future = [joint].concat(points.filter(p => p.x > boundary));
+            return solid(stripCurveSmoothPath(past))
+                + `<path d="${stripCurveSmoothPath(future)}" fill="none" stroke="#9EF25B" stroke-opacity="0.5"`
+                + ` stroke-width="2.5" stroke-dasharray="7 6" stroke-linecap="round"/>`;
         }
 
         function stripCurveSmoothPath(points) {
@@ -1170,8 +1241,13 @@
             if (!strip) return;
             const segs = STRIP_SEGMENTS[season] || STRIP_SEGMENTS.summer;
             const bounds = stripSegmentBounds(segs);
-            const points = stripCurvePoints(bounds);
+            const dataPoints = stripDataCurvePoints();
+            const points = dataPoints || stripCurvePoints(bounds);
             stripCurveState = points;
+
+            // Dátová krivka sa láme na "teraz"; bez merania (skoro ráno, nedostupný kiosk)
+            // je celá predpoveďou, dekoratívna náhrada zostáva jednou plnou čiarou.
+            const boundary = dataPoints ? (realCurveBoundaryMinutes() || 0) : null;
 
             const bandRects = bounds.map(s => `<rect x="${s.start}" y="0" width="${s.min}" height="60" fill="${STRIP_BAND_FILL[s.cls]}"/>`).join('');
             const curvePath = stripCurveSmoothPath(points);
@@ -1183,8 +1259,12 @@
                 </linearGradient></defs>
                 ${bandRects}
                 <path d="${curvePath} L 1440 60 L 0 60 Z" fill="url(#strip-fill)"/>
-                <path d="${curvePath}" fill="none" stroke="#9EF25B" stroke-width="2.5" stroke-linecap="round"/>
+                ${stripCurveStrokes(points, boundary)}
             </svg>`;
+
+            // Legenda dáva zmysel len pri dátovej krivke; "namerané" až keď naozaj niečo máme.
+            if (dom.stripLegend) dom.stripLegend.classList.toggle('hidden', !dataPoints);
+            if (dom.stripLegendReal) dom.stripLegendReal.classList.toggle('hidden', !boundary);
             updateStripMarker();
         }
 
@@ -1202,12 +1282,14 @@
             if (dot) dot.style.top = `${(stripCurveY(stripCurveState, minutes) / 60) * 100}%`;
         }
 
-        // Počas náhľadu iného času zostáva hlavný marker na ťahanej/zafixovanej pozícii -
-        // vtedy sa naživo posúva iba "duch" markera na skutočnom čase, aby sa nestratil.
+        // Počas náhľadu iného času zostáva hlavný marker na ťahanej/zafixovanej pozícii (len sa
+        // preráta výška bodky, keď sa krivka medzitým prekreslila) - naživo sa vtedy posúva iba
+        // "duch" markera na skutočnom čase, aby sa nestratil.
         function updateStripMarker() {
             if (previewMinutes === null) {
                 positionMarkerAt(dom.stripNowMarker, realNowMinutes());
             } else {
+                positionMarkerAt(dom.stripNowMarker, previewMinutes);
                 positionMarkerAt(dom.stripNowGhost, realNowMinutes());
             }
         }
@@ -1564,6 +1646,8 @@
             }
 
             updateTimeAndHighlight();
+            // Nameraná časť krivky pásu narastá s každou novou dávkou dát z kiosku.
+            renderDayStrip(currentSeason);
             if (isForecastVisible()) renderForecastChart();
         }
 
@@ -1578,6 +1662,7 @@
             }
 
             updateTimeAndHighlight();
+            renderDayStrip(currentSeason);
             if (isForecastVisible()) renderForecastChart();
         }
 
@@ -1776,8 +1861,8 @@
 
         // ============ Náhľad iného času: potiahnutím markera sa hero naživo prekreslí ============
         // Zdroj slotu (čas/status/titulok/popis/spotrebiče) je ten istý skrytý zoznam .tl-row, čo
-        // poháňa aj živú odpoveď; výkon pre daný čas berieme z hodinovej predpovede (rovnaká krivka
-        // ako v paneli Predpoveď), nie z reálneho merania, ktoré pre iný než skutočný čas nemáme.
+        // poháňa aj živú odpoveď; výkon pre daný čas berieme z tej istej krivky ako pás dňa -
+        // pre čas z minulosti teda namerané, pre čas dopredu predpovedané.
         function minutesToTimeStr(minutes) {
             const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
             return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -1791,10 +1876,11 @@
             return null;
         }
 
-        function forecastPowerAt(hour) {
-            const pts = latestForecastData ? latestForecastData.hourlyToday : null;
-            if (!pts || !pts.length) return NaN;
-            return forecastInterpolate(pts, hour, 'kw');
+        // Čas v minulosti má namerané dáta, dopredu len predpoveď - to rozlíšenie sa píše
+        // aj pod číslo v ciferníku, nech je zrejmé, či ide o meranie alebo o odhad.
+        function isMeasuredMinute(minutes) {
+            const boundary = realCurveBoundaryMinutes();
+            return boundary !== null && minutes <= boundary;
         }
 
         function minutesFromClientX(clientX) {
@@ -1806,8 +1892,8 @@
         }
 
         // Prekreslí hero (badge, ciferník, nadpis/text, spotrebiče) tak, ako by vyzeral v danú minútu
-        // dňa - rovnakou logikou ako pre živé "teraz" (buildEyebrow/getSlotMessage), len s
-        // predpovedaným namiesto nameraného výkonom.
+        // dňa - rovnakou logikou ako pre živé "teraz" (buildEyebrow/getSlotMessage), len s výkonom
+        // z krivky dňa (nameraný pre minulosť, predpovedaný dopredu).
         function renderHeroForMinutes(minutes, dim) {
             dom.panels.spotrebice.classList.toggle('preview-dim', dim);
             const row = findSlotRowAt(minutesToTimeStr(minutes));
@@ -1815,7 +1901,7 @@
 
             const blockType = row.getAttribute('data-status') || 'green';
             const isNightSlot = row.getAttribute('data-start') === '23:30';
-            const power = forecastPowerAt(minutes / 60);
+            const power = dayKwAt(minutes);
 
             dom.panels.spotrebice.style.setProperty('--accent', tariffColorVar(smartTier(blockType, power)));
             dom.verdictEyebrow.textContent = buildEyebrow(blockType, power, isNightSlot);
@@ -1836,7 +1922,7 @@
 
             dom.pvPower.innerText = Number.isFinite(power) ? power.toFixed(2) : '–';
             dom.pvPower.style.color = tariffColorVar(smartTier(blockType, power));
-            dom.pvPowerUnit.textContent = 'kW (odhad)';
+            dom.pvPowerUnit.textContent = isMeasuredMinute(minutes) ? 'kW (merané)' : 'kW (odhad)';
             setDialRingForPower(power);
 
             return { blockType, tier: smartTier(blockType, power) };
