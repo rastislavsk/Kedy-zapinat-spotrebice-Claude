@@ -1045,13 +1045,13 @@
         },
         {
           "hour": 7,
-          "kw": 0.31,
+          "kw": 0.29,
           "cloud": 34,
           "clearKw": 1.53
         },
         {
           "hour": 8,
-          "kw": 1.92,
+          "kw": 1.87,
           "cloud": 29,
           "clearKw": 3.75
         },
@@ -1146,7 +1146,7 @@
           "clearKw": 0
         }
       ],
-      "kwhTotal": 44.4,
+      "kwhTotal": 44.3,
       "clearKwhTotal": 61.7,
       "peakKw": 6.39,
       "peakHour": 12,
@@ -1307,5 +1307,5 @@
       "cloudAvgPct": 93
     }
   ],
-  "updatedAt": "2026-09-04T09:30:48.529Z"
+  "updatedAt": "2026-09-04T09:35:45.728Z"
 }
