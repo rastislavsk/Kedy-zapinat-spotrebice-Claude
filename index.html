@@ -402,6 +402,9 @@
         .stat.hi .num { color: var(--green); }
         .week-block { margin: 28px 0; }
         .week-block .chart-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+        /* 7 dní v tabe sa do úzkeho stĺpca (bočný panel na PC, aj užšie mobily) nezmestí -
+           nech sa radšej posúva vodorovne, než aby posledný deň zostal neklikateľný. */
+        #week-day-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .week-svg { width: 100%; height: auto; display: block; }
         .day-label { font-size: 9.5px; fill: var(--ink-45); font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
         .day-label.today { fill: var(--ink); }
@@ -661,8 +664,49 @@
             .col-a { grid-column: 1; }
             #panel-predpoved { grid-column: 2; }
             /* "7 dní" sa na dashboarde nemieša so Spotrebičmi/Predpoveďou - je to
-               samostatná záložka, ktorá pri aktivácii zaberie celý riadok. */
-            #panel-7dni { grid-column: 1 / -1; }
+               samostatná záložka, ktorá pri aktivácii zaberie celý riadok a má
+               vlastnú mriežku (bočný stĺpec s číslami/tabuľkou + hlavná plocha
+               s grafmi), namiesto radenia všetkého pod seba. */
+            #panel-7dni {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: minmax(280px, 330px) minmax(0, 1fr) minmax(0, 1fr);
+                gap: 16px;
+                align-items: start;
+                background: none; border: none; padding: 0;
+            }
+            #panel-7dni > .section-head { grid-column: 1 / -1; }
+            #panel-7dni > .stat-trio,
+            #panel-7dni > .week-block,
+            #panel-7dni > .msg-block {
+                background: var(--card-bg);
+                border: 1px solid var(--card-line);
+                border-radius: 12px;
+                padding: 18px 20px;
+                margin: 0;
+            }
+            /* Čísla Dnes/Zajtra/7 dní pod sebou namiesto vedľa seba - v bočnom stĺpci
+               je to čitateľnejšie ako tri stĺpčeky vtesnané do úzkeho priestoru. */
+            #panel-7dni > .stat-trio { grid-column: 1; flex-direction: column; gap: 14px; }
+            #panel-7dni > .stat-trio .stat { border-left: none; padding-left: 0; margin-left: 0; display: flex; align-items: baseline; justify-content: space-between; }
+            #panel-7dni > .stat-trio .stat + .stat { border-top: 1px solid var(--ink-08); padding-top: 12px; margin-top: 0; }
+            /* Mapa výroby cez obe hlavné stĺpce, denné stĺpce a priebeh výroby vedľa
+               seba, tabuľka a súhrn v bočnom stĺpci pod číslami. */
+            #panel-7dni > .week-block:nth-of-type(1) { grid-column: 2 / -1; }
+            #panel-7dni > .week-block:nth-of-type(2) { grid-column: 2; }
+            #panel-7dni > .week-block:nth-of-type(3) { grid-column: 3; }
+            #panel-7dni > .week-block:nth-of-type(4) { grid-column: 1; }
+            #panel-7dni > .msg-block { grid-column: 1; border-top: 1px solid var(--card-line); }
+            /* Bočný stĺpec je úzky - tabuľka tam ukáže len deň/výrobu/špičku,
+               strop/využitie/oblačnosť majú stále svoje miesto v tabuľke na mobile/tablete.
+               min-width sa zruší, inak by tabuľka trvala na pôvodnej šírke pre 6 stĺpcov
+               a zvyšné 3 by sa vysúvali mimo viditeľnú oblasť karty. */
+            #panel-7dni table.week-table { min-width: 0; }
+            #panel-7dni table.week-table th:nth-child(3), #panel-7dni table.week-table td:nth-child(3),
+            #panel-7dni table.week-table th:nth-child(4), #panel-7dni table.week-table td:nth-child(4),
+            #panel-7dni table.week-table th:nth-child(6), #panel-7dni table.week-table td:nth-child(6) {
+                display: none;
+            }
 
             /* Spotrebice aj Predpoved su viditelne vzdy, okrem pohladu Zdielat.
                Selektor je specifickejsi ako .hidden, takze ho prebije. */
