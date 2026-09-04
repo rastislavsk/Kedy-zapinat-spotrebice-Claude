@@ -4,7 +4,7 @@
   "peakKw": null,
   "hoursAhead": null,
   "tomorrowSunny": true,
-  "tomorrowPeakKw": 5.94,
+  "tomorrowPeakKw": 5.9,
   "hourlyToday": [
     {
       "hour": 2,
@@ -165,37 +165,37 @@
     },
     {
       "hour": 9,
-      "kw": 2.3,
+      "kw": 2.29,
       "cloud": 97
     },
     {
       "hour": 10,
-      "kw": 3.34,
+      "kw": 3.33,
       "cloud": 96
     },
     {
       "hour": 11,
-      "kw": 2.77,
+      "kw": 2.76,
       "cloud": 100
     },
     {
       "hour": 12,
-      "kw": 2.16,
+      "kw": 2.15,
       "cloud": 80
     },
     {
       "hour": 13,
-      "kw": 3.76,
+      "kw": 3.73,
       "cloud": 31
     },
     {
       "hour": 14,
-      "kw": 5.94,
+      "kw": 5.9,
       "cloud": 3
     },
     {
       "hour": 15,
-      "kw": 4.92,
+      "kw": 4.9,
       "cloud": 100
     },
     {
@@ -441,43 +441,43 @@
         },
         {
           "hour": 9,
-          "kw": 2.3,
+          "kw": 2.29,
           "cloud": 97,
           "clearKw": 5.68
         },
         {
           "hour": 10,
-          "kw": 3.34,
+          "kw": 3.33,
           "cloud": 96,
           "clearKw": 7.04
         },
         {
           "hour": 11,
-          "kw": 2.77,
+          "kw": 2.76,
           "cloud": 100,
           "clearKw": 7.85
         },
         {
           "hour": 12,
-          "kw": 2.16,
+          "kw": 2.15,
           "cloud": 80,
           "clearKw": 8.11
         },
         {
           "hour": 13,
-          "kw": 3.76,
+          "kw": 3.73,
           "cloud": 31,
           "clearKw": 7.82
         },
         {
           "hour": 14,
-          "kw": 5.94,
+          "kw": 5.9,
           "cloud": 3,
           "clearKw": 7.01
         },
         {
           "hour": 15,
-          "kw": 4.92,
+          "kw": 4.9,
           "cloud": 100,
           "clearKw": 5.7
         },
@@ -530,9 +530,9 @@
           "clearKw": 0
         }
       ],
-      "kwhTotal": 33.9,
+      "kwhTotal": 33.7,
       "clearKwhTotal": 62.9,
-      "peakKw": 5.94,
+      "peakKw": 5.9,
       "peakHour": 14,
       "cloudAvgPct": 40
     },
@@ -619,13 +619,13 @@
         },
         {
           "hour": 13,
-          "kw": 6.56,
+          "kw": 6.55,
           "cloud": 16,
           "clearKw": 7.8
         },
         {
           "hour": 14,
-          "kw": 6,
+          "kw": 5.99,
           "cloud": 12,
           "clearKw": 6.98
         },
@@ -637,7 +637,7 @@
         },
         {
           "hour": 16,
-          "kw": 3.77,
+          "kw": 3.76,
           "cloud": 10,
           "clearKw": 4.18
         },
@@ -1307,5 +1307,5 @@
       "cloudAvgPct": 97
     }
   ],
-  "updatedAt": "2026-09-04T19:26:09.947Z"
+  "updatedAt": "2026-09-04T19:31:06.992Z"
 }
