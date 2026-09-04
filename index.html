@@ -434,6 +434,16 @@
         .heat-scale { display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink-35); }
         .heat-scale .sw { display: inline-flex; gap: 1px; }
         .heat-scale .sw i { width: 8px; height: 8px; display: inline-block; }
+        /* Súhrnný riadok nad grafom (týždenný súčet pri dennej výrobe, špička/oblačnosť
+           vybraného dňa pri priebehu výroby) - dopĺňa graf o číslo, ktoré sa k nemu
+           priamo viaže, namiesto toho, aby bolo len v tabuľke mimo dohľadu. */
+        .stat-line {
+            display: flex; flex-wrap: wrap; gap: 6px 16px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-45);
+            padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--ink-08);
+        }
+        .stat-line b { color: var(--ink); font-weight: 600; }
+        .stat-line .accent { color: var(--green); font-weight: 600; }
         .week-tbl-wrap { overflow-x: auto; }
         table.week-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 480px; }
         table.week-table th { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-35); text-align: right; padding: 0 0 10px; border-bottom: 1px solid var(--ink-12); white-space: nowrap; }
@@ -781,6 +791,30 @@
         @media (min-width: 1200px) {
             .appbar-inner, .page, .bottomnav-inner { max-width: 1120px; }
             .page { grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); }
+
+            /* "Denná výroba" a "Priebeh výroby" stoja v tom istom riadku mriežky ako
+               tabuľka dní, ktorá je zvyčajne vyššia - align-items:stretch preto naťahuje
+               aj ich kartu na tú istú výšku, no samotný graf mal pevnú výšku a pod ním
+               zostávala prázdna medzera. Graf preto rastie spolu s kartou (JS pri
+               vykresľovaní prečíta reálnu výšku .chart-wrap a nakreslí doň SVG 1:1, nech
+               sa graf ani mriežka pri naťahovaní neskreslia). Až od 1200px, kde je na
+               stĺpec dosť miesta - pod tým je stĺpec príliš úzky a popisky by sa zrážali. */
+            #panel-7dni > .week-block:nth-of-type(2) .chart-card,
+            #panel-7dni > .week-block:nth-of-type(3) .chart-card {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 220px;
+            }
+            #panel-7dni > .week-block:nth-of-type(2) .chart-wrap,
+            #panel-7dni > .week-block:nth-of-type(3) .chart-wrap {
+                flex: 1;
+                min-height: 0;
+            }
+            #panel-7dni > .week-block:nth-of-type(2) .week-svg,
+            #panel-7dni > .week-block:nth-of-type(3) .week-svg {
+                height: 100%;
+            }
         }
 
         @media print {
@@ -1164,6 +1198,7 @@
 
             <section class="week-block">
                 <div class="chart-top"><span class="lbl">Denná výroba (kWh)</span></div>
+                <div class="stat-line" id="week-bars-stat"></div>
                 <div class="chart-card"><div class="chart-wrap">
                     <svg id="week-bars" class="week-svg"></svg>
                     <div id="week-bars-tooltip" class="forecast-tooltip"><div class="tt-time"></div><div class="tt-kw"></div></div>
@@ -1181,6 +1216,7 @@
                     <span class="lbl">Priebeh výroby</span>
                 </div>
                 <div class="utabs" id="week-day-tabs" role="tablist"></div>
+                <div class="stat-line" id="week-curve-stat"></div>
                 <div class="chart-card">
                     <div class="chart-wrap">
                         <svg id="week-curve" class="week-svg" viewBox="0 0 320 150" preserveAspectRatio="none"></svg>
@@ -1329,8 +1365,10 @@
             weekHeat: document.getElementById('week-heat'),
             weekHeatScale: document.getElementById('week-heat-scale'),
             weekBars: document.getElementById('week-bars'),
+            weekBarsStat: document.getElementById('week-bars-stat'),
             weekDayTabs: document.getElementById('week-day-tabs'),
             weekCurve: document.getElementById('week-curve'),
+            weekCurveStat: document.getElementById('week-curve-stat'),
             weekTbody: document.getElementById('week-tbody'),
             weekMsgTitle: document.getElementById('week-msg-title'),
             weekMsgBody: document.getElementById('week-msg-body'),
@@ -1383,6 +1421,11 @@
             WIDE_CHART_MQ.addEventListener('change', () => {
                 if (isForecastVisible()) renderForecastChart();
                 if (currentPanel === '7dni') renderWeekCurve();
+            });
+            // Prechod cez 1200 px mení, či "Denná výroba"/"Priebeh výroby" kreslia na
+            // reálny rozmer karty (viď PC_MQ) - treba ich prekresliť na novú šírku.
+            PC_MQ.addEventListener('change', () => {
+                if (currentPanel === '7dni') { renderWeekBars(); renderWeekCurve(); }
             });
             // Pri tej istej hranici sa zdieľanie prepína medzi panelom a modálom.
             // Bez toho by po zmene šírky okna ostalo viset v nesprávnej podobe.
@@ -1768,6 +1811,10 @@
         // Od 1024 px su Spotrebice a Predpoved vedla seba (viz media query v <style>),
         // takze na PC uz nie je co medzi nimi prepinat.
         const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
+        // Zhoduje sa s "PC (>= 1200px)" CSS blokom nižšie - stĺpec grafov v paneli
+        // 7 dní má od tejto šírky dosť miesta, aby sa dali kresliť na reálny rozmer
+        // karty (viď renderWeekBars/renderWeekCurve). Pod 1200px je stĺpec príliš úzky.
+        const PC_MQ = window.matchMedia('(min-width: 1200px)');
 
         // Graf treba prekreslit vzdy, ked je na obrazovke - na mobile len v svojom paneli,
         // na PC prakticky stale.
@@ -2702,13 +2749,18 @@
         function renderWeekBars() {
             const svg = dom.weekBars;
             const days = latestForecastData.days;
-            const W = 440, padL = 30, padT = 14, padR = 6, padB = 32;
+            const wrap = svg.closest('.chart-wrap');
+            const fill = PC_MQ.matches && wrap.clientWidth > 0 && wrap.clientHeight > 0;
+            const W = fill ? Math.round(wrap.clientWidth) : 440;
+            const H = fill ? Math.round(wrap.clientHeight) : 190;
+            const padL = 30, padT = 14, padR = 6, padB = 32;
             const n = days.length;
             const slot = (W - padL - padR) / n;
             const bw = slot * 0.5;
-            const H = 190, plotH = H - padT - padB;
+            const plotH = H - padT - padB;
             svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-            svg.setAttribute('width', '100%'); svg.setAttribute('height', H);
+            if (fill) { svg.removeAttribute('width'); svg.removeAttribute('height'); }
+            else { svg.setAttribute('width', '100%'); svg.setAttribute('height', H); }
 
             const maxV = Math.max(...days.map(d => Math.max(d.kwhTotal, d.clearKwhTotal)), 1) * 1.08;
             const gridStep = maxV > 80 ? 40 : maxV > 40 ? 20 : maxV > 16 ? 10 : 5;
@@ -2734,6 +2786,26 @@
                 out += `<text class="axis-label" x="${cx}" y="${H - 4}" text-anchor="middle">${weekDateLabel(d.date)}</text>`;
             });
             svg.innerHTML = out;
+            renderWeekBarsStat(days);
+        }
+
+        // Súhrn nad grafom "Denná výroba" - rovnaké čísla (spolu/priemer/najlepší deň),
+        // aké appka už počíta pre bočný panel a pre textovú správu dole, len pri grafe,
+        // ku ktorému sa viažu.
+        function renderWeekBarsStat(days) {
+            const box = dom.weekBarsStat;
+            if (!box) return;
+            const fmt1 = n => n.toFixed(1).replace('.', ',');
+            const total = days.reduce((s, d) => s + d.kwhTotal, 0);
+            const avg = total / days.length;
+            let best = days[0];
+            days.forEach(d => { if (d.kwhTotal > best.kwhTotal) best = d; });
+            const bestLabel = weekDayLabel(best.date, days.indexOf(best));
+            box.innerHTML = `
+                <span>Spolu za 7 dní <b>${fmt1(total)} kWh</b></span>
+                <span>Priemer <b>${fmt1(avg)} kWh/deň</b></span>
+                <span>Najsilnejší deň <span class="accent">${bestLabel} · ${fmt1(best.kwhTotal)} kWh</span></span>
+            `;
         }
 
         function renderWeekDayTabs() {
@@ -2758,9 +2830,15 @@
             const day = latestForecastData.days[weekSelDay];
             const hMin = 6, hMax = 21;
             const pts = day.hourly.filter(p => p.hour >= hMin && p.hour <= hMax);
-            if (!pts.length) { svg.innerHTML = ''; return; }
+            if (!pts.length) { svg.innerHTML = ''; if (dom.weekCurveStat) dom.weekCurveStat.innerHTML = ''; return; }
 
-            const dims = chartDims();
+            // Od 1200px kreslíme rovno na reálny rozmer karty (viď PC_MQ pri
+            // renderWeekBars) namiesto pevného pomeru strán z chartDims().
+            const wrap = svg.closest('.chart-wrap');
+            const fill = PC_MQ.matches && wrap.clientWidth > 0 && wrap.clientHeight > 0;
+            const dims = fill
+                ? { w: Math.round(wrap.clientWidth), h: Math.round(wrap.clientHeight), padL: 42, padR: 14, padT: 18, padB: 34, hourStep: 2, xLabelGap: 10, yAxis: true }
+                : chartDims();
             svg.setAttribute('viewBox', `0 0 ${dims.w} ${dims.h}`);
             const maxKw = Math.max(...pts.map(p => p.kw), 0.5) * 1.15;
             const linePath = forecastSmoothPath(pts, hMin, hMax, maxKw, dims);
@@ -2804,6 +2882,25 @@
             `;
 
             weekCurveState = { pts, hMin, hMax, maxKw, dims };
+            renderWeekCurveStat(day);
+        }
+
+        // Súhrn nad grafom "Priebeh výroby" - špička/výroba/oblačnosť pre práve
+        // vybraný deň z tabov nad grafom, nech sa netreba pozerať do tabuľky nižšie.
+        function renderWeekCurveStat(day) {
+            const box = dom.weekCurveStat;
+            if (!box) return;
+            const parts = [];
+            if (Number.isFinite(day.peakKw) && day.peakHour != null) {
+                parts.push(`<span>Špička <b>${day.peakKw.toFixed(1)} kW</b> o ${String(day.peakHour).padStart(2, '0')}:00</span>`);
+            }
+            if (Number.isFinite(day.kwhTotal)) {
+                parts.push(`<span>Výroba <span class="accent">${day.kwhTotal.toFixed(1).replace('.', ',')} kWh</span></span>`);
+            }
+            if (day.cloudAvgPct != null) {
+                parts.push(`<span>Oblačnosť <b>${Math.round(day.cloudAvgPct)} %</b></span>`);
+            }
+            box.innerHTML = parts.join('');
         }
 
         function renderWeekTable() {
@@ -2850,6 +2947,7 @@
             const days = latestForecastData && Array.isArray(latestForecastData.days) ? latestForecastData.days : null;
             if (!days || !days.length) {
                 dom.weekHeat.innerHTML = ''; dom.weekBars.innerHTML = ''; dom.weekCurve.innerHTML = '';
+                dom.weekBarsStat.innerHTML = ''; dom.weekCurveStat.innerHTML = '';
                 dom.weekDayTabs.innerHTML = ''; dom.weekTbody.innerHTML = '';
                 dom.weekToday.innerText = '–'; dom.weekTomorrow.innerText = '–'; dom.weekTotal.innerText = '–';
                 dom.weekTodayBadge.innerHTML = ''; dom.weekTodayMeta.innerHTML = ''; dom.weekTodayProgress.classList.remove('has-data');
