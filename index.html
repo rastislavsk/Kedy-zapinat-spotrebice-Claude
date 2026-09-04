@@ -672,7 +672,11 @@
                 display: grid;
                 grid-template-columns: minmax(280px, 330px) minmax(0, 1fr) minmax(0, 1fr);
                 gap: 16px;
-                align-items: start;
+                /* stretch (nie start) - karty v tom istom riadku majú rôzne dlhý obsah
+                   (napr. heatmapa vs. čísla Dnes/Zajtra), ale ich pozadie/orámovanie má
+                   siahať po rovnakú spodnú hranu, nech dashboard pôsobí ako jeden celok
+                   a nie ako voľne rozhodené karty s dierami medzi nimi. */
+                align-items: stretch;
                 background: none; border: none; padding: 0;
             }
             #panel-7dni > .section-head { grid-column: 1 / -1; grid-row: 1; }
@@ -687,7 +691,7 @@
             }
             /* Čísla Dnes/Zajtra/7 dní pod sebou namiesto vedľa seba - v bočnom stĺpci
                je to čitateľnejšie ako tri stĺpčeky vtesnané do úzkeho priestoru. */
-            #panel-7dni > .stat-trio { grid-column: 1; grid-row: 2; flex-direction: column; gap: 14px; }
+            #panel-7dni > .stat-trio { grid-column: 1; grid-row: 2; flex-direction: column; justify-content: space-between; gap: 14px; }
             #panel-7dni > .stat-trio .stat { border-left: none; padding-left: 0; margin-left: 0; display: flex; align-items: baseline; justify-content: space-between; }
             #panel-7dni > .stat-trio .stat + .stat { border-top: 1px solid var(--ink-08); padding-top: 12px; margin-top: 0; }
             /* Mapa výroby cez obe hlavné stĺpce, denné stĺpce a priebeh výroby vedľa
@@ -699,6 +703,12 @@
             #panel-7dni > .week-block:nth-of-type(3) { grid-column: 3; grid-row: 3; }
             #panel-7dni > .week-block:nth-of-type(4) { grid-column: 1; grid-row: 3; }
             #panel-7dni > .msg-block { grid-column: 1; grid-row: 4; border-top: 1px solid var(--card-line); }
+            /* Karty v riadku majú rôzne dlhý obsah (denná výroba vs. priebeh výroby
+               s tabmi vs. tabuľka) - legenda pod grafom nech sedí na spodku karty,
+               nie hneď pod grafom, inak by karty vyzerali rozhodené aj napriek
+               spoločnej výške. */
+            #panel-7dni > .week-block { display: flex; flex-direction: column; }
+            #panel-7dni > .week-block > .chart-footer { margin-top: auto; }
             /* Bočný stĺpec je úzky - tabuľka tam ukáže len deň/výrobu/špičku,
                strop/využitie/oblačnosť majú stále svoje miesto v tabuľke na mobile/tablete.
                min-width sa zruší, inak by tabuľka trvala na pôvodnej šírke pre 6 stĺpcov
