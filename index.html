@@ -1287,6 +1287,10 @@
 
     <script>
         const PV_LIVE_URL = 'https://pv-proxy.rastislav-racek.workers.dev/';
+        // Ako dlho ostáva tooltip zobrazený po kliknutí/ťuknutí, kým sám zmizne
+        // (predtým 800ms, teraz +100%). Platí jednotne pre všetky tooltips v appke -
+        // klik/ťuknutie inde alebo na iný prvok s tooltipom ho vždy zruší okamžite.
+        const TOOLTIP_HOLD_MS = 1600;
 
         let currentSeason = 'summer';
         let currentPanel = 'spotrebice';
@@ -1752,12 +1756,18 @@
             dom.verdictGoRow.classList.remove('hidden');
         }
 
-        // Klik na ikonu spotrebiča prepne tooltip s jeho príkonom; klik mimo ikony ho zatvorí.
+        // Klik na ikonu spotrebiča prepne tooltip s jeho príkonom; klik mimo ikony (alebo na inú
+        // ikonu) ho zatvorí okamžite, inak sám zmizne po TOOLTIP_HOLD_MS - rovnako ako ostatné tooltips.
+        let chipTooltipTimer = null;
         document.addEventListener('click', (e) => {
             const chip = e.target.closest('.go-chip');
             const wasOpen = chip && chip.classList.contains('tooltip-open');
+            clearTimeout(chipTooltipTimer);
             document.querySelectorAll('.go-chip.tooltip-open').forEach(c => c.classList.remove('tooltip-open'));
-            if (chip && !wasOpen) chip.classList.add('tooltip-open');
+            if (chip && !wasOpen) {
+                chip.classList.add('tooltip-open');
+                chipTooltipTimer = setTimeout(() => chip.classList.remove('tooltip-open'), TOOLTIP_HOLD_MS);
+            }
         });
 
         function tariffColorVar(blockType) {
@@ -3038,11 +3048,25 @@
             renderWeekMessage();
         }
 
+        // Klik/ťuknutie mimo prvku s otvoreným grafovým tooltipom ho zavrie okamžite -
+        // rovnaké pravidlo ako pri ikonách spotrebičov, platí naprieč všetkými grafmi.
+        const openTapTooltips = [];
+        function registerTapTooltip(wrap, hide) {
+            openTapTooltips.push({ wrap, hide });
+        }
+        document.addEventListener('touchstart', (e) => {
+            openTapTooltips.forEach(({ wrap, hide }) => { if (!wrap.contains(e.target)) hide(); });
+        }, { passive: true });
+        document.addEventListener('click', (e) => {
+            openTapTooltips.forEach(({ wrap, hide }) => { if (!wrap.contains(e.target)) hide(); });
+        });
+
         function initForecastChartInteraction() {
             const wrap = document.getElementById('forecast-chart-wrap');
             const svg = document.getElementById('forecast-chart');
             const tooltip = document.getElementById('forecast-tooltip');
             if (!wrap || !svg || !tooltip) return;
+            registerTapTooltip(wrap, () => tooltip.classList.remove('visible'));
 
             function handlePointer(clientX) {
                 if (!forecastChartState) return;
@@ -3070,7 +3094,7 @@
             wrap.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
             wrap.addEventListener('touchstart', (e) => handlePointer(e.touches[0].clientX), { passive: true });
             wrap.addEventListener('touchmove', (e) => handlePointer(e.touches[0].clientX), { passive: true });
-            wrap.addEventListener('touchend', () => setTimeout(() => tooltip.classList.remove('visible'), 800));
+            wrap.addEventListener('touchend', () => setTimeout(() => tooltip.classList.remove('visible'), TOOLTIP_HOLD_MS));
         }
 
         // Tooltip nad diskrétnymi prvkami (bunky mapy výroby, stĺpce dennej výroby) -
@@ -3080,9 +3104,13 @@
             const tooltip = document.getElementById(tooltipId);
             const wrap = svg && svg.closest('.chart-wrap');
             if (!svg || !tooltip || !wrap) return;
+            registerTapTooltip(wrap, () => tooltip.classList.remove('visible'));
 
-            function handle(e) {
-                const target = e.target.closest('rect[data-tip]');
+            function handle(e, touch) {
+                // Pri touch evente ostáva e.target fixný na prvok z touchstart, preto pri
+                // posune prsta treba zistiť bunku pod ním cez elementFromPoint.
+                const hitEl = touch ? document.elementFromPoint(touch.clientX, touch.clientY) : e.target;
+                const target = hitEl && hitEl.closest('rect[data-tip]');
                 if (!target) { tooltip.classList.remove('visible'); return; }
                 const wrapRect = wrap.getBoundingClientRect();
                 const cellRect = target.getBoundingClientRect();
@@ -3094,10 +3122,11 @@
             }
             const leave = () => tooltip.classList.remove('visible');
 
-            wrap.addEventListener('mousemove', handle);
+            wrap.addEventListener('mousemove', (e) => handle(e));
             wrap.addEventListener('mouseleave', leave);
-            wrap.addEventListener('touchstart', handle, { passive: true });
-            wrap.addEventListener('touchend', () => setTimeout(leave, 800));
+            wrap.addEventListener('touchstart', (e) => handle(e, e.touches[0]), { passive: true });
+            wrap.addEventListener('touchmove', (e) => handle(e, e.touches[0]), { passive: true });
+            wrap.addEventListener('touchend', () => setTimeout(leave, TOOLTIP_HOLD_MS));
         }
 
         // Tooltip nad krivkou "Priebeh výroby" na karte 7 dní - rovnaký princíp ako
@@ -3109,6 +3138,7 @@
             const tooltip = document.getElementById('week-curve-tooltip');
             const wrap = svg && svg.closest('.chart-wrap');
             if (!svg || !tooltip || !wrap) return;
+            registerTapTooltip(wrap, () => tooltip.classList.remove('visible'));
 
             function handlePointer(clientX) {
                 if (!weekCurveState) return;
@@ -3137,7 +3167,7 @@
             wrap.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
             wrap.addEventListener('touchstart', (e) => handlePointer(e.touches[0].clientX), { passive: true });
             wrap.addEventListener('touchmove', (e) => handlePointer(e.touches[0].clientX), { passive: true });
-            wrap.addEventListener('touchend', () => setTimeout(() => tooltip.classList.remove('visible'), 800));
+            wrap.addEventListener('touchend', () => setTimeout(() => tooltip.classList.remove('visible'), TOOLTIP_HOLD_MS));
         }
     </script>
 </body>
