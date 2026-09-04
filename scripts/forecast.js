@@ -25,6 +25,12 @@ const ALBEDO = 0.2;
 const HIGH_KW = 4;               // hranica "vysoka vyroba" v texte appky
 const STRONGER_WINDOW_MARGIN_KW = 1.5; // o kolko musi byt buduce okno lepsie nez teraz
 
+const ELEV_M = 180; // priblizna nadmorska vyska Dvorian nad Nitrou
+// Bezoblacny strop (rovnaky Meinelov model s Laueho vyskovou korekciou ako v SolarCaste):
+// horna hranica vyroby, keby bola obloha cely den cista.
+const CS_TAU = 0.80;
+const CS_DHI_FRAC = 0.12;
+
 function toRad(deg) { return (deg * Math.PI) / 180; }
 function toDeg(rad) { return (rad * 180) / Math.PI; }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -113,6 +119,38 @@ function forecastAcKw(ghi, dni, dhi, tempC, dateUtc) {
     return Math.min(AC_LIMIT_KW, Math.max(0, acKw));
 }
 
+// Ziarenie bezoblacnej oblohy pre dane slnecne vysky (Meinelov utlm, vyskova korekcia).
+function clearSkyIrradiance(elevationDeg) {
+    if (elevationDeg <= 0.5) return { ghi: 0, dni: 0, dhi: 0 };
+    const zenithDeg = 90 - elevationDeg;
+    const cosZ = Math.cos(toRad(zenithDeg));
+    const airMass = 1 / (cosZ + 0.50572 * Math.pow(96.07995 - zenithDeg, -1.6364));
+    const hkm = Math.max(0, ELEV_M) / 1000;
+    const dni = 1353 * ((1 - 0.14 * hkm) * Math.pow(CS_TAU, Math.pow(airMass, 0.678)) + 0.14 * hkm);
+    const dhi = CS_DHI_FRAC * dni * cosZ;
+    const ghi = dni * cosZ + dhi;
+    return { ghi, dni, dhi };
+}
+
+// AC vykon celej elektrarne za bezoblacnej oblohy - horny strop pre graf/tabulku.
+function clearSkyAcKw(dateUtc) {
+    const sun = solarPosition(dateUtc, LAT, LON);
+    if (sun.elevationDeg <= 0) return 0;
+    const { ghi, dni, dhi } = clearSkyIrradiance(sun.elevationDeg);
+
+    let dcWatts = 0;
+    for (const s of STRINGS) {
+        const poa = poaIrradiance(ghi, dni, dhi, sun.elevationDeg, sun.azimuthDeg, s.tiltDeg, s.azimuthDeg);
+        const cellTemp = 25 + ((NOCT_C - 20) / 800) * poa; // bezoblacny den, odhad okolia 25 °C
+        const tempFactor = 1 + (TEMP_COEF_PCT_PER_C / 100) * (cellTemp - 25);
+        const stringWp = s.panels * PANEL_WP;
+        dcWatts += stringWp * (poa / 1000) * Math.max(0, tempFactor);
+    }
+
+    const acKw = (dcWatts / 1000) * SYSTEM_EFFICIENCY;
+    return Math.min(AC_LIMIT_KW, Math.max(0, acKw));
+}
+
 function localHour(dateUtc) {
     const parts = new Intl.DateTimeFormat('en-GB', {
         timeZone: TIMEZONE, hour: '2-digit', hour12: false,
@@ -146,7 +184,9 @@ async function main() {
     const url = 'https://api.open-meteo.com/v1/forecast'
         + `?latitude=${LAT}&longitude=${LON}`
         + '&hourly=shortwave_radiation,direct_normal_irradiance,diffuse_radiation,temperature_2m,cloud_cover'
-        + '&forecast_days=3&timezone=UTC';
+        // 9 dni z API je rezerva na to, aby vsetkych 7 miestnych dni (karta "7 dni") malo kompletne hodinove dáta
+        // aj s posunom oproti UTC.
+        + '&forecast_days=9&timezone=UTC';
 
     const res = await fetchWithRetry(url);
     const data = await res.json();
@@ -205,6 +245,37 @@ async function main() {
 
     const todayEntries = hourly.filter((h) => h.localDate === todayKey);
 
+    // Karta "7 dní": dnes + 6 nasledujúcich miestnych dní, hodinová predpoveď
+    // aj bezoblačný strop pre každú hodinu (heatmapa, stĺpce, krivka, tabuľka).
+    const sevenDays = [];
+    for (let i = 0; i < 7; i++) {
+        const dayKey = localDateKey(new Date(now.getTime() + i * 24 * 3600 * 1000));
+        const entries = hourly.filter((h) => h.localDate === dayKey);
+        const dayHourly = hourlySeries(entries).map((h) => {
+            const entry = entries.find((e) => localHour(e.dateUtc) === h.hour);
+            return { ...h, clearKw: Number(clearSkyAcKw(entry.dateUtc).toFixed(2)) };
+        });
+
+        const kwhTotal = Number(dayHourly.reduce((s, h) => s + h.kw, 0).toFixed(1));
+        const clearKwhTotal = Number(dayHourly.reduce((s, h) => s + h.clearKw, 0).toFixed(1));
+        let peak = dayHourly[0] || { hour: null, kw: 0 };
+        for (const h of dayHourly) if (h.kw > peak.kw) peak = h;
+        const cloudVals = dayHourly.map((h) => h.cloud).filter((c) => c != null);
+        const cloudAvgPct = cloudVals.length
+            ? Math.round(cloudVals.reduce((a, b) => a + b, 0) / cloudVals.length)
+            : null;
+
+        sevenDays.push({
+            date: dayKey,
+            hourly: dayHourly,
+            kwhTotal,
+            clearKwhTotal,
+            peakKw: Number(peak.kw.toFixed(2)),
+            peakHour: peak.hour,
+            cloudAvgPct,
+        });
+    }
+
     const output = {
         strongerWindowAhead,
         windowDaypart,
@@ -214,6 +285,7 @@ async function main() {
         tomorrowPeakKw: Number(tomorrowPeakKw.toFixed(2)),
         hourlyToday: hourlySeries(todayEntries),
         hourlyTomorrow: hourlySeries(tomorrowEntries),
+        days: sevenDays,
         updatedAt: new Date().toISOString(),
     };
 
@@ -225,6 +297,7 @@ async function main() {
         ...output,
         hourlyToday: `${output.hourlyToday.length} bodov`,
         hourlyTomorrow: `${output.hourlyTomorrow.length} bodov`,
+        days: `${output.days.length} dní, ${output.days.reduce((s, d) => s + d.hourly.length, 0)} bodov spolu`,
     });
 }
 
