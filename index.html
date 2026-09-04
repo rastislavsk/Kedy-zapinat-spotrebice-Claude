@@ -443,6 +443,10 @@
         table.week-table td span.sub { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-35); margin-top: 2px; }
         table.week-table th + th, table.week-table td + td { padding-left: 14px; }
         table.week-table tbody tr:last-child td { border-bottom: none; }
+        table.week-table .cloud-cell { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
+        table.week-table .cloud-cell svg { width: 12px; height: 12px; flex-shrink: 0; }
+        table.week-table .cloud-cell.sun svg { stroke: var(--amber); }
+        table.week-table .cloud-cell.cloud svg { stroke: var(--ink-35); }
         table.week-table tbody tr.today td { background: rgba(158,242,91,0.045); }
         table.week-table tbody tr.today td:first-child { color: var(--green); font-weight: 600; }
 
@@ -744,14 +748,14 @@
                spoločnej výške. */
             #panel-7dni > .week-block { display: flex; flex-direction: column; }
             #panel-7dni > .week-block > .chart-footer { margin-top: auto; }
-            /* Bočný stĺpec je úzky - tabuľka tam ukáže len deň/výrobu/špičku,
-               strop/využitie/oblačnosť majú stále svoje miesto v tabuľke na mobile/tablete.
+            /* Bočný stĺpec je úzky - tabuľka tam ukáže len deň/výrobu/špičku/oblačnosť,
+               strop a využitie maju stale svoje miesto v tabuľke na mobile/tablete.
+               Oblačnosť ako ikona+% je uzka, tak sa zmesti aj do bočného stĺpca.
                min-width sa zruší, inak by tabuľka trvala na pôvodnej šírke pre 6 stĺpcov
-               a zvyšné 3 by sa vysúvali mimo viditeľnú oblasť karty. */
+               a zvyšné by sa vysúvali mimo viditeľnú oblasť karty. */
             #panel-7dni table.week-table { min-width: 0; }
             #panel-7dni table.week-table th:nth-child(3), #panel-7dni table.week-table td:nth-child(3),
-            #panel-7dni table.week-table th:nth-child(4), #panel-7dni table.week-table td:nth-child(4),
-            #panel-7dni table.week-table th:nth-child(6), #panel-7dni table.week-table td:nth-child(6) {
+            #panel-7dni table.week-table th:nth-child(4), #panel-7dni table.week-table td:nth-child(4) {
                 display: none;
             }
 
@@ -2808,9 +2812,18 @@
                     <td>${d.clearKwhTotal.toFixed(1)} kWh</td>
                     <td>${usePct} %</td>
                     <td>${d.peakKw.toFixed(1)} kW<span class="sub">${peakAt}</span></td>
-                    <td>${d.cloudAvgPct == null ? '–' : d.cloudAvgPct + ' %'}</td>
+                    <td>${weekCloudCell(d.cloudAvgPct)}</td>
                 </tr>`;
             }).join('');
+        }
+
+        // Ikona namiesto slovného "slnečno/oblačno" - pod 50 % priemernej oblačnosti
+        // cez deň je to este prevazne slnecny den, nad tym uz oblacny.
+        function weekCloudCell(cloudPct) {
+            if (cloudPct == null) return '–';
+            const sunny = cloudPct < 50;
+            const icon = sunny ? ICON_SUN : ICON_CLOUD;
+            return `<span class="cloud-cell ${sunny ? 'sun' : 'cloud'}">${icon}${Math.round(cloudPct)} %</span>`;
         }
 
         function renderWeekMessage() {
