@@ -425,43 +425,62 @@
 
         /* ============================================================
            TABLET (>= 768px)
-           Spodna lista sa meni na zvisly rail vlavo, obsah dostava karty.
+           Spodna lista sa meni na vodorovne taby pod hlavickou, v style
+           kariet v prehliadaci - .bottomnav je v HTML medzi .appbar a .page,
+           takze plynie v toku stranky namiesto fixed bocneho railu.
            Pod 768 px sa nic z tohto neuplatni - mobil zostava nezmeneny.
            ============================================================ */
         @media (min-width: 768px) {
             :root {
-                --rail-w: 90px;
                 --card-bg: #151614;
                 --card-line: rgba(242,240,234,0.09);
             }
 
-            /* Cely obsah sa odsunie od railu; .bottomnav je fixed, takze sa ho to netyka. */
-            body { padding-left: var(--rail-w); }
-
             .bottomnav {
-                top: 0;
-                right: auto;
-                width: var(--rail-w);
-                background: #0F1410;
+                position: static;
+                background: transparent;
                 border-top: none;
-                border-right: 1px solid var(--ink-08);
             }
             .bottomnav-inner {
-                max-width: none;
-                flex-direction: column;
-                gap: 6px;
-                height: 100%;
-                padding: 16px 9px;
+                max-width: 780px;
+                margin: 0 auto;
+                flex-direction: row;
+                align-items: flex-end;
+                gap: 4px;
+                height: auto;
+                padding: 10px 28px 0;
+                border-bottom: 1px solid var(--ink-08);
             }
             .nav-item {
+                position: relative;
                 flex: 0 0 auto;
-                border-radius: 10px;
-                padding: 11px 4px;
-                gap: 5px;
+                flex-direction: row;
+                gap: 8px;
+                border-radius: 10px 10px 0 0;
+                padding: 11px 18px;
                 transition: background-color 0.2s ease;
             }
+            .nav-item .lbl { font-size: 10px; }
             .nav-item .ind { display: none; }
-            .nav-item.active { background: color-mix(in srgb, var(--green) 12%, transparent); }
+            .nav-item.active { background: var(--card-bg); }
+            /* Zelena ciarka navrchu aktivneho tabu + "prestrihnutie" spodnej
+               deliacej ciary riadku presne pod aktivnym tabom - tak, aby
+               vizualne splyval s kartou pod nim (efekt karty v prehliadaci). */
+            .nav-item.active::before {
+                content: '';
+                position: absolute; top: 0; left: 12px; right: 12px; height: 2px;
+                background: var(--green); border-radius: 2px 2px 0 0;
+            }
+            .nav-item.active::after {
+                content: '';
+                position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+                background: var(--card-bg);
+            }
+            @media (hover: hover) and (pointer: fine) {
+                .nav-item:not(.active):hover { background: rgba(242,240,234,0.05); }
+                .nav-item:not(.active):hover svg { stroke: var(--ink-45); }
+                .nav-item:not(.active):hover .lbl { color: var(--ink-45); }
+            }
             .nav-item:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
             .appbar-inner { max-width: 780px; padding: 20px 28px 15px; }
@@ -590,13 +609,13 @@
            ============================================================ */
         @media (min-width: 1024px) {
             /* Na dashboarde je predpoved trvale vedla spotrebicov,
-               samostatna polozka v raile by nemala co prepinat. */
+               samostatny tab by nemal co prepinat. */
             #nav-predpoved { display: none; }
             /* Preklik z dialu na predpoved uz nema kam viest. */
             .today-forecast-link { cursor: default; }
             .today-forecast-link:active { opacity: 1; }
 
-            .appbar-inner, .page { max-width: 940px; }
+            .appbar-inner, .page, .bottomnav-inner { max-width: 940px; }
 
             .page {
                 display: grid;
@@ -625,21 +644,10 @@
 
         /* ============================================================
            PC (>= 1200px)
-           Rail sa rozsiri a ikony dostanu popis vedla seba.
+           Taby aj obsah sa rozsiria na sirku PC.
            ============================================================ */
         @media (min-width: 1200px) {
-            :root { --rail-w: 176px; }
-
-            .bottomnav-inner { padding: 18px 13px; }
-            .nav-item {
-                flex-direction: row;
-                justify-content: flex-start;
-                gap: 12px;
-                padding: 11px 12px;
-            }
-            .nav-item .lbl { font-size: 9.5px; }
-
-            .appbar-inner, .page { max-width: 1120px; }
+            .appbar-inner, .page, .bottomnav-inner { max-width: 1120px; }
             .page { grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); }
         }
 
@@ -665,6 +673,26 @@
             <div class="pv-updated-line" id="pv-updated-line">
                 <span id="pv-updated">načítavam…</span>
             </div>
+        </div>
+    </div>
+
+    <div class="bottomnav">
+        <div class="bottomnav-inner">
+            <button id="nav-spotrebice" class="nav-item active" onclick="setPanel('spotrebice')">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+                <span class="lbl">Spotrebiče</span>
+                <span class="ind"></span>
+            </button>
+            <button id="nav-predpoved" class="nav-item" onclick="setPanel('predpoved')">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                <span class="lbl">Predpoveď</span>
+                <span class="ind"></span>
+            </button>
+            <button id="nav-zdielat" class="nav-item" onclick="setPanel('zdielat')">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.6l6.8-3.8M8.6 13.4l6.8 3.8"/></svg>
+                <span class="lbl">Zdieľať</span>
+                <span class="ind"></span>
+            </button>
         </div>
     </div>
 
@@ -961,26 +989,6 @@
         </div>
         <!-- /PANEL: ZDIEĽAŤ -->
 
-    </div>
-
-    <div class="bottomnav">
-        <div class="bottomnav-inner">
-            <button id="nav-spotrebice" class="nav-item active" onclick="setPanel('spotrebice')">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z"/></svg>
-                <span class="lbl">Spotrebiče</span>
-                <span class="ind"></span>
-            </button>
-            <button id="nav-predpoved" class="nav-item" onclick="setPanel('predpoved')">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-                <span class="lbl">Predpoveď</span>
-                <span class="ind"></span>
-            </button>
-            <button id="nav-zdielat" class="nav-item" onclick="setPanel('zdielat')">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.6l6.8-3.8M8.6 13.4l6.8 3.8"/></svg>
-                <span class="lbl">Zdieľať</span>
-                <span class="ind"></span>
-            </button>
-        </div>
     </div>
 
     <script>
