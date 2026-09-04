@@ -428,7 +428,11 @@
         #week-day-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .week-svg { width: 100%; height: auto; display: block; }
         .day-label { font-size: 9.5px; fill: var(--ink-45); font-weight: 500; font-family: 'IBM Plex Mono', monospace; }
-        .day-label.today { fill: var(--ink); }
+        .day-label.today, .day-label.sel { fill: var(--ink); }
+        /* Klikacie oblasti pre výber dňa (heatmapa/stĺpce) - kurzor naznačí, že deň
+           ide vybrať klikom, nie len zobraziť tooltip. */
+        .heat-cell, .bar-hit, .week-row-sel { cursor: pointer; }
+        .week-row-sel { pointer-events: none; }
         .leg-sq { width: 9px; height: 9px; border-radius: 2px; background: var(--ink-45); display: inline-block; }
         .heat-scale { display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink-35); }
         .heat-scale .sw { display: inline-flex; gap: 1px; }
@@ -457,6 +461,12 @@
         table.week-table .cloud-cell.cloud svg { stroke: var(--ink-35); }
         table.week-table tbody tr.today td { background: rgba(158,242,91,0.045); }
         table.week-table tbody tr.today td:first-child { color: var(--green); font-weight: 600; }
+        table.week-table tbody tr { cursor: pointer; }
+        /* .sel je nezávislý od .today - označuje deň vybraný klikom (v ktoromkoľvek
+           z komponentov na karte 7 dní), nie nutne dnešok. Ide neskôr v CSS poradí,
+           aby pri zhode s .today mal prednosť viditeľný "práve vybraný" stav. */
+        table.week-table tbody tr.sel td { background: rgba(242,240,234,0.06); }
+        table.week-table tbody tr.sel td:first-child { box-shadow: inset 2px 0 0 var(--ink-45); padding-left: 8px; }
 
         /* --- Zdieľať panel --- */
         .share-panel { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 44px 0 20px; }
@@ -2721,7 +2731,8 @@
             });
             days.forEach((d, ri) => {
                 const y = padT + ri * rh;
-                out += `<text class="day-label${ri === 0 ? ' today' : ''}" x="${padL - 8}" y="${y + rh / 2 + 3.5}" text-anchor="end">${weekDayShort(d.date, ri)}</text>`;
+                const selCls = (ri === 0 ? ' today' : '') + (ri === weekSelDay ? ' sel' : '');
+                out += `<text class="day-label${selCls}" x="${padL - 8}" y="${y + rh / 2 + 3.5}" text-anchor="end" onclick="selectWeekDay(${ri})" style="cursor:pointer">${weekDayShort(d.date, ri)}</text>`;
                 WEEK_HOURS.forEach((h, ci) => {
                     const cell = maps[ri][h];
                     const v = cell ? cell.kw : 0;
@@ -2733,8 +2744,13 @@
                         const cloudTxt = cell && cell.cloud != null ? ` · ${Math.round(cell.cloud)} % oblačnosť` : '';
                         tip = ` data-tip-title="${title}" data-tip="${v.toFixed(2)} kW${cloudTxt}"`;
                     }
-                    out += `<rect${tip} x="${x + gap / 2}" y="${y + gap / 2}" width="${cw - gap}" height="${rh - gap}" rx="3" fill="${weekHeatColor(v / max)}"/>`;
+                    out += `<rect class="heat-cell"${tip} x="${x + gap / 2}" y="${y + gap / 2}" width="${cw - gap}" height="${rh - gap}" rx="3" fill="${weekHeatColor(v / max)}" onclick="selectWeekDay(${ri})"/>`;
                 });
+                // Orámovanie okolo celého riadku vybraného dňa - klik hocikde v riadku
+                // (heatmapa, stĺpce, tabuľka, taby) musí byť vidno aj tu, nielen v grafoch.
+                if (ri === weekSelDay) {
+                    out += `<rect class="week-row-sel" x="${padL - 1}" y="${y}" width="${W - padL - padR + 2}" height="${rh - gap}" rx="4" fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-opacity="0.55"/>`;
+                }
             });
             svg.innerHTML = out;
 
@@ -2771,17 +2787,23 @@
             days.forEach((d, i) => {
                 const cx = padL + i * slot + slot / 2;
                 const isToday = i === 0;
+                const isSel = i === weekSelDay;
                 const bh = Math.max(0, (d.kwhTotal / maxV) * plotH);
                 const by = padT + plotH - bh;
                 const usePct = d.clearKwhTotal > 0 ? Math.round(100 * d.kwhTotal / d.clearKwhTotal) : 0;
                 const barTitle = `${weekDayShort(d.date, i)} ${weekDateLabel(d.date)}`;
                 const barTip = `${d.kwhTotal.toFixed(1)} kWh · strop ${d.clearKwhTotal.toFixed(1)} kWh (${usePct} %)`;
-                out += `<rect data-tip-title="${barTitle}" data-tip="${barTip}" x="${cx - bw / 2}" y="${by}" width="${bw}" height="${bh}" rx="3" fill="${isToday ? '#F2F0EA' : 'rgba(242,240,234,0.4)'}"/>`;
+                // Biely stĺpec = práve vybraný deň (nie nutne dnešok) - klik na
+                // ktorýkoľvek deň v hociktorom komponente prekreslí výber aj sem.
+                out += `<rect x="${cx - bw / 2}" y="${by}" width="${bw}" height="${bh}" rx="3" fill="${isSel ? '#F2F0EA' : 'rgba(242,240,234,0.4)'}"/>`;
                 const cy = padT + plotH - (d.clearKwhTotal / maxV) * plotH;
                 out += `<line x1="${cx - bw / 2 - 2}" y1="${cy}" x2="${cx + bw / 2 + 2}" y2="${cy}" stroke="rgba(242,240,234,0.4)" stroke-width="1.3" stroke-dasharray="3 2"/>`;
-                out += `<text class="axis-label" x="${cx}" y="${by - 6}" text-anchor="middle" fill="${isToday ? '#F2F0EA' : 'rgba(242,240,234,0.5)'}" style="font-size:9.5px">${d.kwhTotal.toFixed(1)}</text>`;
-                out += `<text class="day-label${isToday ? ' today' : ''}" x="${cx}" y="${H - 14}" text-anchor="middle">${weekDayShort(d.date, i)}</text>`;
+                out += `<text class="axis-label" x="${cx}" y="${by - 6}" text-anchor="middle" fill="${isSel ? '#F2F0EA' : 'rgba(242,240,234,0.5)'}" style="font-size:9.5px">${d.kwhTotal.toFixed(1)}</text>`;
+                out += `<text class="day-label${isToday ? ' today' : ''}${isSel ? ' sel' : ''}" x="${cx}" y="${H - 14}" text-anchor="middle">${weekDayShort(d.date, i)}</text>`;
                 out += `<text class="axis-label" x="${cx}" y="${H - 4}" text-anchor="middle">${weekDateLabel(d.date)}</text>`;
+                // Neviditeľný "hit" obdĺžnik cez celý stĺpec (nielen užší vizuálny bar) -
+                // väčšia klikacia/dotyková plocha, drží aj tooltip aj klik na výber dňa.
+                out += `<rect class="bar-hit" data-tip-title="${barTitle}" data-tip="${barTip}" x="${padL + i * slot}" y="0" width="${slot}" height="${H}" fill="transparent" onclick="selectWeekDay(${i})"/>`;
             });
             svg.innerHTML = out;
             renderWeekBarsStat(days);
@@ -2816,7 +2838,7 @@
                 // Krátky tvar (bez dátumu) - dátum je aj tak v tabuľke pod grafom,
                 // v tabe by 7 plných popiskov ("Ne 6.9." ...) nezmestilo vedľa seba.
                 b.textContent = weekDayShort(d.date, i);
-                b.addEventListener('click', () => { weekSelDay = i; renderWeekDayTabs(); renderWeekCurve(); });
+                b.addEventListener('click', () => selectWeekDay(i));
                 box.appendChild(b);
             });
         }
@@ -2907,8 +2929,9 @@
                 const usePct = d.clearKwhTotal > 0 ? Math.round(100 * d.kwhTotal / d.clearKwhTotal) : 0;
                 const peakAt = d.peakHour == null ? '–' : `o ${String(d.peakHour).padStart(2, '0')}:00`;
                 const dateSub = i > 1 ? `<span class="sub">${weekDateLabel(d.date)}</span>` : '';
+                const rowCls = (i === 0 ? 'today' : '') + (i === weekSelDay ? ' sel' : '');
                 return `
-                <tr class="${i === 0 ? 'today' : ''}">
+                <tr class="${rowCls}" onclick="selectWeekDay(${i})">
                     <td>${weekDayShort(d.date, i)}${dateSub}</td>
                     <td>${d.kwhTotal.toFixed(1)} kWh</td>
                     <td>${d.clearKwhTotal.toFixed(1)} kWh</td>
@@ -2939,6 +2962,22 @@
                 body += ` Najslabšie bude ${weekDayLabel(worst.date, days.indexOf(worst)).toLowerCase()} (${worst.kwhTotal.toFixed(1)} kWh).`;
             }
             dom.weekMsgBody.innerText = body;
+        }
+
+        // Jeden spoločný "vybraný deň" (weekSelDay) pre všetky 4 komponenty na karte
+        // 7 dní - klik v ktoromkoľvek z nich (heatmapa, denné stĺpce, tabuľka, taby nad
+        // priebehom výroby) prekreslí výber vo všetkých ostatných naraz.
+        function selectWeekDay(i) {
+            const days = latestForecastData && latestForecastData.days;
+            if (!days || !days.length) return;
+            const idx = Math.max(0, Math.min(days.length - 1, i));
+            if (idx === weekSelDay) return;
+            weekSelDay = idx;
+            renderWeekHeat();
+            renderWeekBars();
+            renderWeekDayTabs();
+            renderWeekCurve();
+            renderWeekTable();
         }
 
         function renderWeekPanel() {
