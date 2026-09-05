@@ -2,7 +2,7 @@
   "strongerWindowAhead": true,
   "windowDaypart": "poobede",
   "peakKw": 5.79,
-  "hoursAhead": 7,
+  "hoursAhead": 6,
   "tomorrowSunny": true,
   "tomorrowPeakKw": 6.63,
   "hourlyToday": [
@@ -1307,5 +1307,5 @@
       "cloudAvgPct": 55
     }
   ],
-  "updatedAt": "2026-09-05T05:56:07.147Z"
+  "updatedAt": "2026-09-05T06:01:08.262Z"
 }
