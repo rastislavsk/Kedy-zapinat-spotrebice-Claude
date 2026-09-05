@@ -1,5 +1,5 @@
 {
-  "realTimePowerKw": 0.04,
+  "realTimePowerKw": 0,
   "dailyEnergyKwh": 31.86,
   "monthEnergyKwh": 208.11,
   "yearEnergyKwh": 9877.27,
@@ -925,7 +925,31 @@
     {
       "hour": 19.0833,
       "kw": 0.04
+    },
+    {
+      "hour": 19.1667,
+      "kw": 0.03
+    },
+    {
+      "hour": 19.25,
+      "kw": 0
+    },
+    {
+      "hour": 19.3333,
+      "kw": 0
+    },
+    {
+      "hour": 19.4167,
+      "kw": 0
+    },
+    {
+      "hour": 19.5,
+      "kw": 0
+    },
+    {
+      "hour": 19.5833,
+      "kw": 0
     }
   ],
-  "updatedAt": "2026-09-05T17:35:33.201Z"
+  "updatedAt": "2026-09-05T17:40:31.410Z"
 }
