@@ -2,20 +2,10 @@
   "strongerWindowAhead": true,
   "windowDaypart": "poobede",
   "peakKw": 6.74,
-  "hoursAhead": 11,
+  "hoursAhead": 10,
   "tomorrowSunny": true,
   "tomorrowPeakKw": 6.4,
   "hourlyToday": [
-    {
-      "hour": 0,
-      "kw": 0,
-      "cloud": 12
-    },
-    {
-      "hour": 1,
-      "kw": 0,
-      "cloud": 0
-    },
     {
       "hour": 2,
       "kw": 0,
@@ -254,18 +244,6 @@
       "date": "2026-09-06",
       "hourly": [
         {
-          "hour": 0,
-          "kw": 0,
-          "cloud": 12,
-          "clearKw": 0
-        },
-        {
-          "hour": 1,
-          "kw": 0,
-          "cloud": 0,
-          "clearKw": 0
-        },
-        {
           "hour": 2,
           "kw": 0,
           "cloud": 0,
@@ -402,7 +380,7 @@
       "clearKwhTotal": 62.6,
       "peakKw": 6.74,
       "peakHour": 12,
-      "cloudAvgPct": 4
+      "cloudAvgPct": 3
     },
     {
       "date": "2026-09-07",
@@ -1329,5 +1307,5 @@
       "cloudAvgPct": 86
     }
   ],
-  "updatedAt": "2026-09-05T23:55:26.995Z"
+  "updatedAt": "2026-09-06T00:00:28.001Z"
 }
