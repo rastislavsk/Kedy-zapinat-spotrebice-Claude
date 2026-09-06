@@ -1010,25 +1010,25 @@
         {
           "hour": 1,
           "kw": 0,
-          "cloud": 99,
+          "cloud": 98,
           "clearKw": 0
         },
         {
           "hour": 2,
           "kw": 0,
-          "cloud": 100,
+          "cloud": 99,
           "clearKw": 0
         },
         {
           "hour": 3,
           "kw": 0,
-          "cloud": 100,
+          "cloud": 99,
           "clearKw": 0
         },
         {
           "hour": 4,
           "kw": 0,
-          "cloud": 100,
+          "cloud": 99,
           "clearKw": 0
         },
         {
@@ -1307,5 +1307,5 @@
       "cloudAvgPct": 98
     }
   ],
-  "updatedAt": "2026-09-06T09:30:37.782Z"
+  "updatedAt": "2026-09-06T09:35:36.437Z"
 }
